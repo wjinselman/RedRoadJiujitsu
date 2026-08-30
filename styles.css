@@ -1633,3 +1633,78 @@ main,
     pointer-events:none;
   }
 }
+
+/* === v15 mobile hero spacing cleanup === */
+@media (max-width: 700px){
+  .hero-logo-mode .hero-visual{
+    padding:72px 0 10px !important;
+  }
+  .hero-crest-wrap{
+    gap:20px !important;
+  }
+  .hero-crest-meta{
+    margin-top:6px !important;
+    padding-top:14px !important;
+  }
+  .hero-crest-meta::before{
+    width:62px !important;
+    margin:0 auto 14px !important;
+  }
+  .hero-logo-mode .hero-copy{
+    padding-top:40px !important;
+    padding-bottom:66px !important;
+  }
+  .hero-logo-mode .hero-copy .kicker{
+    margin-top:0 !important;
+    margin-bottom:18px !important;
+    padding-top:24px !important;
+  }
+  .hero-logo-mode .hero-copy .kicker::before{
+    top:0 !important;
+  }
+  .hero-logo-mode h1{
+    margin-top:0 !important;
+    margin-bottom:22px !important;
+  }
+}
+
+@media (max-width: 520px){
+  .hero-logo-mode .hero-visual{
+    padding:66px 0 8px !important;
+  }
+  .hero-crest-wrap{
+    gap:18px !important;
+  }
+  .hero-crest-meta{
+    padding-top:12px !important;
+  }
+  .hero-crest-meta::before{
+    width:58px !important;
+    margin:0 auto 12px !important;
+  }
+  .hero-logo-mode .hero-copy{
+    padding-top:44px !important;
+    padding-bottom:62px !important;
+  }
+  .hero-logo-mode .hero-copy .kicker{
+    margin-bottom:20px !important;
+    padding-top:26px !important;
+    letter-spacing:.14em !important;
+    line-height:1.5 !important;
+  }
+  .hero-logo-mode h1{
+    margin-bottom:20px !important;
+  }
+  .hero-logo-mode p{
+    margin-top:0 !important;
+  }
+}
+
+@media (max-width: 400px){
+  .hero-logo-mode .hero-copy{
+    padding-top:48px !important;
+  }
+  .hero-logo-mode .hero-copy .kicker{
+    margin-bottom:22px !important;
+  }
+}

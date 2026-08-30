@@ -1216,3 +1216,48 @@ html{scroll-padding-top:96px}
   .hero-crest-meta span{font-size:9px;min-height:30px;padding:0 9px}
   .hero-crest-meta span:nth-of-type(3)::before{display:none}
 }
+
+/* === v9 mobile hero order: crest first === */
+@media (max-width: 760px){
+  .hero-logo-mode .hero-layout{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:0 !important;
+  }
+  .hero-logo-mode .hero-visual{
+    order:1 !important;
+    width:100% !important;
+    min-height:280px !important;
+    padding:28px 0 4px !important;
+  }
+  .hero-logo-mode .hero-copy{
+    order:2 !important;
+    width:100% !important;
+    max-width:none !important;
+    padding:18px 0 72px !important;
+  }
+  .hero-crest-blend{
+    width:min(78vw, 310px) !important;
+    margin:0 auto !important;
+  }
+  .hero-info-line{
+    margin-top:14px !important;
+    padding:0 8px !important;
+  }
+  .hero-logo-mode h1{
+    margin-top:0 !important;
+  }
+}
+
+@media (max-width: 480px){
+  .hero-logo-mode .hero-visual{
+    min-height:250px !important;
+    padding-top:22px !important;
+  }
+  .hero-crest-blend{
+    width:min(82vw, 285px) !important;
+  }
+  .hero-logo-mode .hero-copy{
+    padding-top:12px !important;
+  }
+}

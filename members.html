@@ -1,62 +1,58 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#08090b">
-  <meta name="robots" content="noindex,nofollow">
-  <title>Member Portal | Red Road Jiu Jitsu</title>
-  <link rel="stylesheet" href="redroad-v25.css?v=launch-2">
-  <style>html,body{background:#07080a!important;color-scheme:dark}body{min-height:100%;margin:0}</style>
-</head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
+<meta content="#08090b" name="theme-color"/>
+<meta content="noindex,nofollow" name="robots"/>
+<title>Member Portal | Red Road Jiu Jitsu</title>
+<link href="redroad-v25.css?v=prod-11" rel="stylesheet"/>
+<style>html,body{background:#07080a!important;color-scheme:dark}body{min-height:100%;margin:0}</style>
+<link href="assets/favicon-64.png" rel="icon" sizes="64x64" type="image/png"/><link href="assets/apple-touch-icon.png" rel="apple-touch-icon"/></head>
 <body>
-<div class="site-emblem-bg" aria-hidden="true"></div>
-<header class="top"><div class="shell nav"><a class="brand" href="index.html"><img src="assets/red-road-master-crest.png" alt="Red Road Jiu Jitsu logo"><div><strong>Red Road Jiu Jitsu</strong><span>Member Portal</span></div></a><a class="btn btn-dark nav-return" href="index.html">Public Website</a></div></header>
+<div aria-hidden="true" class="site-emblem-bg"></div>
+<header class="top"><div class="shell nav"><a class="brand" href="index.html"><img alt="Red Road Jiu Jitsu logo" src="assets/red-road-master-crest.png"/><div><strong>Red Road Jiu Jitsu</strong><span>Member Portal</span></div></a><a class="btn btn-dark nav-return" href="index.html">Public Website</a></div></header>
 <main>
-  <section class="portal-hero compact"><div class="portal-shell"><div class="kicker">Member Area</div><h1 class="portal-title">Your Training. <span class="red">Your Status.</span></h1><p>A simple private view of your Red Road membership, rank and account standing.</p></div></section>
-
-  <section class="section portal-section"><div class="portal-shell">
-    <div class="login-card" id="firebase-setup-view" hidden>
-      <div class="portal-card-head"><div><div class="kicker">Setup Required</div><h2>Portal Not Connected Yet.</h2></div></div>
-      <p class="portal-muted">Firebase is intentionally not configured in this ZIP. Paste the project Web App config into <strong>firebase-config.js</strong> before launch.</p>
-    </div>
-
-    <div class="login-card" id="member-login-view">
-      <div class="portal-card-head"><div><div class="kicker">Member Sign In</div><h2>Welcome Back.</h2></div><span class="secure-badge">Private</span></div>
-      <form id="member-login-form" class="portal-form">
-        <div><label for="member-email">Email</label><input id="member-email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com" required></div>
-        <div><label for="member-password">Password</label><input id="member-password" name="password" type="password" autocomplete="current-password" minlength="6" placeholder="Password" required></div>
-        <button class="btn btn-red btn-full" type="submit">Sign In</button>
-      </form>
-      <div class="auth-secondary-actions">
-        <button class="text-action" id="member-activate" type="button">First time? Activate account</button>
-        <button class="text-action" id="member-reset" type="button">Forgot password?</button>
-      </div>
-      <p class="portal-hint">Your owner must add your email to Red Road before first-time activation.</p>
-      <div class="flash-message" id="member-login-message" hidden></div>
-    </div>
-
-    <div class="dash-card member-dashboard" id="member-dashboard" hidden>
-      <div class="portal-card-head"><div><div class="kicker">Member Dashboard</div><h2><span id="member-name">Member</span></h2><div id="member-email-display" class="portal-email"></div></div><button class="btn btn-dark btn-mini" id="member-logout" type="button">Sign Out</button></div>
-
-      <div class="member-status-hero">
-        <div><span>Membership</span><strong id="member-active-label">—</strong></div>
-        <div><span>Payment</span><strong id="member-paid-label">—</strong></div>
-      </div>
-
-      <div class="member-dashboard-grid compact-member-grid">
-        <div class="dash-stat"><span>Rank</span><strong id="member-rank">—</strong><small>Current belt / rank</small></div>
-        <div class="dash-stat"><span>Plan</span><strong id="member-plan">—</strong><small>Membership plan</small></div>
-        <div class="dash-stat"><span>Joined</span><strong id="member-joined">—</strong><small>Member since</small></div>
-      </div>
-      <div class="member-access-note" id="member-access-note" hidden></div>
-      <div class="member-actions">
-        <a class="btn btn-red" href="index.html#schedule">Class Schedule</a>
-        <a class="btn btn-dark" href="index.html#location">Directions</a>
-      </div>
-    </div>
-  </div></section>
+<section class="portal-hero compact"><div class="portal-shell"><div class="kicker">Member Area</div><h1 class="portal-title">Your Training. <span class="red">Your Status.</span></h1><p>A simple private view of your Red Road membership, rank and account standing.</p></div></section>
+<section class="section portal-section"><div class="portal-shell">
+<div class="login-card" hidden="" id="firebase-setup-view">
+<div class="portal-card-head"><div><div class="kicker">Setup Required</div><h2>Portal Not Connected Yet.</h2></div></div>
+<p class="portal-muted">Firebase is intentionally not configured in this ZIP. Paste the project Web App config into <strong>firebase-config.js</strong> before launch.</p>
+</div>
+<div class="login-card" id="member-login-view">
+<div class="portal-card-head"><div><div class="kicker">Member Sign In</div><h2>Welcome Back.</h2></div><span class="secure-badge">Private</span></div>
+<form class="portal-form" id="member-login-form">
+<div><label for="member-email">Email</label><input autocomplete="email" id="member-email" inputmode="email" name="email" placeholder="you@example.com" required="" type="email"/></div>
+<div><label for="member-password">Password</label><input autocomplete="current-password" id="member-password" minlength="6" name="password" placeholder="Password" required="" type="password"/></div>
+<button class="btn btn-red btn-full" type="submit">Sign In</button>
+</form>
+<div class="auth-secondary-actions">
+<button class="text-action" id="member-activate" type="button">First time? Activate account</button>
+<button class="text-action" id="member-reset" type="button">Forgot password?</button>
+</div>
+<p class="portal-hint">Use the email Red Road has on file. First-time activation requires access to that email so it can be verified before the portal opens.</p>
+<div class="flash-message" hidden="" id="member-login-message"></div>
+</div>
+<div class="dash-card member-dashboard" hidden="" id="member-dashboard">
+<div class="portal-card-head"><div><div class="kicker">Member Dashboard</div><h2><span id="member-name">Member</span></h2><div class="portal-email" id="member-email-display"></div></div><button class="btn btn-dark btn-mini" id="member-logout" type="button">Sign Out</button></div>
+<div class="member-status-hero">
+<div><span>Membership</span><strong id="member-active-label">—</strong></div>
+<div><span>Payment</span><strong id="member-paid-label">—</strong></div>
+</div>
+<div class="member-dashboard-grid compact-member-grid">
+<div class="dash-stat"><span>Rank</span><strong id="member-rank">—</strong><small>Current belt / rank</small></div>
+<div class="dash-stat"><span>Plan</span><strong id="member-plan">—</strong><small>Membership plan</small></div>
+<div class="dash-stat"><span>Joined</span><strong id="member-joined">—</strong><small>Member since</small></div>
+</div>
+<div class="member-access-note" hidden="" id="member-access-note"></div>
+<div class="member-actions">
+<a class="btn btn-red" href="index.html#schedule">Class Schedule</a>
+<a class="btn btn-dark" href="index.html#location">Directions</a>
+</div>
+</div>
+</div></section>
 </main>
-<script type="module" src="portal.js?v=launch-7-smart-routing"></script>
+<script src="portal.js?v=prod-11" type="module"></script>
 </body>
 </html>

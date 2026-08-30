@@ -1,4 +1,5 @@
-RED ROAD JIU JITSU — CONNECTED LAUNCH BUILD
+RED ROAD JIU JITSU — PRODUCTION CANDIDATE
+Domain: redroadbjj.com
 Firebase project: red-road-jiujitsu
 Owner: Jeff Davis <redroadjiujitsu@protonmail.com>
 Developer: William Inselman <wjinselman@gmail.com>
@@ -8,4 +9,6 @@ Analytics: NOT USED
 Realtime Firestore listeners: NONE
 Polling: NONE
 Cloud Functions: NONE
-Next: publish firestore.rules, deploy site, run test member flow, then add final domain to Firebase Authorized domains.
+Member removal: PERMANENT FIRESTORE ROSTER DELETE (Auth identity may remain dormant)
+Custom domain file: CNAME = redroadbjj.com
+Required before go-live: publish firestore.rules, authorize redroadbjj.com in Firebase Auth, add domain to API-key website restrictions, and complete one real end-to-end test member.

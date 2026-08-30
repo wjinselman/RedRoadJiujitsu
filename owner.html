@@ -1,123 +1,114 @@
-<!doctype html>
+<!DOCTYPE html>
+
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#08090b">
-  <meta name="robots" content="noindex,nofollow">
-  <title>Staff Dashboard | Red Road Jiu Jitsu</title>
-  <link rel="stylesheet" href="redroad-v25.css?v=launch-2">
-  <style>html,body{background:#07080a!important;color-scheme:dark}body{min-height:100%;margin:0}</style>
-</head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"/>
+<meta content="#08090b" name="theme-color"/>
+<meta content="noindex,nofollow" name="robots"/>
+<title>Staff Dashboard | Red Road Jiu Jitsu</title>
+<link href="redroad-v25.css?v=prod-11" rel="stylesheet"/>
+<style>html,body{background:#07080a!important;color-scheme:dark}body{min-height:100%;margin:0}</style>
+<link href="assets/favicon-64.png" rel="icon" sizes="64x64" type="image/png"/><link href="assets/apple-touch-icon.png" rel="apple-touch-icon"/></head>
 <body>
-<div class="site-emblem-bg" aria-hidden="true"></div>
-<header class="top"><div class="shell nav"><a class="brand" href="index.html"><img src="assets/red-road-master-crest.png" alt="Red Road Jiu Jitsu logo"><div><strong>Red Road Jiu Jitsu</strong><span id="staff-role-brand">Owner</span></div></a><a class="btn btn-dark nav-return" href="index.html">Public Website</a></div></header>
+<div aria-hidden="true" class="site-emblem-bg"></div>
+<header class="top"><div class="shell nav"><a class="brand" href="index.html"><img alt="Red Road Jiu Jitsu logo" src="assets/red-road-master-crest.png"/><div><strong>Red Road Jiu Jitsu</strong><span id="staff-role-brand">Owner</span></div></a><a class="btn btn-dark nav-return" href="index.html">Public Website</a></div></header>
 <main>
-  <section class="portal-hero compact"><div class="shell"><div class="kicker" id="staff-role-kicker">Owner</div><h1 class="portal-title">The School at a <span class="red">Glance.</span></h1><p>Members, rank, payment standing and access — intentionally simple.</p></div></section>
-
-  <section class="section portal-section"><div class="shell">
-    <div class="login-card owner-login-card" id="firebase-setup-view" hidden>
-      <div class="kicker">Setup Required</div><h2>Owner Portal Not Connected Yet.</h2>
-      <p class="portal-muted">Paste the Firebase Web App config into <strong>firebase-config.js</strong>, deploy the included Firestore rules, then add the owner email to the <strong>owners</strong> collection.</p>
-    </div>
-
-    <div class="login-card owner-login-card" id="owner-login-view">
-      <div class="portal-card-head"><div><div class="kicker">Owner Sign In</div><h2>Private Access.</h2></div><span class="secure-badge">Staff Only</span></div>
-      <form id="owner-login-form" class="portal-form">
-        <div><label for="owner-login-email">Email</label><input id="owner-login-email" type="email" autocomplete="email" inputmode="email" required placeholder="redroadjiujitsu@protonmail.com"></div>
-        <div><label for="owner-login-password">Password</label><input id="owner-login-password" type="password" autocomplete="current-password" minlength="6" required placeholder="Password"></div>
-        <button class="btn btn-red btn-full" type="submit">Sign In</button>
-      </form>
-      <div class="auth-secondary-actions">
-        <button class="text-action" id="owner-activate" type="button">First time? Activate owner account</button>
-        <button class="text-action" id="owner-reset" type="button">Forgot password?</button>
-      </div>
-      <div class="flash-message" id="owner-login-message" hidden></div>
-    </div>
-
-    <div id="owner-app" hidden>
-      <div class="owner-toolbar">
-        <div><div class="kicker" id="dashboard-role-label">Owner Dashboard</div><h2 id="owner-welcome">Red Road</h2><div id="owner-email-display" class="portal-email"></div></div>
-        <div class="owner-toolbar-actions"><button class="btn btn-dark btn-mini" id="owner-refresh" type="button">Refresh</button><button class="btn btn-dark btn-mini" id="owner-logout" type="button">Sign Out</button></div>
-      </div>
-
-      <div class="dash-grid owner-stats owner-percentage-grid">
-        <div class="dash-stat"><span>Members</span><strong id="stat-members">0</strong><small>Current roster</small></div>
-        <div class="dash-stat"><span>Active</span><strong id="stat-active-percent">0%</strong><small id="stat-active-count">0 active</small></div>
-        <div class="dash-stat"><span>Paid / Current</span><strong id="stat-paid-percent">0%</strong><small id="stat-paid-count">0 current</small></div>
-        <div class="dash-stat"><span>Past Due</span><strong id="stat-past-due">0</strong><small>Active accounts</small></div>
-      </div>
-
-      <div class="dash-card owner-card security-card">
-        <div class="owner-member-head">
-          <div><div class="kicker">Account Security</div><h2>Your Password</h2><p class="portal-muted">Change your own staff password securely. Passwords are handled by Firebase Authentication and are never stored in Firestore.</p></div>
-          <button class="btn btn-dark" id="toggle-change-password" type="button" aria-expanded="false">Change Password</button>
-        </div>
-        <div class="add-member-panel" id="change-password-panel" hidden>
-          <form id="change-password-form" class="owner-form launch-owner-form">
-            <div><label for="staff-current-password">Current Password</label><input id="staff-current-password" name="currentPassword" type="password" autocomplete="current-password" minlength="6" required></div>
-            <div><label for="staff-new-password">New Password</label><input id="staff-new-password" name="newPassword" type="password" autocomplete="new-password" minlength="8" required></div>
-            <div><label for="staff-confirm-password">Confirm New Password</label><input id="staff-confirm-password" name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required></div>
-            <button class="btn btn-red btn-full owner-form-submit" type="submit">Update Password</button>
-          </form>
-        </div>
-      </div>
-
-      <div class="dash-card owner-card developer-only" id="developer-access-card" hidden>
-        <div class="owner-member-head">
-          <div><div class="kicker">Developer Access</div><h2>Owners &amp; Coaches</h2><p class="portal-muted">Developer-only access control. Owners can manage members, but cannot create Developers.</p></div>
-          <button class="btn btn-red" id="toggle-add-owner" type="button" aria-expanded="false">+ Add Owner</button>
-        </div>
-        <div class="add-member-panel" id="add-owner-panel" hidden>
-          <form id="add-owner-form" class="owner-form launch-owner-form">
-            <div><label for="access-owner-name">Name</label><input id="access-owner-name" name="name" required maxlength="120" placeholder="Coach / owner name"></div>
-            <div><label for="access-owner-email">Email</label><input id="access-owner-email" name="email" type="email" required placeholder="coach@example.com"></div>
-            <div class="owner-checks"><label><input name="enabled" type="checkbox" checked> Enabled</label></div>
-            <button class="btn btn-red btn-full owner-form-submit" type="submit">Add Owner Access</button>
-          </form>
-        </div>
-        <div class="member-list" id="owner-access-list" aria-live="polite"></div>
-        <div class="owner-list-foot"><span>Maximum 50 owner records per manual load.</span><span>Developer accounts remain console-only.</span></div>
-      </div>
-
-      <div class="dash-card owner-card">
-        <div class="owner-member-head">
-          <div><div class="kicker">Member Management</div><h2>Members</h2></div>
-          <div class="owner-member-tools"><label class="owner-search"><span>Search</span><input id="owner-search" type="search" placeholder="Name or email"></label><button class="btn btn-red" id="toggle-add-member" type="button" aria-expanded="false">+ Add Member</button></div>
-        </div>
-        <div class="flash-message" id="owner-message" hidden></div>
-
-        <div class="add-member-panel" id="add-member-panel" hidden>
-          <form id="add-member-form" class="owner-form launch-owner-form">
-            <div><label for="owner-name">Name</label><input id="owner-name" name="name" required maxlength="120" placeholder="Member name"></div>
-            <div><label for="owner-email">Email</label><input id="owner-email" name="email" type="email" required placeholder="name@example.com"></div>
-            <div><label for="owner-plan">Plan</label><select id="owner-plan" name="plan"><option>Adult</option><option>Kids</option><option>Military / First Responder</option><option>Family</option></select></div>
-            <div><label for="owner-rank">Belt</label><select id="owner-rank" name="rank"><option>White Belt</option><option>Blue Belt</option><option>Purple Belt</option><option>Brown Belt</option><option>Black Belt</option></select></div><div><label for="owner-stripes">Stripes</label><select id="owner-stripes" name="stripes"><option value="0">No Stripes</option><option value="1">1 Stripe</option><option value="2">2 Stripes</option><option value="3">3 Stripes</option><option value="4">4 Stripes</option></select></div>
-            <div><label for="owner-joined">Joined</label><input id="owner-joined" name="joinedAt" type="date"></div>
-            <div class="owner-checks"><label><input name="paid" type="checkbox" checked> Paid / Current</label><label><input name="active" type="checkbox" checked> Active Membership</label><label><input name="enabled" type="checkbox" checked> Portal Enabled</label></div>
-            <button class="btn btn-red btn-full owner-form-submit" type="submit">Add Member</button>
-          </form>
-        </div>
-
-        <div class="edit-member-panel" id="edit-member-panel" hidden>
-          <div class="portal-card-head"><div><div class="kicker">Edit Member</div><h3 id="edit-member-title">Member</h3></div><button class="btn btn-quiet btn-mini" id="close-edit-member" type="button">Close</button></div>
-          <form id="edit-member-form" class="owner-form launch-owner-form">
-            <input type="hidden" id="edit-member-email" name="email">
-            <div><label for="edit-member-name">Name</label><input id="edit-member-name" name="name" required maxlength="120"></div>
-            <div><label for="edit-member-plan">Plan</label><select id="edit-member-plan" name="plan"><option>Adult</option><option>Kids</option><option>Military / First Responder</option><option>Family</option></select></div>
-            <div><label for="edit-member-rank">Belt</label><select id="edit-member-rank" name="rank"><option>White Belt</option><option>Blue Belt</option><option>Purple Belt</option><option>Brown Belt</option><option>Black Belt</option></select></div><div><label for="edit-member-stripes">Stripes</label><select id="edit-member-stripes" name="stripes"><option value="0">No Stripes</option><option value="1">1 Stripe</option><option value="2">2 Stripes</option><option value="3">3 Stripes</option><option value="4">4 Stripes</option></select></div>
-            <div><label for="edit-member-joined">Joined</label><input id="edit-member-joined" name="joinedAt" type="date"></div>
-            <div class="owner-checks"><label><input id="edit-member-paid" name="paid" type="checkbox"> Paid / Current</label><label><input id="edit-member-active" name="active" type="checkbox"> Active Membership</label><label><input id="edit-member-enabled" name="enabled" type="checkbox"> Portal Enabled</label></div>
-            <button class="btn btn-red btn-full owner-form-submit" type="submit">Save Changes</button>
-          </form>
-        </div>
-
-        <div class="member-list" id="owner-member-list" aria-live="polite"></div>
-        <div class="owner-list-foot"><span id="owner-load-note">Loads once when you open or manually refresh this page.</span><span>Maximum 250 members per read.</span></div>
-      </div>
-    </div>
-  </div></section>
+<section class="portal-hero compact"><div class="shell"><div class="kicker" id="staff-role-kicker">Owner</div><h1 class="portal-title">The School at a <span class="red">Glance.</span></h1><p>Members, rank, payment standing and access — intentionally simple.</p></div></section>
+<section class="section portal-section"><div class="shell">
+<div class="login-card owner-login-card" hidden="" id="firebase-setup-view">
+<div class="kicker">Setup Required</div><h2>Owner Portal Not Connected Yet.</h2>
+<p class="portal-muted">Paste the Firebase Web App config into <strong>firebase-config.js</strong>, deploy the included Firestore rules, then add the owner email to the <strong>owners</strong> collection.</p>
+</div>
+<div class="login-card owner-login-card" id="owner-login-view">
+<div class="portal-card-head"><div><div class="kicker">Owner Sign In</div><h2>Private Access.</h2></div><span class="secure-badge">Staff Only</span></div>
+<form class="portal-form" id="owner-login-form">
+<div><label for="owner-login-email">Email</label><input autocomplete="email" id="owner-login-email" inputmode="email" placeholder="owner@example.com" required="" type="email"/></div>
+<div><label for="owner-login-password">Password</label><input autocomplete="current-password" id="owner-login-password" minlength="6" placeholder="Password" required="" type="password"/></div>
+<button class="btn btn-red btn-full" type="submit">Sign In</button>
+</form>
+<div class="auth-secondary-actions">
+<button class="text-action" id="owner-activate" type="button">First time? Activate owner account</button>
+<button class="text-action" id="owner-reset" type="button">Forgot password?</button>
+</div>
+<div class="flash-message" hidden="" id="owner-login-message"></div>
+</div>
+<div hidden="" id="owner-app">
+<div class="owner-toolbar">
+<div><div class="kicker" id="dashboard-role-label">Owner Dashboard</div><h2 id="owner-welcome">Red Road</h2><div class="portal-email" id="owner-email-display"></div></div>
+<div class="owner-toolbar-actions"><button class="btn btn-dark btn-mini" id="owner-refresh" type="button">Refresh</button><button class="btn btn-dark btn-mini" id="owner-logout" type="button">Sign Out</button></div>
+</div>
+<div class="dash-grid owner-stats owner-percentage-grid">
+<div class="dash-stat"><span>Members</span><strong id="stat-members">0</strong><small>Current roster</small></div>
+<div class="dash-stat"><span>Active</span><strong id="stat-active-percent">0%</strong><small id="stat-active-count">0 active</small></div>
+<div class="dash-stat"><span>Paid / Current</span><strong id="stat-paid-percent">0%</strong><small id="stat-paid-count">0 current</small></div>
+<div class="dash-stat"><span>Past Due</span><strong id="stat-past-due">0</strong><small>Active accounts</small></div>
+</div>
+<div class="dash-card owner-card security-card">
+<div class="owner-member-head">
+<div><div class="kicker">Account Security</div><h2>Your Password</h2><p class="portal-muted">Change your own staff password securely. Passwords are handled by Firebase Authentication and are never stored in Firestore.</p></div>
+<button aria-expanded="false" class="btn btn-dark" id="toggle-change-password" type="button">Change Password</button>
+</div>
+<div class="add-member-panel" hidden="" id="change-password-panel">
+<form class="owner-form launch-owner-form" id="change-password-form">
+<div><label for="staff-current-password">Current Password</label><input autocomplete="current-password" id="staff-current-password" minlength="6" name="currentPassword" required="" type="password"/></div>
+<div><label for="staff-new-password">New Password</label><input autocomplete="new-password" id="staff-new-password" minlength="8" name="newPassword" required="" type="password"/></div>
+<div><label for="staff-confirm-password">Confirm New Password</label><input autocomplete="new-password" id="staff-confirm-password" minlength="8" name="confirmPassword" required="" type="password"/></div>
+<button class="btn btn-red btn-full owner-form-submit" type="submit">Update Password</button>
+</form>
+</div>
+</div>
+<div class="dash-card owner-card developer-only" hidden="" id="developer-access-card">
+<div class="owner-member-head">
+<div><div class="kicker">Developer Access</div><h2>Owners &amp; Coaches</h2><p class="portal-muted">Developer-only access control. Owners can manage members, but cannot create Developers.</p></div>
+<button aria-expanded="false" class="btn btn-red" id="toggle-add-owner" type="button">+ Add Owner</button>
+</div>
+<div class="add-member-panel" hidden="" id="add-owner-panel">
+<form class="owner-form launch-owner-form" id="add-owner-form">
+<div><label for="access-owner-name">Name</label><input id="access-owner-name" maxlength="120" name="name" placeholder="Coach / owner name" required=""/></div>
+<div><label for="access-owner-email">Email</label><input id="access-owner-email" name="email" placeholder="coach@example.com" required="" type="email"/></div>
+<div class="owner-checks"><label><input checked="" name="enabled" type="checkbox"/> Enabled</label></div>
+<button class="btn btn-red btn-full owner-form-submit" type="submit">Add Owner Access</button>
+</form>
+</div>
+<div aria-live="polite" class="member-list" id="owner-access-list"></div>
+<div class="owner-list-foot"><span>Maximum 50 owner records per manual load.</span><span>Developer accounts remain console-only.</span></div>
+</div>
+<div class="dash-card owner-card">
+<div class="owner-member-head">
+<div><div class="kicker">Member Management</div><h2>Members</h2></div>
+<div class="owner-member-tools"><label class="owner-search"><span>Search</span><input id="owner-search" placeholder="Name or email" type="search"/></label><button aria-expanded="false" class="btn btn-red" id="toggle-add-member" type="button">+ Add Member</button></div>
+</div>
+<div class="flash-message" hidden="" id="owner-message"></div>
+<div class="add-member-panel" hidden="" id="add-member-panel">
+<form class="owner-form launch-owner-form" id="add-member-form">
+<div><label for="owner-name">Name</label><input id="owner-name" maxlength="120" name="name" placeholder="Member name" required=""/></div>
+<div><label for="owner-email">Email</label><input id="owner-email" name="email" placeholder="name@example.com" required="" type="email"/></div>
+<div><label for="owner-plan">Plan</label><select id="owner-plan" name="plan"><option>Adult</option><option>Kids</option><option>Military / First Responder</option><option>Family</option></select></div>
+<div><label for="owner-rank">Belt</label><select id="owner-rank" name="rank"><option>White Belt</option><option>Blue Belt</option><option>Purple Belt</option><option>Brown Belt</option><option>Black Belt</option></select></div><div><label for="owner-stripes">Stripes</label><select id="owner-stripes" name="stripes"><option value="0">No Stripes</option><option value="1">1 Stripe</option><option value="2">2 Stripes</option><option value="3">3 Stripes</option><option value="4">4 Stripes</option></select></div>
+<div><label for="owner-joined">Joined</label><input id="owner-joined" name="joinedAt" type="date"/></div>
+<div class="owner-checks"><label><input checked="" name="paid" type="checkbox"/> Paid / Current</label><label><input checked="" name="active" type="checkbox"/> Active Membership</label><label><input checked="" name="enabled" type="checkbox"/> Portal Enabled</label></div>
+<button class="btn btn-red btn-full owner-form-submit" type="submit">Add Member</button>
+</form>
+</div>
+<div class="edit-member-panel" hidden="" id="edit-member-panel">
+<div class="portal-card-head"><div><div class="kicker">Edit Member</div><h3 id="edit-member-title">Member</h3></div><button class="btn btn-quiet btn-mini" id="close-edit-member" type="button">Close</button></div>
+<form class="owner-form launch-owner-form" id="edit-member-form">
+<input id="edit-member-email" name="email" type="hidden"/>
+<div><label for="edit-member-name">Name</label><input id="edit-member-name" maxlength="120" name="name" required=""/></div>
+<div><label for="edit-member-plan">Plan</label><select id="edit-member-plan" name="plan"><option>Adult</option><option>Kids</option><option>Military / First Responder</option><option>Family</option></select></div>
+<div><label for="edit-member-rank">Belt</label><select id="edit-member-rank" name="rank"><option>White Belt</option><option>Blue Belt</option><option>Purple Belt</option><option>Brown Belt</option><option>Black Belt</option></select></div><div><label for="edit-member-stripes">Stripes</label><select id="edit-member-stripes" name="stripes"><option value="0">No Stripes</option><option value="1">1 Stripe</option><option value="2">2 Stripes</option><option value="3">3 Stripes</option><option value="4">4 Stripes</option></select></div>
+<div><label for="edit-member-joined">Joined</label><input id="edit-member-joined" name="joinedAt" type="date"/></div>
+<div class="owner-checks"><label><input id="edit-member-paid" name="paid" type="checkbox"/> Paid / Current</label><label><input id="edit-member-active" name="active" type="checkbox"/> Active Membership</label><label><input id="edit-member-enabled" name="enabled" type="checkbox"/> Portal Enabled</label></div>
+<button class="btn btn-red btn-full owner-form-submit" type="submit">Save Changes</button>
+</form>
+</div>
+<div aria-live="polite" class="member-list" id="owner-member-list"></div>
+<div class="owner-list-foot"><span id="owner-load-note">Loads once when you open or manually refresh this page.</span><span>Maximum 250 members per read.</span></div>
+</div>
+</div>
+</div></section>
 </main>
-<script type="module" src="portal.js?v=launch-7-smart-routing"></script>
+<script src="portal.js?v=prod-11" type="module"></script>
 </body>
 </html>

@@ -17,6 +17,7 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
+  sendEmailVerification,
   updatePassword,
   reauthenticateWithCredential,
   EmailAuthProvider,
@@ -33,7 +34,6 @@ import {
   limit,
   serverTimestamp
 } from './firebase-client.js';
-import { PRIMARY_OWNER, DEVELOPER } from './launch-config.js';
 
 const MAX_OWNER_MEMBERS = 250;
 let ownerMembers = [];
@@ -161,10 +161,17 @@ async function openMemberForUser(user) {
       return;
     }
 
+    if (user.emailVerified !== true) {
+      await sendEmailVerification(user).catch(() => {});
+      await signOut(auth);
+      flash(message, 'Check your email and verify your address before opening the member portal. A verification email has been sent.', 'error');
+      return;
+    }
+
     const member = await getMemberRecord(user.email);
     if (!member) {
       await signOut(auth);
-      flash(message, 'Red Road has not added this email to the member roster yet.', 'error');
+      flash(message, 'This verified email does not currently have active portal access. Contact Red Road if you believe this is an error.', 'error');
       return;
     }
     renderMemberDashboard(member, user.email);
@@ -202,16 +209,12 @@ function setupMemberPage() {
       flash(message, 'Enter your member email and a password of at least 6 characters first.', 'error');
       return;
     }
-    let credential = null;
     try {
-      credential = await createUserWithEmailAndPassword(auth, memberEmail, memberPassword);
-      const member = await getMemberRecord(credential.user.email);
-      if (!member) {
-        await deleteUser(credential.user).catch(() => {});
-        flash(message, 'That email is not on the Red Road member roster yet. Ask the owner to add it first.', 'error');
-        return;
-      }
-      renderMemberDashboard(member, credential.user.email);
+      const credential = await createUserWithEmailAndPassword(auth, memberEmail, memberPassword);
+      await sendEmailVerification(credential.user);
+      await signOut(auth);
+      password.value = '';
+      flash(message, 'Activation started. Check your email, open the verification link, then return here and sign in. Portal access will only open for a verified email that Red Road has enabled.');
     } catch (error) {
       flash(message, friendlyError(error), 'error');
     }
@@ -439,9 +442,6 @@ function setupOwnerPage() {
   const password = $('#owner-login-password');
   const loginMessage = $('#owner-login-message');
   const ownerMessage = $('#owner-message');
-
-  // Convenience only — security comes from Firestore rules, not this prefill.
-  if (email && !email.value && PRIMARY_OWNER?.email) email.value = PRIMARY_OWNER.email;
 
   form.addEventListener('submit', async event => {
     event.preventDefault();

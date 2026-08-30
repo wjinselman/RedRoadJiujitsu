@@ -93,7 +93,11 @@ service cloud.firestore {
 
     // Member document ID = lowercase member email.
     match /members/{memberEmail} {
-      allow get: if (signedIn() && authEmail() == memberEmail) || isStaff();
+      allow get: if (signedIn()
+                    && authEmail() == memberEmail
+                    && request.auth.token.email_verified == true
+                    && resource.data.enabled == true
+                    && resource.data.archived != true) || isStaff();
       allow list: if isStaff()
                   && request.query.limit != null
                   && request.query.limit <= 250;

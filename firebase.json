@@ -7,25 +7,37 @@
       "firestore.indexes.json",
       "FIREBASE-LAUNCH-CHECKLIST.md",
       "**/.*",
-      "**/node_modules/**"
+      "**/node_modules/**",
+      "LAUNCH-STATUS.txt",
+      "SECURITY-NOTES.md",
+      "**/*.md"
     ],
     "headers": [
       {
         "source": "**/*.html",
         "headers": [
-          { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
         ]
       },
       {
         "source": "firebase-config.js",
         "headers": [
-          { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
         ]
       },
       {
         "source": "**/*.css",
         "headers": [
-          { "key": "Cache-Control", "value": "public, max-age=3600" }
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=3600"
+          }
         ]
       }
     ]

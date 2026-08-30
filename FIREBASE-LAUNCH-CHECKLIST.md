@@ -1,124 +1,107 @@
-# Red Road Jiu Jitsu — Launch Checklist
+# Red Road Jiu Jitsu — Production Launch Checklist
 
-## Current project
-
+## Project identity
+- Domain: `https://redroadbjj.com`
 - Firebase project: `red-road-jiujitsu`
-- Web app: Red Road Website
 - Primary Owner: Jeff Davis — `redroadjiujitsu@protonmail.com`
 - Developer: William Inselman — `wjinselman@gmail.com`
 - Authentication: Email/Password
 - Firestore: Standard edition
 
 ## Billing guardrail
-
-Keep this project on **Spark** and do **not attach a Cloud Billing account**.
+Keep this Firebase project on **Spark** and do **not attach a Cloud Billing account**.
 The portal intentionally uses no Firestore realtime listeners, no polling, no Cloud Functions, no automatic retry loops, and no background writes.
 
-## Firestore access records
-
-The following records should already exist:
-
+## Access records that must exist
 ### `owners/redroadjiujitsu@protonmail.com`
-
-- `email` string: `redroadjiujitsu@protonmail.com`
-- `name` string: `Jeff Davis`
-- `enabled` boolean: `true`
-- `createdAt` timestamp
-- `updatedAt` timestamp
+Fields: `email`, `name`, `enabled`, `createdAt`, `updatedAt`.
 
 ### `developers/wjinselman@gmail.com`
+Fields: `email`, `name`, `enabled`, `createdAt`, `updatedAt`.
 
-- `email` string: `wjinselman@gmail.com`
-- `name` string: `William Inselman`
-- `enabled` boolean: `true`
-- `createdAt` timestamp
-- `updatedAt` timestamp
+Developer records are console-managed only. Browser code cannot create/elevate a Developer.
 
-Developer records are console-managed only. The website cannot create or elevate a Developer.
-
-## Authentication users
-
-Firebase Authentication → Users should contain:
-
+## Authentication users that must exist
 - `redroadjiujitsu@protonmail.com`
 - `wjinselman@gmail.com`
 
-No Google account linking is required. Both use Email/Password Auth.
+No Google account linking is required.
 
 ## Security rules
+Publish the included `firestore.rules` before production use.
+Current rules:
+- deny unlisted paths by default;
+- let members read only their own member document;
+- let Owner/Developer staff query members only with an explicit maximum limit of 250;
+- let only Developers query/manage Owner access, capped at 50;
+- allow staff to permanently delete member roster documents;
+- prohibit browser/client creation, modification, listing, or deletion of Developer access.
 
-Publish the included `firestore.rules` before real member data is entered.
-The rules:
-
-- deny everything by default;
-- let a member read only the member document matching their authenticated email;
-- let Owner/Developer staff load the member roster only with an explicit limit of 250;
-- let only Developer accounts load/manage Owner access, capped at 50 records;
-- prohibit client-side document deletion;
-- prohibit any browser/client creation or modification of Developer access.
-
-## Firestore usage behavior
-
-- Member login/session restore: one member-document read.
-- Staff access check: Developer document check; Owner document check only if not Developer.
-- Owner dashboard: one bounded member query, maximum 250 documents.
-- Developer dashboard additionally: one bounded Owner query, maximum 50 documents.
+## Database usage behavior
+- Member page: bounded one-document access checks/read only.
+- Staff page: one-time access checks plus one bounded member query.
+- Developer additionally loads one bounded owner query.
 - Refresh happens only when the staff member presses Refresh.
-- Add/edit/enable/disable/remove: one explicit Firestore write per action.
-- Password changes/reset emails use Firebase Authentication, not Firestore.
+- Add/edit/enable/disable: one explicit Firestore write per action.
+- Remove: one explicit Firestore delete.
+- Password changes and password-reset emails use Firebase Authentication, not Firestore.
 - No `onSnapshot()`.
 - No polling.
-- No `setInterval()` database activity.
+- No database timers.
 - No Cloud Functions.
-- No destructive member delete button.
 
-## Member workflow
+## Member behavior
+1. Staff adds a member roster record first.
+2. Member uses the normal Member Login page.
+3. First-time activation creates Email/Password Auth only when the exact email is on the roster; an unapproved activation is deleted immediately when possible.
+4. Member can view rank, belt stripes, plan, joined date, paid/current status, active status and portal-enabled status.
+5. Members cannot change their own rank/status in Firestore.
+6. Belt and stripes are coach-controlled. Stripes are constrained to integer `0–4`.
 
-1. Jeff or William signs into `owner.html`.
-2. Add a member with name, email, plan, rank, join date, paid/current, active, and portal-enabled state.
-3. Member opens `members.html`.
-4. First-time member enters the exact roster email and chooses a password, then activates the account.
-5. Returning member signs in normally.
-6. Member sees rank, plan, join date, Active/Inactive, and Paid/Past Due status only.
-7. Staff can send a password-reset email from the member row.
+## Disable vs Remove
+- **Disable** keeps the Firestore member record and turns portal access off.
+- **Remove** permanently deletes the Firestore member record and removes the person from roster/stats.
+- On the Spark/no-backend architecture, another user's Firebase Authentication identity cannot be securely Admin-deleted by browser code. A removed member's dormant Auth identity may therefore remain, but without a member document it has no member portal access.
+- If a removed person is later re-added, they may need to sign in with/reset the existing Auth password rather than activate a brand-new Auth identity.
 
-## Owner / Developer workflow
+## Smart login routing
+- Normal Member Login is the single front door.
+- Developer account routes to `owner.html` with Developer controls.
+- Owner account routes to `owner.html` with Owner controls.
+- Normal members stay in `members.html`.
 
-Jeff (Owner) can:
+## Domain launch
+Before going live:
+1. Register/configure `redroadbjj.com` with the host.
+2. This package includes `CNAME` containing `redroadbjj.com` for GitHub Pages.
+3. Firebase Authentication → Settings → Authorized domains: add `redroadbjj.com` and `www.redroadbjj.com` if used.
+4. Google Cloud API key → Website restrictions: include `https://redroadbjj.com`, `https://redroadbjj.com/*`, and the www versions if used.
+5. Keep temporary GitHub Pages restrictions until the custom domain is fully tested.
+6. Confirm HTTPS and redirect behavior.
+7. Submit `https://redroadbjj.com/sitemap.xml` to Google Search Console after launch.
 
-- add/edit/disable/remove members;
-- enable/disable member portal access;
-- change rank/plan/status;
-- mark Paid/Past Due and Active/Inactive;
-- view roster percentages;
-- manually refresh the roster;
-- send member password-reset emails;
-- change his own password.
+## Mandatory real-world smoke test
+Use one disposable test member and verify:
+- Developer login and auto-route;
+- Jeff Owner login and auto-route;
+- add member;
+- first-time member activation;
+- member dashboard rank + stripes + paid/active status;
+- edit member;
+- disable then re-enable portal;
+- owner-triggered password-reset email;
+- member Forgot Password;
+- staff own-password change;
+- permanent Remove;
+- removed member cannot regain member portal access simply by signing in.
 
-William (Developer) can do everything an Owner can, plus:
+## Production snapshot
+Once the smoke test passes, archive this exact package as the known-good production baseline before further feature work.
 
-- load Owner/Coach access;
-- add Owner/Coach access;
-- enable/disable Owner/Coach access.
 
-Developer elevation remains Firebase-console-only.
-
-## Before custom domain launch
-
-1. Test Jeff Owner sign-in.
-2. Test William Developer sign-in and confirm the Developer Access panel appears.
-3. Add one test member.
-4. Activate that member account from `members.html`.
-5. Verify rank, payment and Active status display correctly.
-6. Test member password reset and Jeff's password change.
-7. Disable the test member and verify the portal shows disabled status.
-8. Disable/enable the test member, then permanently remove a disposable test member.
-9. Firebase Authentication → Settings → Authorized domains: add the purchased domain when known.
-10. Connect the domain to the chosen static host and retest password-reset links on the real domain.
-
-## Hosting
-
-The site is static and can be deployed to GitHub Pages or Firebase Hosting. The Firebase backend does not need to move when the domain changes. Keep links relative (`members.html`, `owner.html`, etc.).
-
-## Coach-controlled ranks
-Member rank is staff-managed only. Each member document stores `rank` (belt) plus `stripes` (integer 0–4). Members can read their own rank but cannot edit their Firestore member record.
+## Member activation hardening
+- Member self-activation creates an Auth identity but does **not** grant portal data access immediately.
+- Firebase sends a verification email; the member must verify ownership of the email before Firestore permits self-read access.
+- Firestore member self-read also requires `enabled == true` and `archived != true`.
+- Staff access remains independent and is controlled by the `owners` / `developers` permission records.
+- A member who encounters an existing Auth identity can use password reset to reclaim it through control of the mailbox.

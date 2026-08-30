@@ -1261,3 +1261,145 @@ html{scroll-padding-top:96px}
     padding-top:12px !important;
   }
 }
+
+/* === v10: physical mobile crest-first + true fixed underlay panel scroll === */
+
+/* The underlay is a real fixed visual plane, not a negative-z decoration. */
+.site-emblem-bg{
+  z-index:0 !important;
+  right:-12vw !important;
+  top:52% !important;
+  width:min(66vw,980px) !important;
+  opacity:.055 !important;
+  transform:translateY(-50%) rotate(-3deg) !important;
+  filter:grayscale(.18) contrast(1.1) drop-shadow(0 0 70px rgba(201,21,33,.10)) !important;
+  pointer-events:none !important;
+}
+body::before{
+  z-index:-1 !important;
+}
+.top,
+main,
+.footer{
+  position:relative;
+  z-index:2;
+}
+main{
+  background:transparent !important;
+}
+
+/* Desktop hero placement: markup is crest-first, grid puts copy left / crest right. */
+.hero-logo-mode .hero-layout{
+  display:grid !important;
+  grid-template-columns:minmax(0,.92fr) minmax(460px,1.08fr) !important;
+  grid-template-areas:"copy visual" !important;
+  align-items:center !important;
+  gap:0 !important;
+}
+.hero-logo-mode .hero-copy{
+  grid-area:copy !important;
+}
+.hero-logo-mode .hero-visual{
+  grid-area:visual !important;
+}
+
+/* Make the page read like layered sheets passing over a fixed brand underlay. */
+.section,
+.story-band{
+  position:relative !important;
+  isolation:isolate;
+  background:transparent !important;
+  overflow:visible !important;
+}
+.section::before,
+.story-band::before{
+  content:"" !important;
+  position:absolute !important;
+  inset:0 !important;
+  z-index:0 !important;
+  pointer-events:none !important;
+  background:linear-gradient(180deg,rgba(8,9,11,.86),rgba(8,9,11,.76)) !important;
+  border-top:1px solid rgba(255,255,255,.055) !important;
+  border-bottom:1px solid rgba(255,255,255,.045) !important;
+  box-shadow:0 -24px 80px rgba(0,0,0,.18),0 30px 90px rgba(0,0,0,.24) !important;
+  backdrop-filter:blur(3px) !important;
+  -webkit-backdrop-filter:blur(3px) !important;
+}
+.story-band::before{
+  background:linear-gradient(180deg,rgba(12,14,17,.90),rgba(9,11,14,.78)) !important;
+}
+.section:nth-of-type(even)::before{
+  background:linear-gradient(180deg,rgba(10,12,15,.82),rgba(7,9,12,.70)) !important;
+}
+.section > .shell,
+.story-band > .shell,
+.story-band > .story-grid{
+  position:relative !important;
+  z-index:1 !important;
+}
+
+/* Give the underlay a deliberate reveal at section boundaries. */
+.section + .section,
+.section + .story-band,
+.story-band + .section{
+  margin-top:22px !important;
+}
+.section + .section::after,
+.section + .story-band::after,
+.story-band + .section::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  top:-22px;
+  height:22px;
+  background:transparent;
+  pointer-events:none;
+}
+
+/* Mobile: markup itself is crest-first. No CSS reordering dependency. */
+@media(max-width:760px){
+  .hero-logo-mode .hero-layout{
+    display:flex !important;
+    flex-direction:column !important;
+    gap:0 !important;
+  }
+  .hero-logo-mode .hero-visual{
+    order:initial !important;
+    width:100% !important;
+    min-height:0 !important;
+    padding:72px 0 4px !important;
+  }
+  .hero-logo-mode .hero-copy{
+    order:initial !important;
+    width:100% !important;
+    max-width:none !important;
+    padding:14px 0 66px !important;
+  }
+  .hero-crest-wrap{
+    width:min(92vw,370px) !important;
+    gap:10px !important;
+  }
+  .hero-crest-blend{
+    width:min(80vw,300px) !important;
+  }
+  .hero-crest-meta{
+    margin-top:4px !important;
+  }
+  .site-emblem-bg{
+    right:-64vw !important;
+    width:150vw !important;
+    opacity:.03 !important;
+  }
+  .section + .section,
+  .section + .story-band,
+  .story-band + .section{
+    margin-top:10px !important;
+  }
+  .section::before,
+  .story-band::before{
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+    background:rgba(8,9,11,.91) !important;
+  }
+}

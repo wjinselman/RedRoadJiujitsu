@@ -7,7 +7,7 @@
 /* === Red Road scroll system + persistent emblem backdrop === */
 html{scroll-padding-top:88px}
 body{position:relative}
-.site-emblem-bg{position:fixed;z-index:-1;right:-9vw;top:50%;width:min(62vw,920px);aspect-ratio:1;background:url('assets/logo-remastered-transparent.png') center/contain no-repeat;transform:translateY(-50%) rotate(-5deg);opacity:.055;filter:grayscale(.08) contrast(1.08);pointer-events:none;will-change:transform}
+.site-emblem-bg{position:fixed;z-index:-1;right:-9vw;top:50%;width:min(62vw,920px);aspect-ratio:1;background:url('assets/red-road-master-crest.png') center/contain no-repeat;transform:translateY(-50%) rotate(-5deg);opacity:.055;filter:grayscale(.08) contrast(1.08);pointer-events:none;will-change:transform}
 .page-progress{position:fixed;z-index:100;left:0;right:0;top:0;height:2px;background:rgba(255,255,255,.03);pointer-events:none}.page-progress span{display:block;width:100%;height:100%;transform:scaleX(0);transform-origin:left center;background:linear-gradient(90deg,#8b0710,var(--red),#ff3a43);box-shadow:0 0 12px rgba(201,21,33,.65);will-change:transform}
 .scroll-rail{position:fixed;left:18px;top:50%;transform:translateY(-50%);z-index:65;width:112px;height:330px;padding:10px 0;pointer-events:auto}
 .scroll-rail:before,.scroll-rail:after{content:"";position:absolute;left:17px;width:26px;height:1px;background:linear-gradient(90deg,rgba(201,21,33,.9),transparent);box-shadow:0 0 10px rgba(201,21,33,.35)}.scroll-rail:before{top:0}.scroll-rail:after{bottom:0}
@@ -37,7 +37,7 @@ html{scroll-padding-top:96px}
   right:-6vw;
   top:53%;
   width:min(58vw, 860px);
-  background:url('assets/logo-remastered-transparent.png') center/contain no-repeat;
+  background:url('assets/red-road-master-crest.png') center/contain no-repeat;
   opacity:.075;
   filter:drop-shadow(0 0 36px rgba(201,21,33,.13)) saturate(.92) contrast(1.03);
 }
@@ -252,7 +252,7 @@ html{scroll-padding-top:96px}
   top:18px;
   width:min(38vw,280px);
   height:120px;
-  background:url('assets/logo-script-watermark.png') left center/contain no-repeat;
+  background:url('assets/red-road-master-crest.png') left center/contain no-repeat;
   opacity:.16;
   filter:drop-shadow(0 0 10px rgba(201,21,33,.08));
   pointer-events:none;
@@ -907,7 +907,7 @@ html{scroll-padding-top:96px}
   filter:drop-shadow(0 16px 34px rgba(0,0,0,.45)) drop-shadow(0 0 22px rgba(201,21,33,.13));
 }
 .site-emblem-bg{
-  background-image:url('assets/logo-remastered-transparent.png');
+  background-image:url('assets/red-road-master-crest.png');
   opacity:.032;
   filter:grayscale(.1) contrast(1.05) drop-shadow(0 0 36px rgba(201,21,33,.08));
 }
@@ -981,4 +981,73 @@ html{scroll-padding-top:96px}
   .footer-brand{gap:13px}
   .footer-logo{width:64px!important;height:64px;flex-basis:64px}
   .footer-brand strong{font-size:14px}
+}
+
+/* === MASTER CREST SYSTEM: canonical logo everywhere === */
+.site-emblem-bg{
+  background-image:url('assets/red-road-master-crest.png') !important;
+  opacity:.028 !important;
+  filter:grayscale(.15) contrast(1.08) !important;
+}
+.brand img{
+  width:60px !important;height:60px !important;object-fit:contain !important;
+  border:0 !important;border-radius:50% !important;padding:0 !important;background:transparent !important;
+  filter:drop-shadow(0 5px 14px rgba(0,0,0,.42)) !important;
+}
+.hero-logo-mode .hero-layout{
+  grid-template-columns:minmax(0,.92fr) minmax(460px,1.08fr) !important;
+  gap:0 !important;
+}
+.hero-logo-mode .hero-visual{
+  position:relative !important;min-height:650px !important;display:flex !important;
+  align-items:center !important;justify-content:center !important;overflow:visible !important;
+}
+.hero-logo-mode .hero-visual::before,
+.hero-logo-mode .hero-logo-stage,
+.hero-logo-mode .hero-stage-card,
+.hero-logo-mode .hero-stage-ring,
+.hero-logo-mode .hero-side-badges,
+.hero-logo-mode .hero-logo-card,
+.hero-logo-mode .hero-logo-orbit,
+.hero-logo-mode .hero-logo-caption,
+.hero-logo-mode .hero-logo-subcaption{display:none !important}
+.hero-crest-blend{
+  position:relative;width:min(46vw,650px);aspect-ratio:1;display:grid;place-items:center;
+  transform:translateX(3%);isolation:isolate;
+}
+.hero-crest-blend::before{
+  content:"";position:absolute;inset:4%;border-radius:50%;
+  background:radial-gradient(circle at 50% 50%,rgba(201,21,33,.22) 0%,rgba(201,21,33,.12) 36%,rgba(201,21,33,.04) 58%,transparent 74%);
+  filter:blur(28px);transform:scale(1.08);z-index:-2;
+}
+.hero-crest-blend::after{
+  content:"";position:absolute;inset:12%;border-radius:50%;border:1px solid rgba(255,255,255,.055);
+  box-shadow:0 0 0 22px rgba(201,21,33,.018),0 0 100px rgba(201,21,33,.10);z-index:-1;
+}
+.hero-crest-blend .hero-main-logo{
+  width:100% !important;max-width:none !important;height:auto !important;object-fit:contain !important;opacity:1 !important;
+  filter:drop-shadow(0 26px 55px rgba(0,0,0,.52)) drop-shadow(0 0 20px rgba(201,21,33,.13)) !important;
+  transform:none !important;
+}
+.gallery figure img[src*="red-road-master-crest"]{
+  object-fit:contain !important;padding:22px !important;
+  background:radial-gradient(circle at 50% 45%,rgba(201,21,33,.12),transparent 60%),#0d0f12 !important;
+  filter:drop-shadow(0 14px 28px rgba(0,0,0,.42)) !important;
+}
+.join-logo-panel{
+  background:radial-gradient(circle at 50% 50%,rgba(201,21,33,.15),transparent 54%),linear-gradient(135deg,#14161a,#0d0f12) !important;
+}
+.join-logo{width:min(78%,360px) !important;max-width:360px !important;filter:drop-shadow(0 18px 38px rgba(0,0,0,.45)) drop-shadow(0 0 18px rgba(201,21,33,.1)) !important}
+.footer-logo{width:78px !important;height:78px !important;object-fit:contain !important;filter:drop-shadow(0 8px 18px rgba(0,0,0,.4)) !important}
+@media(max-width:1180px){
+  .hero-logo-mode .hero-layout{grid-template-columns:1fr !important}
+  .hero-logo-mode .hero-visual{min-height:450px !important;padding:0 0 44px !important}
+  .hero-crest-blend{width:min(78vw,520px);transform:none}
+}
+@media(max-width:700px){
+  .brand img{width:48px !important;height:48px !important}
+  .hero-logo-mode .hero-visual{min-height:330px !important;padding-bottom:30px !important}
+  .hero-crest-blend{width:min(86vw,340px)}
+  .hero-crest-blend::before{filter:blur(18px)}
+  .footer-logo{width:64px !important;height:64px !important}
 }

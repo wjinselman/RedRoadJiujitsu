@@ -1708,3 +1708,172 @@ main,
     margin-bottom:22px !important;
   }
 }
+
+/* === v16 agency hero: crest blended behind headline === */
+.hero-watermark-mode{
+  min-height:760px !important;
+}
+.hero-watermark-mode .hero-layout{
+  display:block !important;
+  grid-template-columns:none !important;
+  grid-template-areas:none !important;
+  min-height:760px !important;
+}
+.hero-watermark-mode .hero-visual,
+.hero-watermark-mode .hero-crest-wrap,
+.hero-watermark-mode .hero-crest-meta,
+.hero-watermark-mode .hero-info-line,
+.hero-watermark-mode .hero-meta,
+.hero-watermark-mode .hero-spec-line{
+  display:none !important;
+}
+.hero-watermark-mode .hero-copy{
+  position:relative !important;
+  max-width:780px !important;
+  padding:128px 0 128px !important;
+  isolation:isolate;
+}
+.hero-copy-watermark{
+  position:absolute;
+  left:-10px;
+  top:18px;
+  width:min(42vw, 520px);
+  aspect-ratio:1;
+  display:block;
+  z-index:-1;
+  pointer-events:none;
+  opacity:1;
+}
+.hero-copy-watermark::before{
+  content:"";
+  position:absolute;
+  inset:4%;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(201,21,33,.18) 0%, rgba(201,21,33,.08) 34%, rgba(201,21,33,.025) 58%, transparent 74%);
+  filter:blur(34px);
+  transform:scale(1.08);
+  z-index:-1;
+}
+.hero-copy-watermark::after{
+  content:"";
+  position:absolute;
+  inset:-4%;
+  border-radius:50%;
+  background:radial-gradient(circle, transparent 58%, rgba(255,255,255,.035) 70%, rgba(201,21,33,.05) 78%, transparent 84%);
+  filter:blur(16px);
+  z-index:-1;
+}
+.hero-copy-watermark .hero-main-logo{
+  width:100%;
+  height:auto;
+  object-fit:contain;
+  opacity:.13;
+  filter:grayscale(.08) contrast(1.08) drop-shadow(0 24px 60px rgba(0,0,0,.42)) drop-shadow(0 0 18px rgba(201,21,33,.12));
+}
+.hero-watermark-mode .kicker{
+  position:relative;
+  z-index:2;
+  margin-bottom:18px !important;
+}
+.hero-watermark-mode h1,
+.hero-watermark-mode p,
+.hero-watermark-mode .hero-actions{
+  position:relative;
+  z-index:2;
+}
+.hero-watermark-mode h1{
+  max-width:670px;
+}
+.hero-watermark-mode p{
+  max-width:560px !important;
+}
+.hero-watermark-mode .hero-actions{margin-top:28px !important;}
+.hero-watermark-mode .hero-bg{
+  background:
+    radial-gradient(circle at 24% 28%, rgba(201,21,33,.13), transparent 20rem),
+    radial-gradient(circle at 82% 32%, rgba(201,21,33,.12), transparent 24rem),
+    linear-gradient(90deg, rgba(5,5,6,.99) 0%, rgba(5,5,6,.96) 28%, rgba(6,7,9,.90) 54%, rgba(7,8,10,.92) 100%) !important;
+}
+.hero-watermark-mode .hero-bg::after{
+  background:
+    linear-gradient(0deg, rgba(7,8,10,.98) 0%, rgba(7,8,10,.40) 24%, transparent 48%),
+    repeating-linear-gradient(118deg, transparent 0 92px, rgba(201,21,33,.028) 92px 94px) !important;
+}
+.quickbar{
+  margin-top:2px !important;
+  padding-top:30px !important;
+}
+.quickbar::before{
+  width:98px !important;
+  margin:0 auto 20px !important;
+}
+
+@media (max-width: 980px){
+  .hero-watermark-mode{
+    min-height:auto !important;
+  }
+  .hero-watermark-mode .hero-layout{
+    min-height:auto !important;
+  }
+  .hero-watermark-mode .hero-copy{
+    max-width:720px !important;
+    padding:112px 0 94px !important;
+  }
+  .hero-copy-watermark{
+    left:50%;
+    top:0;
+    width:min(62vw, 460px);
+    transform:translateX(-50%);
+  }
+  .hero-copy-watermark .hero-main-logo{
+    opacity:.10;
+  }
+}
+
+@media (max-width: 700px){
+  .hero-watermark-mode .hero-copy{
+    padding:102px 0 78px !important;
+  }
+  .hero-copy-watermark{
+    left:50%;
+    top:-8px;
+    width:min(78vw, 360px);
+    transform:translateX(-50%);
+  }
+  .hero-copy-watermark::before{
+    filter:blur(22px);
+  }
+  .hero-copy-watermark .hero-main-logo{
+    opacity:.09;
+  }
+  .hero-watermark-mode .hero-copy .kicker{
+    margin-top:0 !important;
+    padding-top:30px !important;
+    margin-bottom:20px !important;
+  }
+  .hero-watermark-mode h1{
+    max-width:100%;
+    margin-bottom:18px !important;
+  }
+  .hero-watermark-mode p{
+    max-width:100% !important;
+  }
+  .quickbar{
+    margin-top:10px !important;
+    padding-top:24px !important;
+  }
+  .quickbar::before{
+    width:64px !important;
+    margin-bottom:14px !important;
+  }
+}
+
+@media (max-width: 480px){
+  .hero-watermark-mode .hero-copy{
+    padding:98px 0 72px !important;
+  }
+  .hero-copy-watermark{
+    width:min(84vw, 330px);
+    top:-2px;
+  }
+}

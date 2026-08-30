@@ -526,3 +526,149 @@ html{scroll-padding-top:96px}
     padding:12px 15px;
   }
 }
+
+/* === v5 desktop cleanup: logo hero, no action photo, no RRJJ watermark === */
+.hero-logo-mode{
+  min-height:760px;
+  background:transparent;
+}
+.hero-logo-mode .hero-bg{
+  background:
+    radial-gradient(circle at 78% 45%, rgba(201,21,33,.18), transparent 22rem),
+    radial-gradient(circle at 74% 48%, rgba(255,255,255,.05), transparent 13rem),
+    linear-gradient(90deg,
+      rgba(5,5,6,.985) 0%,
+      rgba(5,5,6,.96) 22%,
+      rgba(5,5,6,.88) 42%,
+      rgba(8,9,11,.82) 62%,
+      rgba(8,9,11,.92) 100%);
+}
+.hero-logo-mode .hero-bg::after{
+  background:
+    linear-gradient(180deg, rgba(7,8,10,.96) 0%, rgba(7,8,10,.42) 38%, rgba(7,8,10,.98) 100%),
+    repeating-linear-gradient(118deg, transparent 0 92px, rgba(201,21,33,.028) 92px 94px);
+}
+.hero-logo-mode .hero-layout{
+  min-height:760px;
+  display:grid;
+  grid-template-columns:minmax(0, 1.05fr) minmax(360px, .95fr);
+  gap:24px;
+  align-items:center;
+}
+.hero-logo-mode .hero-copy{
+  max-width:660px;
+  padding:118px 0 118px;
+}
+.hero-logo-mode .hero-inner::before{
+  display:none !important;
+}
+.hero-logo-mode .hero-visual{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:620px;
+}
+.hero-logo-mode .hero-visual::before{
+  content:"";
+  position:absolute;
+  inset:10% 4% 10% 4%;
+  border-radius:32px;
+  background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01));
+  border:1px solid rgba(255,255,255,.06);
+  box-shadow:0 40px 120px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.05);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+.hero-logo-card{
+  position:relative;
+  z-index:1;
+  width:min(100%, 470px);
+  aspect-ratio:1/1.04;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:38px 28px 30px;
+}
+.hero-logo-orbit{
+  position:absolute;
+  inset:8% 10%;
+  border-radius:50%;
+  border:1px solid rgba(201,21,33,.22);
+  box-shadow:0 0 0 20px rgba(201,21,33,.035), 0 0 70px rgba(201,21,33,.12);
+}
+.hero-logo-orbit::before,
+.hero-logo-orbit::after{
+  content:"";
+  position:absolute;
+  border-radius:50%;
+  inset:-10%;
+  border:1px solid rgba(255,255,255,.05);
+}
+.hero-logo-orbit::after{
+  inset:8%;
+  border-color:rgba(201,21,33,.14);
+}
+.hero-main-logo{
+  position:relative;
+  z-index:1;
+  width:min(84%, 360px);
+  aspect-ratio:1;
+  object-fit:contain;
+  filter:drop-shadow(0 18px 48px rgba(0,0,0,.55)) drop-shadow(0 0 28px rgba(201,21,33,.12));
+}
+.hero-logo-caption{
+  margin-top:20px;
+  font-size:12px;
+  font-weight:950;
+  letter-spacing:.28em;
+  text-transform:uppercase;
+  color:#f0f0ec;
+}
+.hero-logo-subcaption{
+  margin-top:8px;
+  font-size:11px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:#9da2aa;
+}
+.hero-logo-mode .hero h1,
+.hero-logo-mode h1{ text-wrap:balance; }
+.hero-logo-mode .hero h1 .hero-line,
+.hero-logo-mode .hero h1 .hero-line-red{display:block}
+.hero-logo-mode .hero h1{font-size:clamp(4rem,7vw,6.8rem);line-height:.84;letter-spacing:-.01em;margin-bottom:24px}
+.hero-logo-mode .hero p{max-width:570px;font-size:17px;color:#cfd2d7}
+.hero-logo-mode .hero-actions{margin-top:28px}
+.site-emblem-bg{
+  right:-8vw;
+  width:min(46vw,740px);
+  top:53%;
+  opacity:.05;
+}
+.scroll-rail{left:18px;width:102px}
+.quickbar{margin-top:-44px}
+
+@media (max-width: 1180px){
+  .hero-logo-mode .hero-layout{grid-template-columns:1fr;gap:8px;padding-top:0}
+  .hero-logo-mode .hero-copy{max-width:720px;padding:110px 0 32px}
+  .hero-logo-mode .hero-visual{min-height:420px;padding:0 0 44px}
+  .hero-logo-mode .hero-visual::before{inset:6% 8% 12% 8%}
+  .site-emblem-bg{right:-22vw;width:78vw;opacity:.045}
+}
+@media (max-width: 760px){
+  .hero-logo-mode{min-height:unset}
+  .hero-logo-mode .hero-layout{min-height:unset}
+  .hero-logo-mode .hero-copy{padding:92px 0 20px}
+  .hero-logo-mode .hero h1,
+  .hero-logo-mode h1{font-size:clamp(3.4rem,16vw,5rem);line-height:.86}
+  .hero-logo-mode .hero p{font-size:15px;max-width:100%}
+  .hero-logo-mode .hero-visual{min-height:320px;padding:0 0 30px}
+  .hero-logo-mode .hero-visual::before{border-radius:24px;inset:2% 2% 6% 2%}
+  .hero-logo-card{width:min(100%,320px);padding:24px 14px 24px}
+  .hero-main-logo{width:min(84%,230px)}
+  .hero-logo-caption{font-size:10px;letter-spacing:.22em}
+  .hero-logo-subcaption{font-size:10px;letter-spacing:.12em}
+  .quickbar{margin-top:-18px}
+}

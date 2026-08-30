@@ -47,7 +47,7 @@ service cloud.firestore {
 
     function validMember(data, memberEmail) {
       return data.keys().hasOnly([
-          'email', 'name', 'rank', 'plan', 'paid', 'active',
+          'email', 'name', 'rank', 'stripes', 'plan', 'paid', 'active',
           'enabled', 'archived', 'joinedAt', 'createdAt', 'updatedAt'
         ])
         && data.email is string
@@ -57,6 +57,9 @@ service cloud.firestore {
         && data.name.size() <= 120
         && data.rank is string
         && data.rank.size() <= 80
+        && data.stripes is int
+        && data.stripes >= 0
+        && data.stripes <= 4
         && data.plan is string
         && data.plan.size() <= 80
         && data.paid is bool

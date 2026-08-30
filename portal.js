@@ -46,6 +46,17 @@ const esc = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;'
 const normalizedEmail = value => String(value || '').trim().toLowerCase();
 const todayIso = () => new Date().toISOString().slice(0, 10);
 
+const stripeCount = value => {
+  const n = Number(value);
+  return Number.isInteger(n) && n >= 0 && n <= 4 ? n : 0;
+};
+const formatRank = member => {
+  const belt = String(member?.rank || 'White Belt');
+  const stripes = stripeCount(member?.stripes);
+  if (stripes === 0) return belt;
+  return `${belt} · ${stripes} ${stripes === 1 ? 'Stripe' : 'Stripes'}`;
+};
+
 function flash(el, message, tone = 'ok') {
   if (!el) return;
   el.textContent = message;
@@ -111,7 +122,7 @@ function renderMemberDashboard(member, userEmail) {
   $('#member-dashboard').hidden = false;
   $('#member-name').textContent = member.name || 'Member';
   $('#member-email-display').textContent = userEmail || member.email || '';
-  $('#member-rank').textContent = member.rank || '—';
+  $('#member-rank').textContent = formatRank(member);
   $('#member-plan').textContent = member.plan || '—';
   $('#member-joined').textContent = member.joinedAt || '—';
 
@@ -233,6 +244,7 @@ function memberPayloadFromForm(form, previous = null) {
     email,
     name: String(fd.get('name') || '').trim(),
     rank: String(fd.get('rank') || 'White Belt'),
+    stripes: stripeCount(fd.get('stripes')),
     plan: String(fd.get('plan') || 'Adult'),
     paid: fd.get('paid') === 'on',
     active: fd.get('active') === 'on',
@@ -288,7 +300,7 @@ function renderOwnerList() {
   list.innerHTML = members.map(member => `
     <article class="member-row launch-member-row ${member.archived ? 'is-archived' : ''}" data-member-email="${esc(member.email)}">
       <div class="member-row-main"><strong>${esc(member.name)}</strong><span>${esc(member.email)}</span></div>
-      <div class="member-row-meta"><span>${esc(member.rank)}</span><span>${esc(member.plan)}</span><div class="member-pills">${statusPills(member)}</div></div>
+      <div class="member-row-meta"><span>${esc(formatRank(member))}</span><span>${esc(member.plan)}</span><div class="member-pills">${statusPills(member)}</div></div>
       <div class="member-row-actions">
         <button class="btn btn-mini btn-dark" type="button" data-action="edit">Edit</button>
         <button class="btn btn-mini btn-dark" type="button" data-action="reset-password">Reset Password</button>
@@ -307,15 +319,32 @@ async function loadOwnerMembers() {
   // ONE bounded query. No listener. No auto-refresh.
   const q = query(collection(db, 'members'), limit(MAX_OWNER_MEMBERS));
   const snap = await getDocs(q);
-  ownerMembers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  ownerMembers = snap.docs.map(d => { const data = d.data(); return { id: d.id, ...data, stripes: stripeCount(data.stripes) }; });
   renderOwner();
 }
 
 async function saveMember(member, previous = null) {
   const email = normalizedEmail(member.email);
   if (!email) throw new Error('Member email is required.');
-  const payload = { ...member, email };
-  if (previous?.createdAt) payload.createdAt = previous.createdAt;
+
+  // IMPORTANT: only persist fields explicitly allowed by firestore.rules.
+  // Roster objects also carry local UI helpers such as `id`; those must never
+  // be written back to Firestore or the rules will (correctly) reject them.
+  const payload = {
+    email,
+    name: String(member.name || '').trim(),
+    rank: String(member.rank || 'White Belt'),
+    stripes: stripeCount(member.stripes),
+    plan: String(member.plan || 'Adult'),
+    paid: member.paid === true,
+    active: member.active === true,
+    enabled: member.enabled === true,
+    archived: member.archived === true,
+    joinedAt: String(member.joinedAt || previous?.joinedAt || todayIso()),
+    createdAt: previous?.createdAt || member.createdAt || serverTimestamp(),
+    updatedAt: member.updatedAt || serverTimestamp()
+  };
+
   await setDoc(doc(db, 'members', email), payload, { merge: false }); // exactly one explicit write
 }
 
@@ -327,6 +356,7 @@ function openEditMember(member) {
   $('#edit-member-name').value = member.name || '';
   $('#edit-member-plan').value = member.plan || 'Adult';
   $('#edit-member-rank').value = member.rank || 'White Belt';
+  $('#edit-member-stripes').value = String(stripeCount(member.stripes));
   $('#edit-member-joined').value = member.joinedAt || '';
   $('#edit-member-paid').checked = member.paid === true;
   $('#edit-member-active').checked = member.active === true;

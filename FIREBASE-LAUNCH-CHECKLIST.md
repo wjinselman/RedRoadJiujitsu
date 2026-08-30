@@ -119,3 +119,6 @@ Developer elevation remains Firebase-console-only.
 ## Hosting
 
 The site is static and can be deployed to GitHub Pages or Firebase Hosting. The Firebase backend does not need to move when the domain changes. Keep links relative (`members.html`, `owner.html`, etc.).
+
+## Coach-controlled ranks
+Member rank is staff-managed only. Each member document stores `rank` (belt) plus `stripes` (integer 0–4). Members can read their own rank but cannot edit their Firestore member record.

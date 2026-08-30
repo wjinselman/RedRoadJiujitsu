@@ -92,7 +92,7 @@
             <div><label for="owner-name">Name</label><input id="owner-name" name="name" required maxlength="120" placeholder="Member name"></div>
             <div><label for="owner-email">Email</label><input id="owner-email" name="email" type="email" required placeholder="name@example.com"></div>
             <div><label for="owner-plan">Plan</label><select id="owner-plan" name="plan"><option>Adult</option><option>Kids</option><option>Military / First Responder</option><option>Family</option></select></div>
-            <div><label for="owner-rank">Rank</label><select id="owner-rank" name="rank"><option>White Belt</option><option>Blue Belt</option><option>Purple Belt</option><option>Brown Belt</option><option>Black Belt</option></select></div>
+            <div><label for="owner-rank">Belt</label><select id="owner-rank" name="rank"><option>White Belt</option><option>Blue Belt</option><option>Purple Belt</option><option>Brown Belt</option><option>Black Belt</option></select></div><div><label for="owner-stripes">Stripes</label><select id="owner-stripes" name="stripes"><option value="0">No Stripes</option><option value="1">1 Stripe</option><option value="2">2 Stripes</option><option value="3">3 Stripes</option><option value="4">4 Stripes</option></select></div>
             <div><label for="owner-joined">Joined</label><input id="owner-joined" name="joinedAt" type="date"></div>
             <div class="owner-checks"><label><input name="paid" type="checkbox" checked> Paid / Current</label><label><input name="active" type="checkbox" checked> Active Membership</label><label><input name="enabled" type="checkbox" checked> Portal Enabled</label></div>
             <button class="btn btn-red btn-full owner-form-submit" type="submit">Add Member</button>
@@ -105,7 +105,7 @@
             <input type="hidden" id="edit-member-email" name="email">
             <div><label for="edit-member-name">Name</label><input id="edit-member-name" name="name" required maxlength="120"></div>
             <div><label for="edit-member-plan">Plan</label><select id="edit-member-plan" name="plan"><option>Adult</option><option>Kids</option><option>Military / First Responder</option><option>Family</option></select></div>
-            <div><label for="edit-member-rank">Rank</label><select id="edit-member-rank" name="rank"><option>White Belt</option><option>Blue Belt</option><option>Purple Belt</option><option>Brown Belt</option><option>Black Belt</option></select></div>
+            <div><label for="edit-member-rank">Belt</label><select id="edit-member-rank" name="rank"><option>White Belt</option><option>Blue Belt</option><option>Purple Belt</option><option>Brown Belt</option><option>Black Belt</option></select></div><div><label for="edit-member-stripes">Stripes</label><select id="edit-member-stripes" name="stripes"><option value="0">No Stripes</option><option value="1">1 Stripe</option><option value="2">2 Stripes</option><option value="3">3 Stripes</option><option value="4">4 Stripes</option></select></div>
             <div><label for="edit-member-joined">Joined</label><input id="edit-member-joined" name="joinedAt" type="date"></div>
             <div class="owner-checks"><label><input id="edit-member-paid" name="paid" type="checkbox"> Paid / Current</label><label><input id="edit-member-active" name="active" type="checkbox"> Active Membership</label><label><input id="edit-member-enabled" name="enabled" type="checkbox"> Portal Enabled</label></div>
             <button class="btn btn-red btn-full owner-form-submit" type="submit">Save Changes</button>
@@ -118,6 +118,6 @@
     </div>
   </div></section>
 </main>
-<script type="module" src="portal.js?v=launch-3"></script>
+<script type="module" src="portal.js?v=launch-5-ranks"></script>
 </body>
 </html>

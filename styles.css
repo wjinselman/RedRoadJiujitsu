@@ -2232,7 +2232,7 @@ main,
   }
 }
 
-/* === v22 pricing tighten-up on mobile === */
+/* === v23 mobile-only pricing tighten-up (desktop reverted) === */
 @media (max-width: 700px){
   #pricing{
     padding-top:46px !important;

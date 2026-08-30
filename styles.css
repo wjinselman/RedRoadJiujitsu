@@ -7,7 +7,7 @@
 /* === Red Road scroll system + persistent emblem backdrop === */
 html{scroll-padding-top:88px}
 body{position:relative}
-.site-emblem-bg{position:fixed;z-index:-1;right:-9vw;top:50%;width:min(62vw,920px);aspect-ratio:1;background:url('assets/logo-round-transparent.png') center/contain no-repeat;transform:translateY(-50%) rotate(-5deg);opacity:.055;filter:grayscale(.08) contrast(1.08);pointer-events:none;will-change:transform}
+.site-emblem-bg{position:fixed;z-index:-1;right:-9vw;top:50%;width:min(62vw,920px);aspect-ratio:1;background:url('assets/logo-remastered-transparent.png') center/contain no-repeat;transform:translateY(-50%) rotate(-5deg);opacity:.055;filter:grayscale(.08) contrast(1.08);pointer-events:none;will-change:transform}
 .page-progress{position:fixed;z-index:100;left:0;right:0;top:0;height:2px;background:rgba(255,255,255,.03);pointer-events:none}.page-progress span{display:block;width:100%;height:100%;transform:scaleX(0);transform-origin:left center;background:linear-gradient(90deg,#8b0710,var(--red),#ff3a43);box-shadow:0 0 12px rgba(201,21,33,.65);will-change:transform}
 .scroll-rail{position:fixed;left:18px;top:50%;transform:translateY(-50%);z-index:65;width:112px;height:330px;padding:10px 0;pointer-events:auto}
 .scroll-rail:before,.scroll-rail:after{content:"";position:absolute;left:17px;width:26px;height:1px;background:linear-gradient(90deg,rgba(201,21,33,.9),transparent);box-shadow:0 0 10px rgba(201,21,33,.35)}.scroll-rail:before{top:0}.scroll-rail:after{bottom:0}
@@ -37,7 +37,7 @@ html{scroll-padding-top:96px}
   right:-6vw;
   top:53%;
   width:min(58vw, 860px);
-  background:url('assets/logo-round-transparent.png') center/contain no-repeat;
+  background:url('assets/logo-remastered-transparent.png') center/contain no-repeat;
   opacity:.075;
   filter:drop-shadow(0 0 36px rgba(201,21,33,.13)) saturate(.92) contrast(1.03);
 }
@@ -843,4 +843,142 @@ html{scroll-padding-top:96px}
   .hero-side-badges{grid-template-columns:1fr;gap:8px}
   .hero-side-badges span{min-height:44px;font-size:10px}
   .quickbar{margin-top:-12px}
+}
+
+/* === Final crest integration pass === */
+.brand img{
+  width:62px;
+  height:62px;
+  padding:0;
+  border:0;
+  border-radius:50%;
+  background:transparent;
+  object-fit:contain;
+  filter:drop-shadow(0 4px 12px rgba(0,0,0,.45)) drop-shadow(0 0 10px rgba(201,21,33,.16));
+  box-shadow:none;
+}
+.hero-main-logo{
+  width:min(92%, 410px);
+  filter:drop-shadow(0 28px 60px rgba(0,0,0,.58)) drop-shadow(0 0 42px rgba(201,21,33,.2));
+  transform:translateZ(0);
+}
+.hero-stage-card{
+  background:
+    radial-gradient(circle at 50% 42%, rgba(201,21,33,.12), transparent 38%),
+    linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.012));
+  border-color:rgba(255,255,255,.09);
+}
+.hero-stage-card::before{
+  content:"";
+  position:absolute;
+  inset:10% 8%;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(201,21,33,.11), transparent 60%);
+  filter:blur(12px);
+  z-index:-1;
+}
+.gallery figure:last-child{
+  background:
+    radial-gradient(circle at 50% 46%, rgba(201,21,33,.15), transparent 48%),
+    linear-gradient(180deg,#12151a,#0a0c0f);
+  border-color:rgba(201,21,33,.22);
+}
+.gallery figure:last-child img{
+  object-fit:contain;
+  padding:18px;
+  filter:drop-shadow(0 14px 28px rgba(0,0,0,.45)) drop-shadow(0 0 22px rgba(201,21,33,.16));
+  transform:none;
+}
+.gallery figure:last-child:hover img{
+  transform:scale(1.02);
+  filter:drop-shadow(0 16px 34px rgba(0,0,0,.5)) drop-shadow(0 0 26px rgba(201,21,33,.2));
+}
+.footer img{
+  background:transparent;
+  border-radius:50%;
+  object-fit:contain;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.35));
+}
+.location-map img{
+  background:transparent;
+  object-fit:contain;
+  border-radius:50%;
+  box-shadow:none !important;
+  filter:drop-shadow(0 16px 34px rgba(0,0,0,.45)) drop-shadow(0 0 22px rgba(201,21,33,.13));
+}
+.site-emblem-bg{
+  background-image:url('assets/logo-remastered-transparent.png');
+  opacity:.032;
+  filter:grayscale(.1) contrast(1.05) drop-shadow(0 0 36px rgba(201,21,33,.08));
+}
+@media(max-width:780px){
+  .brand img{width:50px;height:50px}
+  .hero-main-logo{width:min(88%,250px)}
+}
+
+/* === final join + footer crest polish === */
+.join-logo-panel{
+  position:relative;
+  overflow:hidden;
+  min-height:390px;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(201,21,33,.18), transparent 38%),
+    linear-gradient(135deg, rgba(34,12,16,.92), rgba(16,17,21,.96));
+}
+.join-logo-panel::before,
+.join-logo-panel::after{
+  content:"";
+  position:absolute;
+  border-radius:50%;
+  pointer-events:none;
+}
+.join-logo-panel::before{
+  width:360px;
+  height:360px;
+  border:1px solid rgba(201,21,33,.18);
+  box-shadow:0 0 0 24px rgba(201,21,33,.025),0 0 70px rgba(201,21,33,.10);
+}
+.join-logo-panel::after{
+  width:270px;
+  height:270px;
+  border:1px solid rgba(255,255,255,.06);
+}
+.join-logo{
+  position:relative;
+  z-index:2;
+  width:min(74%, 330px) !important;
+  height:auto;
+  border-radius:0 !important;
+  filter:drop-shadow(0 24px 42px rgba(0,0,0,.52)) drop-shadow(0 0 28px rgba(201,21,33,.18));
+}
+.footer-brand{
+  display:flex;
+  align-items:center;
+  gap:18px;
+}
+.footer-logo{
+  width:84px !important;
+  height:84px;
+  flex:0 0 84px;
+  border-radius:0 !important;
+  object-fit:contain;
+  filter:drop-shadow(0 8px 16px rgba(0,0,0,.4)) drop-shadow(0 0 12px rgba(201,21,33,.12));
+}
+.footer-brand strong{
+  font-size:16px;
+  letter-spacing:.08em;
+}
+.footer-brand > div > div{
+  margin-top:3px;
+}
+@media(max-width:900px){
+  .join-logo-panel{min-height:320px}
+  .join-logo{width:min(68%,280px)!important}
+}
+@media(max-width:600px){
+  .join-logo-panel{min-height:280px}
+  .join-logo{width:min(72%,245px)!important}
+  .footer-brand{gap:13px}
+  .footer-logo{width:64px!important;height:64px;flex-basis:64px}
+  .footer-brand strong{font-size:14px}
 }

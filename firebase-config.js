@@ -1,15 +1,13 @@
 // Red Road Jiu Jitsu — Firebase connection
-// Paste the Web App config from Firebase Console > Project settings > Your apps.
-// Keep this project on the Spark plan with NO Cloud Billing account attached.
+// Firebase Web App config is public client configuration; access is enforced by Auth + Firestore Security Rules.
+// Keep this Firebase project on Spark with NO Cloud Billing account attached.
 export const firebaseConfig = {
-  apiKey: "REPLACE_WITH_FIREBASE_API_KEY",
-  authDomain: "REPLACE_WITH_PROJECT.firebaseapp.com",
-  projectId: "REPLACE_WITH_PROJECT_ID",
-  storageBucket: "REPLACE_WITH_PROJECT.firebasestorage.app",
-  messagingSenderId: "REPLACE_WITH_SENDER_ID",
-  appId: "REPLACE_WITH_APP_ID"
+  apiKey: "AIzaSyBOlLYHqRjwJpsROyEJt2_mQ8iTjHuXJS0",
+  authDomain: "red-road-jiujitsu.firebaseapp.com",
+  projectId: "red-road-jiujitsu",
+  storageBucket: "red-road-jiujitsu.firebasestorage.app",
+  messagingSenderId: "197565623890",
+  appId: "1:197565623890:web:66ebe368cbaa9e4f33b98b"
 };
 
-export const firebaseConfigured = Object.values(firebaseConfig).every(
-  value => typeof value === "string" && value.length > 0 && !value.startsWith("REPLACE_")
-);
+export const firebaseConfigured = true;

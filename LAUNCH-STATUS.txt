@@ -1,0 +1,11 @@
+RED ROAD JIU JITSU — CONNECTED LAUNCH BUILD
+Firebase project: red-road-jiujitsu
+Owner: Jeff Davis <redroadjiujitsu@protonmail.com>
+Developer: William Inselman <wjinselman@gmail.com>
+Auth: Email/Password
+Firestore: Standard / bounded one-time reads only
+Analytics: NOT USED
+Realtime Firestore listeners: NONE
+Polling: NONE
+Cloud Functions: NONE
+Next: publish firestore.rules, deploy site, run test member flow, then add final domain to Firebase Authorized domains.

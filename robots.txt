@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /owner.html
+Disallow: /admin-demo.html
+Sitemap: https://redroadbjj.com/sitemap.xml

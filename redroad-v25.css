@@ -1842,3 +1842,84 @@ main,
 @media(max-width:900px){.owner-percentage-grid{grid-template-columns:1fr 1fr}.launch-owner-form{grid-template-columns:1fr 1fr}.launch-member-row{grid-template-columns:1fr}.member-row-meta{grid-template-columns:auto auto 1fr}.member-row-actions{width:100%}.member-row-actions .btn{flex:1}}
 @media(max-width:700px){.portal-hero.compact{text-align:center}.portal-hero .kicker{justify-content:center}.portal-hero .kicker:before{display:none}.owner-toolbar,.owner-member-head{align-items:center;text-align:center;flex-direction:column}.owner-toolbar-actions,.owner-member-tools{width:100%;justify-content:center}.owner-member-tools{align-items:stretch;flex-direction:column}.owner-search{width:100%}.owner-search input{width:100%}.owner-percentage-grid{grid-template-columns:1fr 1fr}.launch-owner-form{grid-template-columns:1fr}.owner-checks{grid-column:auto;justify-content:center}.launch-owner-form .owner-form-submit{grid-column:auto}.member-status-hero{text-align:center}.compact-member-grid{grid-template-columns:1fr}.member-dashboard .portal-card-head{align-items:center;text-align:center;flex-direction:column}.member-dashboard-grid .dash-stat{text-align:center}.member-actions{justify-content:center}.owner-list-foot{flex-direction:column;text-align:center}.member-row-main,.member-row-meta{text-align:center}.member-row-meta{grid-template-columns:1fr}.member-pills{justify-content:center}}
 @media(max-width:480px){.member-status-hero{grid-template-columns:1fr}.owner-percentage-grid{grid-template-columns:1fr 1fr}.owner-toolbar-actions{display:grid;grid-template-columns:1fr 1fr}.auth-secondary-actions{justify-content:center;text-align:center}.launch-member-row{padding:14px}.member-row-actions{display:grid;grid-template-columns:1fr 1fr}.member-row-actions .btn:last-child{grid-column:1/-1}}
+
+
+/* === v8 local SEO pages / discreet service area === */
+.service-area-footer{
+  margin-top:22px;
+  padding-top:17px;
+  border-top:1px solid rgba(255,255,255,.055);
+  text-align:center;
+  color:#5f646c;
+  font-size:10px;
+}
+.service-area-footer>span{
+  display:block;
+  margin-bottom:8px;
+  text-transform:uppercase;
+  letter-spacing:.14em;
+  font-weight:850;
+  color:#696e76;
+}
+.service-area-footer nav{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:4px 11px;
+}
+.service-area-footer a{color:#666b73;transition:color .2s ease}
+.service-area-footer a:hover{color:#a7abb2}
+
+.local-page{min-height:100vh;background:#08090b}
+.local-hero{
+  position:relative;
+  overflow:hidden;
+  padding:112px 0 72px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+  background:
+    radial-gradient(circle at 80% 25%,rgba(201,21,33,.14),transparent 26rem),
+    linear-gradient(135deg,#07080a,#111319);
+}
+.local-hero::after{
+  content:"";
+  position:absolute;
+  width:min(42vw,500px);
+  aspect-ratio:1;
+  right:-7vw;
+  top:50%;
+  transform:translateY(-50%);
+  background:url('assets/red-road-master-crest.png') center/contain no-repeat;
+  opacity:.055;
+  pointer-events:none;
+}
+.local-hero .shell{position:relative;z-index:1}
+.local-hero h1{
+  max-width:800px;
+  margin:0 0 20px;
+  font-family:Impact,Haettenschweiler,'Arial Narrow Bold',sans-serif;
+  font-size:clamp(3.5rem,8vw,7rem);
+  line-height:.88;
+  text-transform:uppercase;
+}
+.local-hero p{max-width:680px;color:#b3b7be;font-size:17px}
+.local-content{padding:62px 0 76px}
+.local-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:28px;align-items:start}
+.local-copy{padding:28px;border:1px solid #292d33;background:#101216}
+.local-copy h2{font-size:30px;margin-bottom:13px}
+.local-copy p{color:#a5aab2}
+.local-facts{display:grid;gap:12px}
+.local-fact{padding:20px;border:1px solid #292d33;background:#111318}
+.local-fact small{display:block;color:#777d86;font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+.local-fact strong{display:block;margin-top:5px;font-size:17px}
+.local-back{margin-top:24px;display:flex;gap:10px;flex-wrap:wrap}
+@media(max-width:700px){
+  .service-area-footer{padding-inline:8px}
+  .service-area-footer nav{gap:6px 10px}
+  .local-hero{padding:84px 0 54px;text-align:center}
+  .local-hero .kicker{justify-content:center}.local-hero .kicker:before{display:none}
+  .local-hero p{margin-left:auto;margin-right:auto}
+  .local-grid{grid-template-columns:1fr}
+  .local-copy,.local-fact{text-align:center}
+  .local-back{justify-content:center}
+  .local-hero::after{width:80vw;right:-38vw;opacity:.04}
+}

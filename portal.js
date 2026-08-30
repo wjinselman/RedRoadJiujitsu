@@ -152,6 +152,14 @@ async function openMemberForUser(user) {
   const message = $('#member-login-message');
   clearFlash(message);
   try {
+    // One public login door: staff are routed to the Owner/Developer dashboard.
+    // These are one-time document checks only; no listeners or polling.
+    const staff = await getStaffAccess(user.email);
+    if (staff) {
+      window.location.replace('owner.html');
+      return;
+    }
+
     const member = await getMemberRecord(user.email);
     if (!member) {
       await signOut(auth);

@@ -1979,3 +1979,40 @@ main,
     transform:translateX(-50%) !important;
   }
 }
+
+
+/* === v19 mobile crest viewport-center hard fix === */
+@media (max-width:760px){
+  .hero-watermark-mode .hero-copy{
+    width:100% !important;
+    max-width:none !important;
+    align-self:stretch !important;
+  }
+
+  .hero-watermark-mode .hero-copy-watermark{
+    position:relative !important;
+    left:50% !important;
+    right:auto !important;
+    width:min(82vw, 320px) !important;
+    max-width:320px !important;
+    margin:32px 0 0 !important;
+    transform:translateX(-50%) !important;
+    align-self:auto !important;
+  }
+
+  .hero-watermark-mode .hero-copy-watermark .hero-main-logo{
+    display:block !important;
+    width:100% !important;
+    height:auto !important;
+    margin:0 !important;
+    transform:none !important;
+  }
+}
+
+@media (max-width:480px){
+  .hero-watermark-mode .hero-copy-watermark{
+    width:min(84vw, 295px) !important;
+    max-width:295px !important;
+    margin-top:30px !important;
+  }
+}

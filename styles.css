@@ -2016,3 +2016,174 @@ main,
     margin-top:30px !important;
   }
 }
+
+/* === v20 mobile-centered homepage + no-gi info === */
+.quickgrid{
+  grid-template-columns:repeat(5,1fr) !important;
+}
+.quick:nth-child(4){
+  border-right:1px solid rgba(255,255,255,.08) !important;
+}
+.quick:last-child{
+  border-right:0 !important;
+}
+
+@media (max-width:980px){
+  .quickgrid{
+    grid-template-columns:1fr 1fr !important;
+  }
+  .quick{
+    border-right:1px solid rgba(255,255,255,.08) !important;
+    border-bottom:1px solid rgba(255,255,255,.08) !important;
+  }
+  .quick:nth-child(2n){
+    border-right:0 !important;
+  }
+  .quick:nth-child(5){
+    grid-column:1 / -1 !important;
+    border-right:0 !important;
+    border-bottom:0 !important;
+  }
+}
+
+@media (max-width:700px){
+  /* Mobile hero centered and clean */
+  .hero-watermark-mode .hero-copy{
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    text-align:center !important;
+    width:100% !important;
+    max-width:none !important;
+    padding:92px 0 34px !important;
+  }
+  .hero-watermark-mode .hero-copy .kicker{
+    width:100% !important;
+    justify-content:center !important;
+    text-align:center !important;
+    padding-top:30px !important;
+    margin-bottom:18px !important;
+  }
+  .hero-watermark-mode .hero-copy .kicker::before{
+    left:50% !important;
+    transform:translateX(-50%) !important;
+  }
+  .hero-watermark-mode h1,
+  .hero-watermark-mode p{
+    text-align:center !important;
+  }
+  .hero-watermark-mode p{
+    max-width:34ch !important;
+    margin-left:auto !important;
+    margin-right:auto !important;
+  }
+  .hero-watermark-mode .hero-actions{
+    justify-content:center !important;
+    width:100% !important;
+  }
+  .hero-watermark-mode .hero-copy-watermark{
+    position:relative !important;
+    left:auto !important;
+    right:auto !important;
+    top:auto !important;
+    transform:none !important;
+    width:min(82vw, 320px) !important;
+    max-width:320px !important;
+    margin:30px auto 0 !important;
+    order:5 !important;
+  }
+
+  /* Homepage sections centered on mobile */
+  .quickbar,
+  .quick,
+  .section-head,
+  .section-head h2,
+  .section-head p,
+  .class-card,
+  .class-card h3,
+  .class-card p,
+  .class-card .time,
+  .price,
+  .price h3,
+  .price span,
+  .story-copy,
+  .location-copy,
+  .location-map,
+  .footer,
+  .footer-grid,
+  .footer-brand,
+  .gallery figcaption{
+    text-align:center !important;
+  }
+  .section-head{
+    grid-template-columns:1fr !important;
+    justify-items:center !important;
+    gap:14px !important;
+  }
+  .section-head p{
+    max-width:34rem !important;
+    margin:0 auto !important;
+  }
+  .quickgrid{
+    width:min(100%, 540px) !important;
+  }
+  .quick{
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    justify-content:center !important;
+  }
+  .class-card{
+    justify-items:center !important;
+    text-align:center !important;
+  }
+  .class-card .pill,
+  .class-card .btn{
+    justify-self:center !important;
+  }
+  .price-grid,
+  .schedule,
+  .gallery,
+  .location-card{
+    justify-items:center !important;
+  }
+  .story-copy{
+    align-items:center !important;
+    padding-left:24px !important;
+    padding-right:24px !important;
+  }
+  .story-copy blockquote{
+    text-align:center !important;
+    border-left:0 !important;
+    border-top:3px solid var(--red) !important;
+    padding-left:0 !important;
+    padding-top:18px !important;
+  }
+  .location-copy,
+  .location-map{
+    display:flex !important;
+    flex-direction:column !important;
+    align-items:center !important;
+    justify-content:center !important;
+  }
+  .footer-grid,
+  .footer-brand{
+    flex-direction:column !important;
+    align-items:center !important;
+    justify-content:center !important;
+  }
+}
+
+@media (max-width:520px){
+  .quickgrid{
+    grid-template-columns:1fr !important;
+  }
+  .quick{
+    border-right:0 !important;
+    border-bottom:1px solid rgba(255,255,255,.08) !important;
+  }
+  .quick:nth-child(5){
+    grid-column:auto !important;
+    border-bottom:0 !important;
+  }
+}

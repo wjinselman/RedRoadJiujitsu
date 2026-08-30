@@ -1403,3 +1403,89 @@ main{
     background:rgba(8,9,11,.91) !important;
   }
 }
+
+/* === v11 mobile hero cleanup === */
+@media(max-width:760px){
+  .hero-side-badges,
+  .hero-spec-line,
+  .hero-meta,
+  .hero-info-line{
+    display:none !important;
+  }
+  .hero-visual{
+    margin-bottom:8px !important;
+  }
+}
+@media(max-width:760px){
+  .hero-crest-meta{display:none !important;}
+}
+
+/* === v12 agency polish === */
+:root{--ease-premium:cubic-bezier(.22,.78,.24,1)}
+body{background:#07080a}
+.top{box-shadow:0 10px 34px rgba(0,0,0,.12)}
+.reveal-section{transition:opacity .8s var(--ease-premium),transform .8s var(--ease-premium)}
+.section,.story-band{padding:84px 0}
+.section::before,.story-band::before{
+  inset:6px 0;
+  border-block:1px solid rgba(255,255,255,.035);
+  background:linear-gradient(180deg,rgba(9,10,13,.84),rgba(9,10,13,.76));
+  box-shadow:0 18px 70px rgba(0,0,0,.12);
+}
+.section::after,.story-band::after{
+  content:"";
+  position:absolute;
+  left:0;right:0;bottom:-18px;height:36px;
+  background:linear-gradient(180deg,rgba(7,8,10,0),rgba(7,8,10,.5) 46%,rgba(7,8,10,0));
+  pointer-events:none;
+  z-index:0;
+}
+.section-head{margin-bottom:30px}
+.quickbar{margin-top:-38px}
+.quickgrid{box-shadow:0 20px 60px rgba(0,0,0,.28)}
+.class-card,.price,.location-card,.gallery figure,.poster{transition:transform .32s var(--ease-premium),border-color .32s ease,box-shadow .32s ease}
+.class-card:hover,.price:hover,.gallery figure:hover,.poster:hover{transform:translateY(-3px)}
+.scroll-rail-link{transition:transform .25s var(--ease-premium),color .25s ease}
+.agency-credit{
+  display:inline-flex;align-items:center;gap:8px;
+  color:#92979f;font-size:11px;font-weight:850;letter-spacing:.12em;text-transform:uppercase;
+  transition:color .25s ease,transform .25s ease;
+}
+.agency-credit::before{content:"";width:24px;height:1px;background:var(--red);box-shadow:0 0 8px rgba(201,21,33,.35)}
+.agency-credit:hover{color:#fff;transform:translateX(2px)}
+
+/* Mobile hero breathing room + divider before kicker */
+@media(max-width:700px){
+  .hero-logo-mode .hero-copy{padding-top:28px !important}
+  .hero-logo-mode .hero-copy .kicker{
+    margin-top:18px;
+    padding-top:22px;
+    position:relative;
+  }
+  .hero-logo-mode .hero-copy .kicker::before{
+    content:"";
+    position:absolute;
+    left:0;
+    top:0;
+    width:54px;
+    height:2px;
+    background:linear-gradient(90deg,var(--red),rgba(201,21,33,.2));
+    box-shadow:0 0 12px rgba(201,21,33,.35);
+  }
+  .hero-logo-mode .hero-copy .kicker{gap:0}
+  .hero-logo-mode .hero-copy .kicker > *{display:none}
+  .hero-logo-mode .hero-copy .kicker::after{content:none}
+  .section,.story-band{padding:58px 0}
+  .section::before,.story-band::before{inset:2px 0}
+  .section::after,.story-band::after{bottom:-12px;height:24px}
+}
+@media(max-width:700px){
+  .hero-logo-mode .hero-copy .kicker::before{
+    width:54px !important;
+    height:2px !important;
+    flex:none !important;
+    position:absolute !important;
+    left:0 !important;
+    top:0 !important;
+  }
+}

@@ -1051,3 +1051,168 @@ html{scroll-padding-top:96px}
   .hero-crest-blend::before{filter:blur(18px)}
   .footer-logo{width:64px !important;height:64px !important}
 }
+
+/* === v8 hero: fully blended crest + editorial info row, zero boxes === */
+.hero-logo-mode .hero-visual{
+  position:relative !important;
+  min-height:650px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  overflow:visible !important;
+  background:none !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+.hero-logo-mode .hero-visual::before,
+.hero-logo-mode .hero-visual::after{
+  display:none !important;
+  content:none !important;
+}
+.hero-crest-wrap{
+  position:relative;
+  width:min(48vw,680px);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:20px;
+  padding:0 !important;
+  margin:0 !important;
+  background:none !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+.hero-crest-wrap::before,
+.hero-crest-wrap::after{
+  content:none !important;
+  display:none !important;
+}
+.hero-crest-blend{
+  position:relative;
+  width:min(100%,610px) !important;
+  aspect-ratio:1;
+  display:grid;
+  place-items:center;
+  transform:none !important;
+  background:none !important;
+  border:0 !important;
+  box-shadow:none !important;
+  border-radius:0 !important;
+  padding:0 !important;
+  overflow:visible !important;
+}
+.hero-crest-blend::before{
+  content:"" !important;
+  display:block !important;
+  position:absolute;
+  inset:8%;
+  border-radius:50%;
+  background:radial-gradient(circle,
+    rgba(201,21,33,.20) 0%,
+    rgba(201,21,33,.10) 35%,
+    rgba(201,21,33,.035) 56%,
+    transparent 74%);
+  filter:blur(38px);
+  transform:scale(1.08);
+  z-index:-2;
+  pointer-events:none;
+}
+.hero-crest-blend::after{
+  content:"" !important;
+  display:block !important;
+  position:absolute;
+  inset:4%;
+  border-radius:50%;
+  background:radial-gradient(circle,
+    transparent 54%,
+    rgba(201,21,33,.045) 72%,
+    transparent 82%);
+  filter:blur(12px);
+  z-index:-1;
+  pointer-events:none;
+  border:0 !important;
+  box-shadow:none !important;
+}
+.hero-crest-blend .hero-main-logo{
+  display:block;
+  width:100% !important;
+  height:auto !important;
+  max-width:none !important;
+  object-fit:contain !important;
+  opacity:1 !important;
+  background:transparent !important;
+  border:0 !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  filter:
+    drop-shadow(0 28px 48px rgba(0,0,0,.42))
+    drop-shadow(0 0 18px rgba(201,21,33,.10)) !important;
+}
+.hero-crest-meta{
+  width:min(100%,570px);
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  align-items:center;
+  gap:0;
+  padding:2px 0 0;
+  margin:0;
+  background:none !important;
+  border:0 !important;
+  box-shadow:none !important;
+}
+.hero-crest-meta span{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:34px;
+  padding:0 13px;
+  text-align:center;
+  color:#b9bdc4;
+  font-size:10px;
+  line-height:1.35;
+  font-weight:900;
+  letter-spacing:.11em;
+  text-transform:uppercase;
+  background:none !important;
+  border:0 !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+}
+.hero-crest-meta span + span::before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:50%;
+  width:1px;
+  height:20px;
+  transform:translateY(-50%);
+  background:linear-gradient(180deg,transparent,rgba(201,21,33,.72),transparent);
+}
+.hero-crest-meta::before{
+  content:"";
+  grid-column:1/-1;
+  height:1px;
+  width:74%;
+  margin:0 auto 15px;
+  background:linear-gradient(90deg,transparent,rgba(201,21,33,.45),transparent);
+}
+
+@media(max-width:1180px){
+  .hero-crest-wrap{width:min(82vw,560px)}
+  .hero-crest-blend{width:min(100%,500px) !important}
+  .hero-crest-meta{width:min(100%,540px)}
+}
+@media(max-width:700px){
+  .hero-crest-wrap{width:min(92vw,380px);gap:12px}
+  .hero-crest-blend{width:min(100%,320px) !important}
+  .hero-crest-meta{
+    grid-template-columns:1fr 1fr;
+    row-gap:10px;
+    width:min(100%,350px);
+  }
+  .hero-crest-meta::before{width:68%;margin-bottom:10px}
+  .hero-crest-meta span{font-size:9px;min-height:30px;padding:0 9px}
+  .hero-crest-meta span:nth-of-type(3)::before{display:none}
+}

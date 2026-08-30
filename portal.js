@@ -474,6 +474,7 @@ function setupOwnerPage() {
 
   $('#change-password-form')?.addEventListener('submit', async event => {
     event.preventDefault();
+    const form = event.currentTarget;
     clearFlash(ownerMessage);
     const currentPassword = String($('#staff-current-password')?.value || '');
     const newPassword = String($('#staff-new-password')?.value || '');
@@ -495,7 +496,7 @@ function setupOwnerPage() {
       const credential = EmailAuthProvider.credential(user.email, currentPassword);
       await reauthenticateWithCredential(user, credential);
       await updatePassword(user, newPassword);
-      event.currentTarget.reset();
+      form.reset();
       $('#change-password-panel').hidden = true;
       $('#toggle-change-password').setAttribute('aria-expanded', 'false');
       flash(ownerMessage, 'Password updated successfully.');
@@ -524,12 +525,13 @@ function setupOwnerPage() {
 
   $('#add-owner-form')?.addEventListener('submit', async event => {
     event.preventDefault();
+    const form = event.currentTarget;
     clearFlash(ownerMessage);
     if (ownerIdentity?.role !== 'developer') {
       flash(ownerMessage, 'Developer access required.', 'error');
       return;
     }
-    const fd = new FormData(event.currentTarget);
+    const fd = new FormData(form);
     const person = {
       name: String(fd.get('name') || '').trim(),
       email: normalizedEmail(fd.get('email')),
@@ -547,8 +549,8 @@ function setupOwnerPage() {
       await saveOwnerAccess(person);
       ownerAccess.push({ ...person, createdAt: new Date(), updatedAt: new Date() });
       renderOwnerAccess();
-      event.currentTarget.reset();
-      event.currentTarget.querySelector('[name="enabled"]').checked = true;
+      form.reset();
+      form.querySelector('[name="enabled"]').checked = true;
       $('#add-owner-panel').hidden = true;
       $('#toggle-add-owner').setAttribute('aria-expanded', 'false');
       flash(ownerMessage, `${person.name} can now activate an Owner account with ${person.email}.`);
@@ -585,8 +587,9 @@ function setupOwnerPage() {
 
   $('#add-member-form')?.addEventListener('submit', async event => {
     event.preventDefault();
+    const form = event.currentTarget;
     clearFlash(ownerMessage);
-    const member = memberPayloadFromForm(event.currentTarget);
+    const member = memberPayloadFromForm(form);
     if (ownerMembers.some(m => normalizedEmail(m.email) === member.email)) {
       flash(ownerMessage, 'That member email already exists. Use Edit instead.', 'error');
       return;
@@ -594,7 +597,7 @@ function setupOwnerPage() {
     try {
       await saveMember(member);
       ownerMembers.push({ ...member, createdAt: new Date(), updatedAt: new Date() });
-      event.currentTarget.reset();
+      form.reset();
       $('#owner-joined').value = todayIso();
       $('#add-member-panel').hidden = true;
       $('#toggle-add-member').setAttribute('aria-expanded', 'false');

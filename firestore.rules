@@ -99,8 +99,8 @@ service cloud.firestore {
                   && request.query.limit <= 250;
       allow create, update: if isStaff()
                             && validMember(request.resource.data, memberEmail);
-      // Normal removal is archive/disable. Destructive client deletes are prohibited.
-      allow delete: if false;
+      // Staff-only permanent roster removal. Authentication identities are managed separately.
+      allow delete: if isStaff();
     }
 
     // Explicit deny-by-default for anything not listed above.

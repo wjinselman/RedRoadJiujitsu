@@ -64,7 +64,7 @@ The rules:
 - Owner dashboard: one bounded member query, maximum 250 documents.
 - Developer dashboard additionally: one bounded Owner query, maximum 50 documents.
 - Refresh happens only when the staff member presses Refresh.
-- Add/edit/enable/disable/archive: one explicit Firestore write per action.
+- Add/edit/enable/disable/remove: one explicit Firestore write per action.
 - Password changes/reset emails use Firebase Authentication, not Firestore.
 - No `onSnapshot()`.
 - No polling.
@@ -86,7 +86,7 @@ The rules:
 
 Jeff (Owner) can:
 
-- add/edit/archive members;
+- add/edit/disable/remove members;
 - enable/disable member portal access;
 - change rank/plan/status;
 - mark Paid/Past Due and Active/Inactive;
@@ -112,7 +112,7 @@ Developer elevation remains Firebase-console-only.
 5. Verify rank, payment and Active status display correctly.
 6. Test member password reset and Jeff's password change.
 7. Disable the test member and verify the portal shows disabled status.
-8. Archive/restore the test member.
+8. Disable/enable the test member, then permanently remove a disposable test member.
 9. Firebase Authentication → Settings → Authorized domains: add the purchased domain when known.
 10. Connect the domain to the chosen static host and retest password-reset links on the real domain.
 

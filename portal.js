@@ -5,7 +5,7 @@
     - Member page: one getDoc on login/session restore.
     - Staff page: Developer check (and Owner check if needed) + one bounded member query. Developer additionally loads a bounded owner list.
     - Refresh happens ONLY when the owner presses Refresh.
-    - Writes happen ONLY when the owner presses Add/Save/Enable/Disable/Archive.
+    - Writes happen ONLY when the owner presses Add/Save/Enable/Disable/Remove.
     - NO realtime listeners (no onSnapshot).
     - NO polling / intervals.
     - NO Cloud Functions.
@@ -27,6 +27,7 @@ import {
   getDoc,
   getDocs,
   setDoc,
+  deleteDoc,
   collection,
   query,
   limit,
@@ -313,7 +314,7 @@ function renderOwnerList() {
         <button class="btn btn-mini btn-dark" type="button" data-action="edit">Edit</button>
         <button class="btn btn-mini btn-dark" type="button" data-action="reset-password">Reset Password</button>
         <button class="btn btn-mini btn-dark" type="button" data-action="toggle-enabled">${member.enabled ? 'Disable' : 'Enable'}</button>
-        <button class="btn btn-mini btn-quiet" type="button" data-action="archive">${member.archived ? 'Restore' : 'Remove'}</button>
+        <button class="btn btn-mini btn-quiet" type="button" data-action="remove">Remove</button>
       </div>
     </article>`).join('');
 }
@@ -668,23 +669,30 @@ function setupOwnerPage() {
       return;
     }
 
+    if (button.dataset.action === 'remove') {
+      const confirmed = window.confirm(
+        `Permanently remove ${member.name} from Red Road?\n\nThis deletes the membership record and removes them from roster/stats. Disable should be used when you only want to block access.`
+      );
+      if (!confirmed) return;
+      try {
+        await deleteDoc(doc(db, 'members', normalizedEmail(member.email)));
+        ownerMembers = ownerMembers.filter(m => normalizedEmail(m.email) !== normalizedEmail(member.email));
+        renderOwner();
+        flash(ownerMessage, `${member.name} permanently removed from the Red Road membership roster.`);
+      } catch (error) {
+        flash(ownerMessage, friendlyError(error), 'error');
+      }
+      return;
+    }
+
     const updated = { ...member, updatedAt: serverTimestamp() };
     if (button.dataset.action === 'toggle-enabled') updated.enabled = !member.enabled;
-    if (button.dataset.action === 'archive') {
-      updated.archived = !member.archived;
-      if (updated.archived) {
-        updated.enabled = false;
-        updated.active = false;
-      }
-    }
 
     try {
       await saveMember(updated, member);
       Object.assign(member, updated);
       renderOwner();
-      flash(ownerMessage, button.dataset.action === 'archive'
-        ? `${member.name} ${member.archived ? 'removed from the active roster' : 'restored'}.`
-        : `${member.name} portal access ${member.enabled ? 'enabled' : 'disabled'}.`);
+      flash(ownerMessage, `${member.name} portal access ${member.enabled ? 'enabled' : 'disabled'}.`);
     } catch (error) {
       flash(ownerMessage, friendlyError(error), 'error');
     }

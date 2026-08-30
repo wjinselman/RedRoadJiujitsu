@@ -1944,3 +1944,38 @@ main,
     padding-top:90px !important;
   }
 }
+
+/* === v18 mobile crest true-center fix === */
+@media (max-width: 760px){
+  .hero-mobile-crest,
+  .hero-mobile-logo,
+  .hero-copy-watermark,
+  .hero-crest-blend{
+    left:auto !important;
+    right:auto !important;
+    margin-left:auto !important;
+    margin-right:auto !important;
+    transform:none !important;
+  }
+  .hero-mobile-crest,
+  .hero-mobile-logo{
+    display:block !important;
+    width:min(82vw, 330px) !important;
+    max-width:330px !important;
+    text-align:center !important;
+  }
+  .hero-mobile-crest img,
+  .hero-mobile-logo img{
+    display:block !important;
+    margin:0 auto !important;
+  }
+  .hero-watermark-mode .hero-copy{
+    text-align:left !important;
+  }
+  .hero-watermark-mode .hero-copy .hero-mobile-crest,
+  .hero-watermark-mode .hero-copy .hero-mobile-logo{
+    position:relative !important;
+    left:50% !important;
+    transform:translateX(-50%) !important;
+  }
+}

@@ -1,0 +1,108 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null && request.auth.token.email != null;
+    }
+
+    function authEmail() {
+      return request.auth.token.email.lower();
+    }
+
+    function developerPath() {
+      return /databases/$(database)/documents/developers/$(authEmail());
+    }
+
+    function ownerPath() {
+      return /databases/$(database)/documents/owners/$(authEmail());
+    }
+
+    function isDeveloper() {
+      return signedIn()
+        && exists(developerPath())
+        && get(developerPath()).data.enabled == true;
+    }
+
+    function isOwner() {
+      return signedIn()
+        && exists(ownerPath())
+        && get(ownerPath()).data.enabled == true;
+    }
+
+    function isStaff() {
+      return isDeveloper() || isOwner();
+    }
+
+    function validOwner(data, ownerEmail) {
+      return data.keys().hasOnly(['email', 'name', 'enabled', 'createdAt', 'updatedAt'])
+        && data.email is string
+        && data.email.lower() == ownerEmail
+        && data.name is string
+        && data.name.size() > 0
+        && data.name.size() <= 120
+        && data.enabled is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function validMember(data, memberEmail) {
+      return data.keys().hasOnly([
+          'email', 'name', 'rank', 'plan', 'paid', 'active',
+          'enabled', 'archived', 'joinedAt', 'createdAt', 'updatedAt'
+        ])
+        && data.email is string
+        && data.email.lower() == memberEmail
+        && data.name is string
+        && data.name.size() > 0
+        && data.name.size() <= 120
+        && data.rank is string
+        && data.rank.size() <= 80
+        && data.plan is string
+        && data.plan.size() <= 80
+        && data.paid is bool
+        && data.active is bool
+        && data.enabled is bool
+        && data.archived is bool
+        && data.joinedAt is string
+        && data.joinedAt.size() <= 10
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    // ROOT ACCESS: developer records are console-managed only.
+    // No browser/client code can create, update, list, or delete developer access.
+    match /developers/{developerEmail} {
+      allow get: if signedIn() && authEmail() == developerEmail;
+      allow list, create, update, delete: if false;
+    }
+
+    // OWNER ACCESS: each owner can verify only their own access record.
+    // Developers can manage the owner list from the Developer dashboard.
+    match /owners/{ownerEmail} {
+      allow get: if (signedIn() && authEmail() == ownerEmail) || isDeveloper();
+      allow list: if isDeveloper()
+                  && request.query.limit != null
+                  && request.query.limit <= 50;
+      allow create, update: if isDeveloper()
+                            && validOwner(request.resource.data, ownerEmail);
+      allow delete: if false;
+    }
+
+    // Member document ID = lowercase member email.
+    match /members/{memberEmail} {
+      allow get: if (signedIn() && authEmail() == memberEmail) || isStaff();
+      allow list: if isStaff()
+                  && request.query.limit != null
+                  && request.query.limit <= 250;
+      allow create, update: if isStaff()
+                            && validMember(request.resource.data, memberEmail);
+      // Normal removal is archive/disable. Destructive client deletes are prohibited.
+      allow delete: if false;
+    }
+
+    // Explicit deny-by-default for anything not listed above.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

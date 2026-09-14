@@ -161,7 +161,7 @@ async function openMemberForUser(user) {
     // These are one-time document checks only; no listeners or polling.
     const staff = await getStaffAccess(user.email);
     if (staff) {
-      window.location.replace('owner.html');
+      window.location.replace('https://wjinselman.github.io/RedRoadJiujitsu/owner.html?v=prod16');
       return;
     }
 

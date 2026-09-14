@@ -59,6 +59,7 @@ body{background:#07080a}
 .status-chip.pending{color:#ffd09b;border-color:rgba(224,147,47,.35);background:rgba(224,147,47,.1)}
 
 @media(max-width:1000px){.program-grid{grid-template-columns:1fr 1fr}.program-card:last-child{grid-column:1/-1;min-height:430px}.visit-grid{grid-template-columns:1fr 1fr}}
+@media(min-width:1001px){.top .links a[href*="story.html"]{white-space:nowrap}}
 @media(max-width:760px){
   body{padding-bottom:82px}
   .mobile-trial-bar{display:block}

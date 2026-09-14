@@ -85,7 +85,7 @@ body{background:#07080a}
   pointer-events:none;
   background:url('assets/red-road-hero-action.png') center 48% / cover no-repeat;
   filter:saturate(.72) contrast(1.08);
-  opacity:.46;
+  opacity:.68;
 }
 .hero-logo-mode .hero-bg{
   z-index:1;
@@ -95,8 +95,8 @@ body{background:#07080a}
       rgba(4,5,7,.99) 0%,
       rgba(4,5,7,.94) 25%,
       rgba(5,6,8,.76) 45%,
-      rgba(5,6,8,.38) 67%,
-      rgba(5,6,8,.54) 100%) !important;
+      rgba(5,6,8,.3) 67%,
+      rgba(5,6,8,.42) 100%) !important;
 }
 .hero-logo-mode .hero-bg::after{
   background:
@@ -112,7 +112,7 @@ body{background:#07080a}
   .hero-logo-mode .hero-action-photo{
     background-position:53% center;
     filter:saturate(.62) contrast(1.08);
-    opacity:.32;
+    opacity:.52;
   }
   .hero-logo-mode .hero-bg{
     background:
@@ -126,4 +126,188 @@ body{background:#07080a}
   .hero-logo-mode .hero-bg::after{
     background:linear-gradient(90deg,rgba(7,8,10,.38),transparent 50%,rgba(7,8,10,.28)) !important;
   }
+}
+
+/* === prod-22: real mobile navigation === */
+.mobile-nav-panel{display:none}
+@media(max-width:900px){
+  .top .nav{min-height:70px}
+  .top .nav>.btn-red{display:none!important}
+  .top .nav>.nav-return{display:none!important}
+  .mobile-menu{
+    display:inline-flex!important;
+    min-width:82px;
+    min-height:44px;
+    padding:10px 14px;
+    color:#fff;
+    font:inherit;
+    font-size:11px;
+    font-weight:900;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+  .mobile-menu-toggle::after{
+    content:"";
+    width:16px;
+    height:11px;
+    margin-left:8px;
+    border-top:2px solid currentColor;
+    border-bottom:2px solid currentColor;
+    box-shadow:inset 0 4px transparent,inset 0 6px currentColor;
+  }
+  .mobile-nav-panel{
+    display:block;
+    position:absolute;
+    top:100%;
+    left:0;
+    right:0;
+    z-index:120;
+    padding:10px 12px 16px;
+    border-top:1px solid rgba(255,255,255,.08);
+    border-bottom:1px solid rgba(255,255,255,.12);
+    background:rgba(7,8,10,.98);
+    box-shadow:0 28px 60px rgba(0,0,0,.58);
+    backdrop-filter:blur(18px);
+    -webkit-backdrop-filter:blur(18px);
+    opacity:0;
+    visibility:hidden;
+    pointer-events:none;
+    transform:translateY(-8px);
+    transition:opacity .2s ease,transform .2s ease,visibility .2s ease;
+  }
+  .mobile-nav-panel.is-open{
+    opacity:1;
+    visibility:visible;
+    pointer-events:auto;
+    transform:none;
+  }
+  .mobile-nav-links{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:7px;
+    width:min(100%,620px);
+    margin:0 auto;
+  }
+  .mobile-nav-links a{
+    display:flex;
+    align-items:center;
+    min-height:46px;
+    padding:11px 13px;
+    border:1px solid rgba(255,255,255,.09);
+    border-radius:7px;
+    background:#111318;
+    color:#f2f2ef;
+    font-size:11px;
+    font-weight:900;
+    letter-spacing:.06em;
+    text-transform:uppercase;
+  }
+  .mobile-nav-links a:hover,.mobile-nav-links a:focus-visible{border-color:rgba(226,12,27,.58);background:#171a20}
+  .mobile-nav-links .mobile-nav-primary{
+    grid-column:1/-1;
+    justify-content:center;
+    border-color:transparent;
+    background:linear-gradient(135deg,#e31d2a,#a60812);
+  }
+}
+
+/* === prod-22: shorter, cleaner homepage on phones === */
+@media(max-width:700px){
+  .home-page .section,
+  .home-page .story-band{padding:44px 0!important}
+  .home-page .section+.section,
+  .home-page .section+.story-band,
+  .home-page .story-band+.section{margin-top:6px!important}
+  .home-page .section-head{margin-bottom:20px!important;gap:8px!important}
+  .home-page .section-head h2{font-size:clamp(2.55rem,12vw,3.55rem)!important}
+  .home-page .section-head p{font-size:14px!important;line-height:1.5!important}
+
+  .home-page .quickbar{padding-top:14px!important;margin-top:4px!important}
+  .home-page .quickbar::before{margin-bottom:10px!important}
+  .home-page .quickgrid{grid-template-columns:1fr 1fr!important}
+  .home-page .quick{padding:13px 12px!important;border-bottom:1px solid rgba(255,255,255,.08)!important}
+  .home-page .quick:nth-child(odd){border-right:1px solid rgba(255,255,255,.08)!important}
+  .home-page .quick:nth-child(even){border-right:0!important}
+  .home-page .quick:nth-last-child(-n+2){border-bottom:0!important}
+  .home-page .quick strong{font-size:13px!important}
+
+  .home-page .programs-section{padding-top:52px!important}
+  .home-page .program-card,
+  .home-page .program-card:last-child{min-height:320px!important;padding:24px!important}
+  .home-page .program-card h3{font-size:clamp(2rem,11vw,3rem)!important}
+
+  .home-page #schedule .poster{display:none!important}
+  .home-page .schedule-wrap{display:block!important}
+  .home-page .schedule{gap:9px!important}
+  .home-page .class-card{padding:17px!important;gap:10px!important}
+  .home-page .class-card .time{font-size:20px!important}
+  .home-page .class-card p{font-size:13px!important;line-height:1.45!important}
+  .home-page .schedule-note{margin-top:5px!important;padding:13px!important}
+
+  .home-page .bullyproof-grid{gap:24px!important}
+  .home-page .bullyproof-poster{width:min(72vw,280px)!important}
+  .home-page .bullyproof-copy{text-align:center}
+  .home-page .bullyproof-copy .kicker,
+  .home-page .bullyproof-copy .hero-actions{justify-content:center}
+  .home-page .bullyproof-copy h2{font-size:clamp(3rem,15vw,4.4rem)!important;margin-bottom:14px!important}
+  .home-page .bullyproof-copy>p{font-size:14px!important}
+  .home-page .bullyproof-points{grid-template-columns:1fr 1fr!important;gap:7px!important;margin:17px 0!important}
+  .home-page .bullyproof-points span{padding:10px 8px!important;font-size:10px!important}
+
+  .home-page .price{padding:17px 13px!important}
+  .home-page .price h3{font-size:14px!important;margin-bottom:10px!important}
+  .home-page .price strong{font-size:29px!important}
+
+  .home-page .coaches-feature{display:block!important}
+  .home-page .coaches-photo{min-height:280px!important}
+  .home-page .coach-intro{display:none!important}
+  .home-page .coaches-roster{grid-template-columns:1fr 1fr!important;gap:8px!important;margin-top:8px!important}
+  .home-page .coach-card{min-height:150px!important;padding:18px 14px!important}
+  .home-page .coach-role{margin-bottom:10px!important;font-size:8px!important}
+  .home-page .coach-card h3{font-size:24px!important;margin-bottom:9px!important}
+  .home-page .coach-card p{font-size:12px!important}
+
+  .home-page .story-grid{display:block!important;min-height:0!important}
+  .home-page .story-photo{display:none!important}
+  .home-page .story-copy{padding:10px 18px!important;text-align:center}
+  .home-page .story-copy .kicker{justify-content:center}
+  .home-page .story-copy blockquote{font-size:19px!important;margin:15px 0!important;text-align:left}
+  .home-page .story-copy p{font-size:13px!important}
+
+  .home-page .gallery{
+    display:flex!important;
+    gap:10px!important;
+    grid-template:none!important;
+    overflow-x:auto;
+    scroll-snap-type:x mandatory;
+    padding-bottom:10px;
+    scrollbar-width:thin;
+  }
+  .home-page .gallery figure,
+  .home-page .gallery figure:first-child{
+    flex:0 0 82vw!important;
+    height:270px!important;
+    grid-column:auto!important;
+    grid-row:auto!important;
+    scroll-snap-align:center;
+  }
+
+  .home-page .visit-grid{grid-template-columns:1fr 1fr!important;gap:8px!important}
+  .home-page .visit-card{min-height:155px!important;padding:17px 14px!important}
+  .home-page .visit-card>b{width:30px!important;height:30px!important;margin-bottom:13px!important}
+  .home-page .visit-card h3{font-size:16px!important;margin-bottom:6px!important}
+  .home-page .visit-card p{font-size:12px!important;line-height:1.4!important}
+
+  .home-page .location-copy{padding:25px 20px!important}
+  .home-page .location-map,
+  .home-page .location-map iframe{min-height:280px!important;height:280px!important}
+  .home-page #join .join-logo-panel{display:none!important}
+  .home-page #join .location-card{display:block!important}
+}
+
+@media(max-width:380px){
+  .mobile-nav-links{grid-template-columns:1fr}
+  .mobile-nav-links .mobile-nav-primary{grid-column:auto}
+  .home-page .coaches-roster,
+  .home-page .visit-grid{grid-template-columns:1fr!important}
 }

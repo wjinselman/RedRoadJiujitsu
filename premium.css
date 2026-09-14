@@ -84,8 +84,8 @@ body{background:#07080a}
   z-index:0;
   pointer-events:none;
   background:url('assets/red-road-hero-action.png') center 48% / cover no-repeat;
-  filter:saturate(.72) contrast(1.08);
-  opacity:.68;
+  filter:brightness(1.18) saturate(.8) contrast(1.06);
+  opacity:.86;
 }
 .hero-logo-mode .hero-bg{
   z-index:1;
@@ -94,13 +94,13 @@ body{background:#07080a}
     linear-gradient(90deg,
       rgba(4,5,7,.99) 0%,
       rgba(4,5,7,.94) 25%,
-      rgba(5,6,8,.76) 45%,
-      rgba(5,6,8,.3) 67%,
-      rgba(5,6,8,.42) 100%) !important;
+      rgba(5,6,8,.68) 45%,
+      rgba(5,6,8,.18) 67%,
+      rgba(5,6,8,.24) 100%) !important;
 }
 .hero-logo-mode .hero-bg::after{
   background:
-    linear-gradient(180deg,rgba(7,8,10,.62) 0%,transparent 31%,rgba(7,8,10,.9) 91%,#07080a 100%),
+    linear-gradient(180deg,rgba(7,8,10,.5) 0%,transparent 31%,rgba(7,8,10,.72) 91%,#07080a 100%),
     repeating-linear-gradient(118deg,transparent 0 96px,rgba(201,21,33,.022) 96px 98px) !important;
 }
 .hero-logo-mode > .shell{
@@ -111,8 +111,8 @@ body{background:#07080a}
 @media(max-width:700px){
   .hero-logo-mode .hero-action-photo{
     background-position:53% center;
-    filter:saturate(.62) contrast(1.08);
-    opacity:.52;
+    filter:brightness(1.12) saturate(.72) contrast(1.06);
+    opacity:.68;
   }
   .hero-logo-mode .hero-bg{
     background:

@@ -18,16 +18,16 @@
   panel.className='mobile-nav-panel';
   panel.id='mobile-site-nav';
   panel.innerHTML=`<nav class="mobile-nav-links" aria-label="Mobile navigation">
-    <a href="${base}?v=prod22">Home</a>
-    <a href="${base}?v=prod22#programs">Programs</a>
-    <a href="${base}?v=prod22#schedule">Schedule</a>
-    <a href="${base}?v=prod22#pricing">Pricing</a>
-    <a href="${base}?v=prod22#coaches">Coaches</a>
-    <a href="${base}story.html?v=prod22">Our Story</a>
-    <a href="${base}?v=prod22#location">Location</a>
-    <a href="${base}waiver.html?v=prod22">Waiver</a>
-    <a href="${base}members.html?v=prod22">Member Login</a>
-    <a class="mobile-nav-primary" href="${base}enroll.html?v=prod22">Book First Class</a>
+    <a href="${base}">Home</a>
+    <a href="${base}#programs">Programs</a>
+    <a href="${base}#schedule">Schedule</a>
+    <a href="${base}#pricing">Pricing</a>
+    <a href="${base}#coaches">Coaches</a>
+    <a href="${base}story.html">Our Story</a>
+    <a href="${base}#location">Location</a>
+    <a href="${base}waiver.html">Waiver</a>
+    <a href="${base}members.html">Member Login</a>
+    <a class="mobile-nav-primary" href="${base}enroll.html">Book First Class</a>
   </nav>`;
   header.append(panel);
 

@@ -28,7 +28,7 @@ body{background:#07080a}
 .class-card .class-action{white-space:nowrap}
 .schedule-note{display:flex;gap:10px;align-items:center;margin-top:16px;padding:16px 18px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);color:#aeb2b9;font-size:13px}
 .schedule-note strong{color:#fff}
-.schedule-format-note{display:flex;align-items:center;justify-content:center;gap:16px;margin:-8px 0 22px;padding:13px 18px;border:1px solid rgba(226,12,27,.34);border-left:4px solid var(--premium-red);background:linear-gradient(90deg,rgba(226,12,27,.12),rgba(255,255,255,.025));color:#d7d9dd;font-size:13px;letter-spacing:.03em}
+.schedule-format-note{display:flex;align-items:center;justify-content:flex-start;gap:16px;margin:0;padding:13px 18px;border:1px solid rgba(226,12,27,.34);border-left:4px solid var(--premium-red);background:linear-gradient(90deg,rgba(226,12,27,.12),rgba(255,255,255,.025));color:#d7d9dd;font-size:13px;letter-spacing:.03em}
 .schedule-format-note strong{flex:0 0 auto;color:#fff;font-size:11px;font-weight:950;letter-spacing:.12em;text-transform:uppercase}
 
 .visit-section{background:linear-gradient(180deg,#08090b,#101216 52%,#08090b)}
@@ -75,7 +75,7 @@ body{background:#07080a}
   .flow-steps{grid-template-columns:1fr}
 }
 @media(max-width:600px){
-  .schedule-format-note{align-items:flex-start;flex-direction:column;gap:4px;margin:-4px 0 16px;padding:12px 14px;font-size:12px}
+  .schedule-format-note{align-items:flex-start;flex-direction:column;gap:4px;margin:0;padding:12px 14px;font-size:12px}
 }
 @media(prefers-reduced-motion:reduce){.program-card,.program-card::before,.class-card,.btn{transition:none!important}}
 

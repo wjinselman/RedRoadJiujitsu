@@ -23,3 +23,13 @@
 @media(max-width:700px){.owner-percentage-grid{grid-template-columns:1fr 1fr!important}}
 @media(max-width:560px){.coaches-photo{min-height:390px}.coach-intro{padding:25px 20px}.coaches-roster{grid-template-columns:1fr}.coach-card{min-height:auto}}
 @media(max-width:480px){.member-status-hero{grid-template-columns:1fr!important}}
+
+/* prod-15: use a distinct photo in the Story section. */
+.story-photo{
+  background:
+    linear-gradient(90deg,transparent 68%,#0d0f12),
+    url('assets/red-road-story-photo.jpg') center 35%/cover no-repeat!important;
+}
+@media(max-width:900px){
+  .story-photo{background-position:center 31%!important}
+}

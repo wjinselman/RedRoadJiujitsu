@@ -1923,3 +1923,32 @@ main,
   .local-back{justify-content:center}
   .local-hero::after{width:80vw;right:-38vw;opacity:.04}
 }
+
+/* === prod-12: new Red Road photos + Bullyproof + enrollment/waiver flow === */
+.story-photo{background:linear-gradient(90deg,transparent 70%,#0d0f12),url('assets/red-road-coaches-2026.jpg') center 34%/cover no-repeat!important}
+.bullyproof-section{background:linear-gradient(180deg,#08090b,#0d0f12 50%,#08090b);border-block:1px solid #24272c}
+.bullyproof-grid{display:grid;grid-template-columns:minmax(280px,.78fr) minmax(0,1.22fr);gap:44px;align-items:center}
+.bullyproof-poster{max-width:500px;margin:auto;border:1px solid #333840;background:#111317;padding:9px;box-shadow:0 28px 75px rgba(0,0,0,.48)}
+.bullyproof-poster img{width:100%;height:auto}
+.bullyproof-copy h2{font-family:Impact,Haettenschweiler,'Arial Narrow Bold',sans-serif;font-size:clamp(3.5rem,7vw,6.4rem);line-height:.88;text-transform:uppercase;margin-bottom:22px}
+.bullyproof-copy>p{color:#b0b4bb;font-size:18px;max-width:720px}
+.bullyproof-points{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:26px 0}
+.bullyproof-points span{border:1px solid #2c3036;background:#111419;padding:13px 15px;border-left:3px solid var(--red);font-weight:850;text-transform:uppercase;letter-spacing:.04em;font-size:12px}
+.flow-shell{width:min(900px,calc(100% - 34px));margin:auto}
+.flow-card{background:#111317;border:1px solid #30343a;box-shadow:var(--shadow);padding:30px;margin-bottom:18px}
+.flow-card h2{font-family:Impact,Haettenschweiler,'Arial Narrow Bold',sans-serif;text-transform:uppercase;font-size:clamp(2rem,5vw,3.4rem);line-height:.95;margin-bottom:10px}
+.flow-muted{color:#9da2aa}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-field{display:flex;flex-direction:column;gap:7px}.form-field.full{grid-column:1/-1}
+.form-field label,.check-row label{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:#cfd2d6}
+.form-field input,.form-field select,.form-field textarea{width:100%;padding:14px 15px;border:1px solid #363b42;border-radius:7px;background:#090b0e;color:#fff;font:inherit}
+.form-field input:focus,.form-field select:focus,.form-field textarea:focus{outline:2px solid rgba(227,29,42,.35);border-color:#bd1721}
+.check-row{display:flex;gap:12px;align-items:flex-start;padding:14px 0;border-top:1px solid #282c31}.check-row input{margin-top:4px;accent-color:#d51925}
+.waiver-viewer{width:100%;height:min(72vh,760px);border:1px solid #353a41;background:#fff;border-radius:6px}
+.signature-box{border:1px solid #3b4048;background:#090b0e;padding:18px;border-radius:8px}
+.signature-preview{font-family:"Segoe Script","Bradley Hand",cursive;font-size:30px;min-height:48px;color:#fff;border-bottom:1px solid #484d55;padding:8px 4px;margin-top:8px}
+.flow-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}.btn-fullish{min-width:220px}
+.flow-success{border-left:4px solid #35a869;background:#0d1b14;padding:18px;margin-top:18px}.flow-warning{border-left:4px solid #d69a2d;background:#1b160d;padding:16px;margin:18px 0;color:#d9d1bf}
+.waiver-inline-link{font-weight:900;color:#fff;text-decoration:underline;text-decoration-color:var(--red);text-underline-offset:4px}
+@media(max-width:900px){.bullyproof-grid{grid-template-columns:1fr}.bullyproof-poster{max-width:430px}.waiver-viewer{height:62vh}}
+@media(max-width:600px){.form-grid,.bullyproof-points{grid-template-columns:1fr}.form-field.full{grid-column:auto}.flow-card{padding:22px 18px}.flow-actions .btn{width:100%}.waiver-viewer{height:55vh}}

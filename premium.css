@@ -1,0 +1,74 @@
+:root{--premium-red:#e20c1b;--premium-panel:#0d0f13;--premium-line:rgba(255,255,255,.1)}
+body{background:#07080a}
+.btn{transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease,background .22s ease}
+.btn:hover{transform:translateY(-2px)}
+.btn-red:hover{box-shadow:0 18px 44px rgba(226,12,27,.38)}
+.section-head p{max-width:720px}
+
+.programs-section{padding-top:108px;background:radial-gradient(circle at 50% 0,rgba(201,21,33,.12),transparent 35rem)}
+.program-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.program-card{position:relative;isolation:isolate;display:flex;flex-direction:column;justify-content:flex-end;min-height:510px;padding:32px;overflow:hidden;border:1px solid var(--premium-line);background:#111317;box-shadow:0 24px 70px rgba(0,0,0,.32);color:#fff;text-decoration:none;transition:transform .3s ease,border-color .3s ease,box-shadow .3s ease}
+.program-card::before{content:"";position:absolute;inset:0;z-index:-2;background:var(--program-image) center/cover no-repeat;filter:saturate(.65) contrast(1.08);transition:transform .65s cubic-bezier(.2,.8,.2,1),filter .35s ease}
+.program-card::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(3,4,6,.06) 12%,rgba(3,4,6,.68) 57%,#07080a 100%)}
+.program-card:hover{transform:translateY(-7px);border-color:rgba(226,12,27,.62);box-shadow:0 34px 90px rgba(0,0,0,.5)}
+.program-card:hover::before{transform:scale(1.045);filter:saturate(.9) contrast(1.05)}
+.program-card-content{align-self:flex-end;width:100%;padding:32px}
+.program-number{display:block;color:var(--premium-red);font-size:10px;font-weight:950;letter-spacing:.2em;text-transform:uppercase;margin-bottom:10px}
+.program-card h3{font-family:Impact,Haettenschweiler,'Arial Narrow Bold',sans-serif;font-size:clamp(2.2rem,4vw,3.6rem);line-height:.9;text-transform:uppercase;margin-bottom:13px}
+.program-card p{min-height:76px;color:#b8bcc3;font-size:15px}
+.program-card .btn{width:100%;margin-top:8px}
+.program-card>span{display:block;color:#d6d8dd;font-size:10px;font-weight:950;letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px}
+.program-card>strong{color:#fff;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
+.program-kids{--program-image:url('assets/kids-training.png')}
+.program-adults{--program-image:url('assets/action.png')}
+.program-service{--program-image:url('assets/red-road-story-photo.jpg')}
+
+.class-card{transition:border-color .25s ease,transform .25s ease,background .25s ease}
+.class-card:hover{transform:translateX(5px);border-color:rgba(226,12,27,.45);background:linear-gradient(135deg,#15171c,#1a1d23)}
+.class-card .class-action{white-space:nowrap}
+.schedule-note{display:flex;gap:10px;align-items:center;margin-top:16px;padding:16px 18px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.025);color:#aeb2b9;font-size:13px}
+.schedule-note strong{color:#fff}
+
+.visit-section{background:linear-gradient(180deg,#08090b,#101216 52%,#08090b)}
+.visit-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.visit-card{position:relative;min-height:225px;padding:28px 24px;border:1px solid var(--premium-line);background:linear-gradient(145deg,#111317,#171a20)}
+.visit-card>b{display:grid;place-items:center;width:38px;height:38px;margin-bottom:27px;border:1px solid rgba(226,12,27,.45);border-radius:50%;color:#fff;background:rgba(226,12,27,.12);font-weight:950}
+.visit-card h3{font-size:20px;margin-bottom:10px}
+.visit-card p{margin:0;color:#9fa4ad;font-size:14px}
+
+.location-map{padding:0!important;overflow:hidden;min-height:390px!important;background:#0c0e12!important}
+.location-map iframe{display:block;width:100%;height:100%;min-height:390px;border:0;filter:grayscale(1) invert(.9) contrast(.88);opacity:.88}
+.location-copy .location-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.location-detail{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:22px 0}
+.location-detail span{padding:13px;border:1px solid rgba(255,255,255,.07);background:rgba(0,0,0,.22);color:#aeb2b9;font-size:12px}
+.location-detail strong{display:block;color:#fff;margin-bottom:3px}
+
+.premium-cta{position:relative;overflow:hidden;border:1px solid rgba(226,12,27,.35)!important;background:radial-gradient(circle at 85% 30%,rgba(226,12,27,.22),transparent 25rem),linear-gradient(145deg,#111318,#08090b)!important}
+.premium-cta::after{content:"";position:absolute;width:420px;aspect-ratio:1;right:-90px;bottom:-180px;background:url('assets/red-road-master-crest.png') center/contain no-repeat;opacity:.045;pointer-events:none}
+
+.mobile-trial-bar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:90;padding:10px max(12px,env(safe-area-inset-left)) calc(10px + env(safe-area-inset-bottom));background:rgba(7,8,10,.94);border-top:1px solid rgba(255,255,255,.11);backdrop-filter:blur(16px)}
+.mobile-trial-bar .btn{width:100%;min-height:52px}
+.mobile-trial-bar small{display:block;margin-top:5px;text-align:center;color:#858a93;font-size:9px;letter-spacing:.08em;text-transform:uppercase}
+
+.flow-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:620px;margin-top:24px}
+.flow-steps>span{padding:10px 12px;border:1px solid rgba(255,255,255,.08);color:#747a83;font-size:10px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+.flow-steps>span b{display:inline-grid;place-items:center;width:20px;height:20px;margin-right:7px;border-radius:50%;background:rgba(255,255,255,.08);color:#fff}
+.flow-steps>span.current,.flow-steps>span.done{border-color:rgba(226,12,27,.42);background:rgba(226,12,27,.08);color:#fff}
+.flow-steps>span.done b{background:#267e4c;color:#fff}
+.launch-member-row.is-pending{border-color:rgba(224,147,47,.4);background:rgba(224,147,47,.055)}
+.status-chip.pending{color:#ffd09b;border-color:rgba(224,147,47,.35);background:rgba(224,147,47,.1)}
+
+@media(max-width:1000px){.program-grid{grid-template-columns:1fr 1fr}.program-card:last-child{grid-column:1/-1;min-height:430px}.visit-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:760px){
+  body{padding-bottom:82px}
+  .mobile-trial-bar{display:block}
+  .programs-section{padding-top:78px}
+  .program-grid{grid-template-columns:1fr}
+  .program-card,.program-card:last-child{grid-column:auto;min-height:450px}
+  .program-card p{min-height:auto}
+  .visit-grid{grid-template-columns:1fr}
+  .visit-card{min-height:auto}
+  .location-detail{grid-template-columns:1fr}
+  .flow-steps{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){.program-card,.program-card::before,.class-card,.btn{transition:none!important}}

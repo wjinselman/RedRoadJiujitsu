@@ -147,6 +147,10 @@ function renderMemberDashboard(member, userEmail) {
     note.hidden = false;
     note.textContent = 'Portal access has been disabled by Red Road. Contact the academy if you believe this is an error.';
     $('#member-dashboard').dataset.disabled = 'true';
+  } else if (!membershipActive && waiverSigned) {
+    note.hidden = false;
+    note.textContent = 'Your waiver is signed and your membership is waiting for staff activation.';
+    delete $('#member-dashboard').dataset.disabled;
   } else {
     note.hidden = true;
     delete $('#member-dashboard').dataset.disabled;
@@ -161,7 +165,7 @@ async function openMemberForUser(user) {
     // These are one-time document checks only; no listeners or polling.
     const staff = await getStaffAccess(user.email);
     if (staff) {
-      window.location.replace('https://wjinselman.github.io/RedRoadJiujitsu/owner.html?v=prod16');
+      window.location.replace('https://wjinselman.github.io/RedRoadJiujitsu/owner.html?v=prod17');
       return;
     }
 
@@ -280,7 +284,12 @@ function visibleRoster() {
   const queryText = String($('#owner-search')?.value || '').trim().toLowerCase();
   return ownerMembers
     .filter(member => !queryText || member.name?.toLowerCase().includes(queryText) || member.email?.toLowerCase().includes(queryText))
-    .sort((a, b) => (a.archived === b.archived ? String(a.name).localeCompare(String(b.name)) : Number(a.archived) - Number(b.archived)));
+    .sort((a, b) => {
+      const aPending = a.waiverSigned === true && a.active !== true && a.archived !== true;
+      const bPending = b.waiverSigned === true && b.active !== true && b.archived !== true;
+      if (aPending !== bPending) return Number(bPending) - Number(aPending);
+      return a.archived === b.archived ? String(a.name).localeCompare(String(b.name)) : Number(a.archived) - Number(b.archived);
+    });
 }
 
 function renderOwnerStats() {
@@ -290,10 +299,13 @@ function renderOwnerStats() {
   const paid = active.filter(m => m.paid === true);
   const pastDue = active.filter(m => m.paid !== true);
   const waivers = roster.filter(m => m.waiverSigned === true);
+  const pending = roster.filter(m => m.waiverSigned === true && m.active !== true);
   const activePercent = total ? Math.round((active.length / total) * 100) : 0;
   const paidPercent = active.length ? Math.round((paid.length / active.length) * 100) : 0;
 
   $('#stat-members').textContent = String(total);
+  $('#stat-pending').textContent = String(pending.length);
+  $('#stat-pending-note').textContent = pending.length === 1 ? '1 signup to review' : `${pending.length} signups to review`;
   $('#stat-active-percent').textContent = `${activePercent}%`;
   $('#stat-active-count').textContent = `${active.length} active`;
   $('#stat-paid-percent').textContent = `${paidPercent}%`;
@@ -305,6 +317,7 @@ function renderOwnerStats() {
 
 function statusPills(member) {
   const pills = [];
+  if (member.waiverSigned === true && member.active !== true && member.archived !== true) pills.push('<span class="status-chip pending">Pending Approval</span>');
   pills.push(`<span class="status-chip ${member.active ? 'active' : 'paused'}">${member.active ? 'Active' : 'Inactive'}</span>`);
   pills.push(`<span class="status-chip ${member.paid ? 'active' : 'past-due'}">${member.paid ? 'Paid' : 'Past Due'}</span>`);
   pills.push(`<span class="status-chip ${member.enabled ? 'active' : 'paused'}">${member.enabled ? 'Portal On' : 'Portal Off'}</span>`);
@@ -321,7 +334,7 @@ function renderOwnerList() {
     return;
   }
   list.innerHTML = members.map(member => `
-    <article class="member-row launch-member-row ${member.archived ? 'is-archived' : ''}" data-member-email="${esc(member.email)}">
+    <article class="member-row launch-member-row ${member.archived ? 'is-archived' : ''} ${member.waiverSigned === true && member.active !== true && member.archived !== true ? 'is-pending' : ''}" data-member-email="${esc(member.email)}">
       <div class="member-row-main"><strong>${esc(member.name)}</strong><span>${esc(member.email)}</span></div>
       <div class="member-row-meta"><span>${esc(formatRank(member))}</span><span>${esc(member.plan)}</span><div class="member-pills">${statusPills(member)}</div></div>
       <div class="member-row-actions">

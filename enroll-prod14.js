@@ -20,7 +20,8 @@ function friendlyError(error) {
 
 if (form) {
   const params = new URLSearchParams(location.search);
-  if (params.get('program') === 'kids') document.querySelector('#program').value = 'Kids';
+  const requestedProgram = { kids: 'Kids', adult: 'Adult', service: 'First Responder', family: 'Family' }[params.get('program')];
+  if (requestedProgram) document.querySelector('#program').value = requestedProgram;
 
   form.addEventListener('submit', async event => {
     event.preventDefault();

@@ -9,50 +9,128 @@
 <title>Member Portal | Red Road Jiu Jitsu</title>
 <link href="redroad-v25.css?v=prod-14" rel="stylesheet"/>
 <style>html,body{background:#07080a!important;color-scheme:dark}body{min-height:100%;margin:0}</style>
-<link href="assets/favicon-64.png" rel="icon" sizes="64x64" type="image/png"/><link href="assets/apple-touch-icon.png" rel="apple-touch-icon"/><link rel="stylesheet" href="prod14.css?v=prod-16"></head>
+<link href="assets/favicon-64.png" rel="icon" sizes="64x64" type="image/png"/>
+<link href="assets/apple-touch-icon.png" rel="apple-touch-icon"/>
+<link rel="stylesheet" href="prod14.css?v=prod-17">
+<link rel="stylesheet" href="premium.css?v=prod-17">
+</head>
 <body>
-<div aria-hidden="true" class="site-emblem-bg"></div>
-<header class="top"><div class="shell nav"><a class="brand" href="https://wjinselman.github.io/RedRoadJiujitsu/?v=prod16"><img alt="Red Road Jiu Jitsu logo" src="assets/red-road-master-crest.png"/><div><strong>Red Road Jiu Jitsu</strong><span>Member Portal</span></div></a><a class="btn btn-dark nav-return" href="https://wjinselman.github.io/RedRoadJiujitsu/?v=prod16">Public Website</a></div></header>
+<div aria-hidden="true" class="site-emblem-bg">
+</div>
+<header class="top">
+<div class="shell nav">
+<a class="brand" href="https://wjinselman.github.io/RedRoadJiujitsu/?v=prod17">
+<img alt="Red Road Jiu Jitsu logo" src="assets/red-road-master-crest.png"/>
+<div>
+<strong>Red Road Jiu Jitsu</strong>
+<span>Member Portal</span>
+</div>
+</a>
+<a class="btn btn-dark nav-return" href="https://wjinselman.github.io/RedRoadJiujitsu/?v=prod17">Public Website</a>
+</div>
+</header>
 <main>
-<section class="portal-hero compact"><div class="portal-shell"><div class="kicker">Member Area</div><h1 class="portal-title">Your Training. <span class="red">Your Status.</span></h1><p>A simple private view of your Red Road membership, rank and account standing.</p></div></section>
-<section class="section portal-section"><div class="portal-shell">
+<section class="portal-hero compact">
+<div class="portal-shell">
+<div class="kicker">Member Area</div>
+<h1 class="portal-title">Your Training. <span class="red">Your Status.</span>
+</h1>
+<p>A simple private view of your Red Road membership, rank and account standing.</p>
+</div>
+</section>
+<section class="section portal-section">
+<div class="portal-shell">
 <div class="login-card" hidden="" id="firebase-setup-view">
-<div class="portal-card-head"><div><div class="kicker">Setup Required</div><h2>Portal Not Connected Yet.</h2></div></div>
+<div class="portal-card-head">
+<div>
+<div class="kicker">Setup Required</div>
+<h2>Portal Not Connected Yet.</h2>
+</div>
+</div>
 <p class="portal-muted">Firebase is intentionally not configured in this ZIP. Paste the project Web App config into <strong>firebase-config.js</strong> before launch.</p>
 </div>
 <div class="login-card" id="member-login-view">
-<div class="portal-card-head"><div><div class="kicker">Member Sign In</div><h2>Welcome Back.</h2></div><span class="secure-badge">Private</span></div>
+<div class="portal-card-head">
+<div>
+<div class="kicker">Member Sign In</div>
+<h2>Welcome Back.</h2>
+</div>
+<span class="secure-badge">Private</span>
+</div>
 <form class="portal-form" id="member-login-form">
-<div><label for="member-email">Email</label><input autocomplete="email" id="member-email" inputmode="email" name="email" placeholder="you@example.com" required="" type="email"/></div>
-<div><label for="member-password">Password</label><input autocomplete="current-password" id="member-password" minlength="6" name="password" placeholder="Password" required="" type="password"/></div>
+<div>
+<label for="member-email">Email</label>
+<input autocomplete="email" id="member-email" inputmode="email" name="email" placeholder="you@example.com" required="" type="email"/>
+</div>
+<div>
+<label for="member-password">Password</label>
+<input autocomplete="current-password" id="member-password" minlength="6" name="password" placeholder="Password" required="" type="password"/>
+</div>
 <button class="btn btn-red btn-full" type="submit">Sign In</button>
 </form>
 <div class="auth-secondary-actions">
 <button class="text-action" id="member-activate" type="button">First time? Activate account</button>
 <button class="text-action" id="member-reset" type="button">Forgot password?</button>
 </div>
-<p class="portal-hint">Use the email Red Road has on file. First-time activation requires access to that email so it can be verified before the portal opens.</p><p class="portal-hint">New to Red Road? <a class="waiver-inline-link" href="https://wjinselman.github.io/RedRoadJiujitsu/enroll.html?v=prod16">Start enrollment here</a> or <a class="waiver-inline-link" href="https://wjinselman.github.io/RedRoadJiujitsu/waiver.html?v=prod16">view/sign the waiver</a>.</p>
-<div class="flash-message" hidden="" id="member-login-message"></div>
+<p class="portal-hint">Use the email Red Road has on file. First-time activation requires access to that email so it can be verified before the portal opens.</p>
+<p class="portal-hint">New to Red Road? <a class="waiver-inline-link" href="https://wjinselman.github.io/RedRoadJiujitsu/enroll.html?v=prod17">Start enrollment here</a> or <a class="waiver-inline-link" href="https://wjinselman.github.io/RedRoadJiujitsu/waiver.html?v=prod17">view/sign the waiver</a>.</p>
+<div class="flash-message" hidden="" id="member-login-message">
+</div>
 </div>
 <div class="dash-card member-dashboard" hidden="" id="member-dashboard">
-<div class="portal-card-head"><div><div class="kicker">Member Dashboard</div><h2><span id="member-name">Member</span></h2><div class="portal-email" id="member-email-display"></div></div><button class="btn btn-dark btn-mini" id="member-logout" type="button">Sign Out</button></div>
+<div class="portal-card-head">
+<div>
+<div class="kicker">Member Dashboard</div>
+<h2>
+<span id="member-name">Member</span>
+</h2>
+<div class="portal-email" id="member-email-display">
+</div>
+</div>
+<button class="btn btn-dark btn-mini" id="member-logout" type="button">Sign Out</button>
+</div>
 <div class="member-status-hero">
-<div><span>Membership</span><strong id="member-active-label">—</strong></div>
-<div><span>Payment</span><strong id="member-paid-label">—</strong></div><div><span>Waiver</span><strong id="member-waiver-label">—</strong></div>
+<div>
+<span>Membership</span>
+<strong id="member-active-label">—</strong>
+</div>
+<div>
+<span>Payment</span>
+<strong id="member-paid-label">—</strong>
+</div>
+<div>
+<span>Waiver</span>
+<strong id="member-waiver-label">—</strong>
+</div>
 </div>
 <div class="member-dashboard-grid compact-member-grid">
-<div class="dash-stat"><span>Rank</span><strong id="member-rank">—</strong><small>Current belt / rank</small></div>
-<div class="dash-stat"><span>Plan</span><strong id="member-plan">—</strong><small>Membership plan</small></div>
-<div class="dash-stat"><span>Joined</span><strong id="member-joined">—</strong><small>Member since</small></div>
+<div class="dash-stat">
+<span>Rank</span>
+<strong id="member-rank">—</strong>
+<small>Current belt / rank</small>
 </div>
-<div class="member-access-note" hidden="" id="member-access-note"></div>
+<div class="dash-stat">
+<span>Plan</span>
+<strong id="member-plan">—</strong>
+<small>Membership plan</small>
+</div>
+<div class="dash-stat">
+<span>Joined</span>
+<strong id="member-joined">—</strong>
+<small>Member since</small>
+</div>
+</div>
+<div class="member-access-note" hidden="" id="member-access-note">
+</div>
 <div class="member-actions">
-<a class="btn btn-red" href="https://wjinselman.github.io/RedRoadJiujitsu/?v=prod16#schedule">Class Schedule</a>
-<a class="btn btn-dark" href="https://wjinselman.github.io/RedRoadJiujitsu/?v=prod16#location">Directions</a>
+<a class="btn btn-red" href="https://wjinselman.github.io/RedRoadJiujitsu/?v=prod17#schedule">Class Schedule</a>
+<a class="btn btn-dark" href="https://wjinselman.github.io/RedRoadJiujitsu/?v=prod17#location">Directions</a>
 </div>
 </div>
-</div></section>
+</div>
+</section>
 </main>
-<script src="portal.js?v=prod-14" type="module"></script>
+<script src="portal.js?v=prod-14" type="module">
+</script>
 </body>
 </html>

@@ -34,7 +34,8 @@ import {
   collection,
   query,
   limit,
-  serverTimestamp
+  serverTimestamp,
+  writeBatch
 } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
 import { firebaseConfig, firebaseConfigured } from './firebase-config.js';
 
@@ -72,5 +73,6 @@ export {
   collection,
   query,
   limit,
-  serverTimestamp
+  serverTimestamp,
+  writeBatch
 };

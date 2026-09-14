@@ -130,13 +130,17 @@ function renderMemberDashboard(member, userEmail) {
   const membershipActive = member.active === true && member.archived !== true;
   const portalEnabled = member.enabled === true && member.archived !== true;
   const paid = member.paid === true;
+  const waiverSigned = member.waiverSigned === true;
 
   const activeLabel = $('#member-active-label');
   const paidLabel = $('#member-paid-label');
+  const waiverLabel = $('#member-waiver-label');
   activeLabel.textContent = membershipActive ? 'Active' : 'Inactive';
   paidLabel.textContent = paid ? 'Paid / Current' : 'Past Due';
   activeLabel.dataset.state = membershipActive ? 'good' : 'bad';
   paidLabel.dataset.state = paid ? 'good' : 'bad';
+  waiverLabel.textContent = waiverSigned ? 'Signed' : 'Missing';
+  waiverLabel.dataset.state = waiverSigned ? 'good' : 'bad';
 
   const note = $('#member-access-note');
   if (!portalEnabled) {
@@ -263,6 +267,9 @@ function memberPayloadFromForm(form, previous = null) {
     enabled: fd.get('enabled') === 'on',
     archived: previous?.archived === true,
     joinedAt: String(fd.get('joinedAt') || previous?.joinedAt || todayIso()),
+    waiverSigned: previous?.waiverSigned === true,
+    waiverSignedAt: String(previous?.waiverSignedAt || ''),
+    waiverReceiptId: String(previous?.waiverReceiptId || ''),
     createdAt: previous?.createdAt || serverTimestamp(),
     updatedAt: serverTimestamp()
   };
@@ -282,6 +289,7 @@ function renderOwnerStats() {
   const active = roster.filter(m => m.active === true);
   const paid = active.filter(m => m.paid === true);
   const pastDue = active.filter(m => m.paid !== true);
+  const waivers = roster.filter(m => m.waiverSigned === true);
   const activePercent = total ? Math.round((active.length / total) * 100) : 0;
   const paidPercent = active.length ? Math.round((paid.length / active.length) * 100) : 0;
 
@@ -291,6 +299,8 @@ function renderOwnerStats() {
   $('#stat-paid-percent').textContent = `${paidPercent}%`;
   $('#stat-paid-count').textContent = `${paid.length} current`;
   $('#stat-past-due').textContent = String(pastDue.length);
+  $('#stat-waiver-percent').textContent = `${total ? Math.round((waivers.length / total) * 100) : 0}%`;
+  $('#stat-waiver-count').textContent = `${waivers.length} signed`;
 }
 
 function statusPills(member) {
@@ -298,6 +308,7 @@ function statusPills(member) {
   pills.push(`<span class="status-chip ${member.active ? 'active' : 'paused'}">${member.active ? 'Active' : 'Inactive'}</span>`);
   pills.push(`<span class="status-chip ${member.paid ? 'active' : 'past-due'}">${member.paid ? 'Paid' : 'Past Due'}</span>`);
   pills.push(`<span class="status-chip ${member.enabled ? 'active' : 'paused'}">${member.enabled ? 'Portal On' : 'Portal Off'}</span>`);
+  pills.push(`<span class="status-chip ${member.waiverSigned ? 'active' : 'past-due'}">${member.waiverSigned ? 'Waiver Signed' : 'Waiver Missing'}</span>`);
   if (member.archived) pills.push('<span class="status-chip archived">Archived</span>');
   return pills.join('');
 }
@@ -353,6 +364,9 @@ async function saveMember(member, previous = null) {
     enabled: member.enabled === true,
     archived: member.archived === true,
     joinedAt: String(member.joinedAt || previous?.joinedAt || todayIso()),
+    waiverSigned: member.waiverSigned === true,
+    waiverSignedAt: String(member.waiverSignedAt || previous?.waiverSignedAt || ''),
+    waiverReceiptId: String(member.waiverReceiptId || previous?.waiverReceiptId || ''),
     createdAt: previous?.createdAt || member.createdAt || serverTimestamp(),
     updatedAt: member.updatedAt || serverTimestamp()
   };

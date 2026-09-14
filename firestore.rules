@@ -48,7 +48,8 @@ service cloud.firestore {
     function validMember(data, memberEmail) {
       return data.keys().hasOnly([
           'email', 'name', 'rank', 'stripes', 'plan', 'paid', 'active',
-          'enabled', 'archived', 'joinedAt', 'createdAt', 'updatedAt'
+          'enabled', 'archived', 'joinedAt', 'waiverSigned', 'waiverSignedAt',
+          'waiverReceiptId', 'createdAt', 'updatedAt'
         ])
         && data.email is string
         && data.email.lower() == memberEmail
@@ -68,8 +69,49 @@ service cloud.firestore {
         && data.archived is bool
         && data.joinedAt is string
         && data.joinedAt.size() <= 10
+        && data.waiverSigned is bool
+        && data.waiverSignedAt is string
+        && data.waiverSignedAt.size() <= 40
+        && data.waiverReceiptId is string
+        && data.waiverReceiptId.size() <= 80
         && data.createdAt is timestamp
         && data.updatedAt is timestamp;
+    }
+
+    function validSelfSignup(data, memberEmail) {
+      return validMember(data, memberEmail)
+        && data.rank == 'White Belt'
+        && data.stripes == 0
+        && data.paid == false
+        && data.active == false
+        && data.enabled == true
+        && data.archived == false
+        && data.waiverSigned == true
+        && data.waiverSignedAt.size() > 0
+        && data.waiverReceiptId.size() > 0;
+    }
+
+    function validWaiver(data, waiverEmail) {
+      return data.keys().hasOnly([
+          'receiptId', 'waiverVersion', 'signedAt', 'participantName', 'dob',
+          'email', 'phone', 'address', 'emergencyName', 'emergencyPhone',
+          'minor', 'guardianName', 'relationship', 'electronicSignature',
+          'signatureDate', 'signerUid', 'createdAt'
+        ])
+        && data.email is string
+        && data.email.lower() == waiverEmail
+        && data.signerUid == request.auth.uid
+        && data.receiptId is string
+        && data.receiptId.size() > 0
+        && data.receiptId.size() <= 80
+        && data.participantName is string
+        && data.participantName.size() > 0
+        && data.participantName.size() <= 160
+        && data.electronicSignature is string
+        && data.electronicSignature.size() > 0
+        && data.electronicSignature.size() <= 160
+        && data.minor is bool
+        && data.createdAt is timestamp;
     }
 
     // ROOT ACCESS: developer records are console-managed only.
@@ -101,10 +143,28 @@ service cloud.firestore {
       allow list: if isStaff()
                   && request.query.limit != null
                   && request.query.limit <= 250;
-      allow create, update: if isStaff()
-                            && validMember(request.resource.data, memberEmail);
+      allow create: if (isStaff() && validMember(request.resource.data, memberEmail))
+                    || (signedIn()
+                        && authEmail() == memberEmail
+                        && validSelfSignup(request.resource.data, memberEmail));
+      allow update: if isStaff()
+                    && validMember(request.resource.data, memberEmail);
       // Staff-only permanent roster removal. Authentication identities are managed separately.
       allow delete: if isStaff();
+    }
+
+    // Full signed records are append-only from the member flow. Members may read
+    // their own record; staff can review it. Client updates and deletes are denied.
+    match /waivers/{waiverEmail} {
+      allow get: if (signedIn() && authEmail() == waiverEmail) || isStaff();
+      allow list: if isStaff()
+                  && request.query.limit != null
+                  && request.query.limit <= 250;
+      allow create: if signedIn()
+                    && authEmail() == waiverEmail
+                    && !exists(/databases/$(database)/documents/waivers/$(waiverEmail))
+                    && validWaiver(request.resource.data, waiverEmail);
+      allow update, delete: if false;
     }
 
     // Explicit deny-by-default for anything not listed above.

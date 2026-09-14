@@ -21,7 +21,37 @@ body{background:#07080a}
 .program-card>strong{color:#fff;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
 .program-kids{--program-image:url('assets/kids-training.jpg')}
 .program-adults{--program-image:url('assets/action.jpg');--program-position:56% center}
-.program-service{--program-image:url('assets/red-road-story-photo.jpg')}
+.program-service{--program-image:url('assets/coaches.png')}
+
+/* Bullyproof section: current-gym training photo with the same cinematic treatment as the hero. */
+.home-page .bullyproof-section{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+}
+.home-page .bullyproof-section::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-2;
+  background:url('assets/bullyproof-training-background.png') center 46% / cover no-repeat;
+  opacity:.38;
+  filter:saturate(.8) contrast(1.06);
+}
+.home-page .bullyproof-section::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  background:radial-gradient(ellipse at center,rgba(8,9,11,.38) 0%,rgba(8,9,11,.72) 64%,#08090b 100%);
+  pointer-events:none;
+}
+.home-page .bullyproof-section>.shell{position:relative;z-index:1}
+
+@media(max-width:700px){
+  .home-page .bullyproof-section::before{background-position:center 48%;opacity:.3}
+  .home-page .bullyproof-section::after{background:linear-gradient(180deg,rgba(8,9,11,.72),rgba(8,9,11,.5) 42%,rgba(8,9,11,.88))}
+}
 
 .class-card{transition:border-color .25s ease,transform .25s ease,background .25s ease}
 .class-card:hover{transform:translateX(5px);border-color:rgba(226,12,27,.45);background:linear-gradient(135deg,#15171c,#1a1d23)}

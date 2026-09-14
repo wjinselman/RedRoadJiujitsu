@@ -19,8 +19,8 @@ body{background:#07080a}
 .program-card .btn{width:100%;margin-top:8px}
 .program-card>span{display:block;color:#d6d8dd;font-size:10px;font-weight:950;letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px}
 .program-card>strong{color:#fff;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
-.program-kids{--program-image:url('assets/kids-training.png')}
-.program-adults{--program-image:url('assets/action.png');--program-position:56% center}
+.program-kids{--program-image:url('assets/kids-training.jpg')}
+.program-adults{--program-image:url('assets/action.jpg');--program-position:56% center}
 .program-service{--program-image:url('assets/red-road-story-photo.jpg')}
 
 .class-card{transition:border-color .25s ease,transform .25s ease,background .25s ease}

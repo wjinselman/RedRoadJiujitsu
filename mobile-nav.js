@@ -3,7 +3,9 @@
   const nav=header?.querySelector('.nav');
   if(!header||!nav||header.querySelector('.mobile-nav-panel')) return;
 
-  const base='https://wjinselman.github.io/RedRoadJiujitsu/';
+  // All pages live as siblings at the site root, so plain relative paths
+  // work from any page without needing an absolute base URL.
+  const home='index.html';
   let toggle=nav.querySelector('.mobile-menu');
   const button=document.createElement('button');
   button.type='button';
@@ -18,16 +20,16 @@
   panel.className='mobile-nav-panel';
   panel.id='mobile-site-nav';
   panel.innerHTML=`<nav class="mobile-nav-links" aria-label="Mobile navigation">
-    <a href="${base}">Home</a>
-    <a href="${base}#programs">Programs</a>
-    <a href="${base}#schedule">Schedule</a>
-    <a href="${base}#pricing">Pricing</a>
-    <a href="${base}#coaches">Coaches</a>
-    <a href="${base}story.html">Our Story</a>
-    <a href="${base}#location">Location</a>
-    <a href="${base}waiver.html">Waiver</a>
-    <a href="${base}members.html">Member Login</a>
-    <a class="mobile-nav-primary" href="${base}enroll.html">Book First Class</a>
+    <a href="${home}">Home</a>
+    <a href="${home}#programs">Programs</a>
+    <a href="${home}#schedule">Schedule</a>
+    <a href="${home}#pricing">Pricing</a>
+    <a href="${home}#coaches">Coaches</a>
+    <a href="story.html">Our Story</a>
+    <a href="${home}#location">Location</a>
+    <a href="waiver.html">Waiver</a>
+    <a href="members.html">Member Login</a>
+    <a class="mobile-nav-primary" href="enroll.html">Book First Class</a>
   </nav>`;
   header.append(panel);
 

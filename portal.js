@@ -28,7 +28,9 @@ import {
   onAuthStateChanged,
   doc,
   getDoc,
+  getDocFromServer,
   getDocs,
+  getDocsFromServer,
   setDoc,
   deleteDoc,
   collection,
@@ -39,7 +41,7 @@ import {
   limit,
   serverTimestamp,
   writeBatch
-} from './firebase-client.js?v=49';
+} from './firebase-client.js?v=52';
 
 const MAX_OWNER_MEMBERS = 250;
 let ownerMembers = [];
@@ -531,7 +533,7 @@ function renderOwnerList() {
   }
   const canManage = ownerIdentity?.role === 'developer' || ownerIdentity?.role === 'owner';
   list.innerHTML = members.map(member => `
-    <article class="member-row launch-member-row ${member.archived ? 'is-archived' : ''} ${member.waiverSigned === true && member.active !== true && member.archived !== true ? 'is-pending' : ''}" data-member-email="${esc(member.email)}">
+    <article class="member-row launch-member-row ${member.archived ? 'is-archived' : ''} ${member.waiverSigned === true && member.active !== true && member.archived !== true ? 'is-pending' : ''}" data-member-id="${esc(member.id || normalizedEmail(member.email))}" data-member-email="${esc(member.email)}">
       <div class="member-row-main"><strong>${esc(member.name)}</strong><span>${esc(member.email)}</span></div>
       <div class="member-row-meta"><span>${esc(formatRank(member))}</span><span>${esc(member.plan)}</span>${member.householdEmail ? `<span>Household: ${esc(member.householdEmail)}</span>` : ''}<div class="member-pills">${statusPills(member)}</div></div>
       <div class="member-row-actions">
@@ -554,7 +556,7 @@ async function loadOwnerMembers(append = false) {
   // The roster remains usable during a rules rollout; kiosk readiness is an
   // optional second bounded read until the prod40 rules are deployed.
   const page = waiverPages.members;
-  const snap = await getDocs(query(collection(db, 'members'), ...(append && page.cursor ? [startAfter(page.cursor)] : []), limit(MAX_OWNER_MEMBERS)));
+  const snap = await getDocsFromServer(query(collection(db, 'members'), ...(append && page.cursor ? [startAfter(page.cursor)] : []), limit(MAX_OWNER_MEMBERS)));
   let kioskReady = new Set();
   let directoryComplete = false;
   try {
@@ -562,7 +564,7 @@ async function loadOwnerMembers(append = false) {
     kioskReady = new Set(directorySnap.docs.map(item => normalizedEmail(item.id)));
     directoryComplete = directorySnap.docs.length < MAX_OWNER_MEMBERS;
   } catch (_) {}
-  const records = snap.docs.map(d => { const data = d.data(); return { id: d.id, ...data, stripes: stripeCount(data.stripes), kioskReady: kioskReady.has(normalizedEmail(d.id)) ? true : directoryComplete ? false : null }; });
+  const records = snap.docs.map(d => { const data = d.data(); return { ...data, id: d.id, stripes: stripeCount(data.stripes), kioskReady: kioskReady.has(normalizedEmail(d.id)) ? true : directoryComplete ? false : null }; });
   ownerMembers = append ? [...ownerMembers, ...records] : records;
   page.cursor = snap.docs.at(-1) || page.cursor;
   page.more = snap.docs.length === MAX_OWNER_MEMBERS;
@@ -1285,7 +1287,7 @@ function setupOwnerPage() {
     const button = event.target.closest('button[data-action]');
     if (!button) return;
     const row = button.closest('[data-member-email]');
-    const member = ownerMembers.find(m => normalizedEmail(m.email) === normalizedEmail(row?.dataset.memberEmail));
+    const member = ownerMembers.find(m => (m.id || normalizedEmail(m.email)) === row?.dataset.memberId);
     if (!member) return;
 
     if (button.dataset.action === 'edit') {
@@ -1322,19 +1324,23 @@ function setupOwnerPage() {
         `Permanently remove ${member.name} from Red Road?\n\nThis deletes the membership record, kiosk entry and attached waiver. Disable should be used when you only want to block access.`
       );
       if (!confirmed) return;
+      let removalStatus = row.querySelector('.member-removal-status');
+      if (!removalStatus) {
+        removalStatus = document.createElement('p');
+        removalStatus.className = 'flash-message member-removal-status';
+        removalStatus.setAttribute('role', 'status');
+        row.append(removalStatus);
+      }
+      flash(removalStatus, 'Deleting and confirming with the server…');
       try {
-        const memberRef = doc(db, 'members', normalizedEmail(member.email));
-        const batch = writeBatch(db);
-        batch.delete(memberRef);
-        batch.delete(doc(db, 'checkInDirectory', normalizedEmail(member.email)));
-        batch.delete(doc(db, 'waivers', normalizedEmail(member.email)));
-        await batch.commit();
-        const verification = await getDoc(memberRef);
-        if (verification.exists()) throw new Error('Firestore still returned this member after deletion. Refresh the rules and try again.');
-        ownerMembers = ownerMembers.filter(m => normalizedEmail(m.email) !== normalizedEmail(member.email));
+        await permanentlyRemoveMember(member);
+        const deletedId = member.id || normalizedEmail(member.email);
+        ownerMembers = ownerMembers.filter(m => (m.id || normalizedEmail(m.email)) !== deletedId);
+        if ($('#edit-member-email')?.value === member.email) $('#edit-member-panel').hidden = true;
         renderOwner();
         flash(ownerMessage, `${member.name} permanently removed. Their roster record, kiosk entry and waiver are gone.`);
       } catch (error) {
+        flash(removalStatus, friendlyError(error), 'error');
         flash(ownerMessage, friendlyError(error), 'error');
       }
       return;
@@ -1390,6 +1396,21 @@ function setupOwnerPage() {
       // Stop here. No retry loop.
     }
   });
+}
+
+async function permanentlyRemoveMember(member) {
+  if (!['owner', 'developer'].includes(ownerIdentity?.role)) throw new Error('Owner access required.');
+  const email = normalizedEmail(member.email);
+  const id = member.id || email;
+  if (!email || !id) throw new Error('This record is missing its identity. Refresh the roster before deleting.');
+  const refs = [doc(db, 'members', id), doc(db, 'checkInDirectory', email), doc(db, 'waivers', email)];
+  const batch = writeBatch(db);
+  refs.forEach(ref => batch.delete(ref));
+  await batch.commit();
+  let results;
+  try { results = await Promise.all(refs.map(ref => getDocFromServer(ref))); }
+  catch (_) { throw new Error('The delete was submitted, but server verification failed. Reconnect and Refresh before trying again.'); }
+  if (results.some(snapshot => snapshot.exists())) throw new Error('A record is still present on the server. Refresh the roster; deletion could not be confirmed.');
 }
 
 setupMemberPage();

@@ -33,24 +33,24 @@ body{background:#07080a}
   content:"";
   position:absolute;
   inset:0;
-  z-index:-2;
+  z-index:0;
   background:url('assets/bullyproof-training-background.png') center 46% / cover no-repeat;
-  opacity:.38;
+  opacity:.62;
   filter:saturate(.8) contrast(1.06);
 }
 .home-page .bullyproof-section::after{
   content:"";
   position:absolute;
   inset:0;
-  z-index:-1;
-  background:radial-gradient(ellipse at center,rgba(8,9,11,.38) 0%,rgba(8,9,11,.72) 64%,#08090b 100%);
+  z-index:1;
+  background:radial-gradient(ellipse at center,rgba(8,9,11,.18) 0%,rgba(8,9,11,.56) 64%,#08090b 100%);
   pointer-events:none;
 }
-.home-page .bullyproof-section>.shell{position:relative;z-index:1}
+.home-page .bullyproof-section>.shell{position:relative;z-index:2}
 
 @media(max-width:700px){
-  .home-page .bullyproof-section::before{background-position:center 48%;opacity:.3}
-  .home-page .bullyproof-section::after{background:linear-gradient(180deg,rgba(8,9,11,.72),rgba(8,9,11,.5) 42%,rgba(8,9,11,.88))}
+  .home-page .bullyproof-section::before{background-position:center 48%;opacity:.5}
+  .home-page .bullyproof-section::after{background:linear-gradient(180deg,rgba(8,9,11,.66),rgba(8,9,11,.38) 42%,rgba(8,9,11,.82))}
 }
 
 .class-card{transition:border-color .25s ease,transform .25s ease,background .25s ease}

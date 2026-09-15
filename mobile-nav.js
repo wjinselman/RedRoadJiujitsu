@@ -36,6 +36,7 @@
   header.after(backdrop);
   let inertElements = [];
   let priorOverflow = '';
+  let priorRootOverflow = '';
   const close = (restoreFocus = false) => {
     if (panel.hidden) return;
     panel.hidden = true;
@@ -46,6 +47,7 @@
     toggle.textContent = 'Menu';
     document.body.classList.remove('navigation-open');
     document.body.style.overflow = priorOverflow;
+    document.documentElement.style.overflow = priorRootOverflow;
     inertElements.forEach(([el, original]) => { el.inert = original; });
     inertElements = [];
     if (restoreFocus) toggle.focus({ preventScroll: true });
@@ -53,10 +55,12 @@
   toggle.addEventListener('click', () => {
     if (!panel.hidden) return close(true);
     priorOverflow = document.body.style.overflow;
+    priorRootOverflow = document.documentElement.style.overflow;
     inertElements = [...document.querySelectorAll('main, footer, .mobile-action-bar, .scroll-rail, .skip-link')]
       .filter(el => !header.contains(el)).map(el => [el, el.inert]);
     inertElements.forEach(([el]) => { el.inert = true; });
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
     document.body.classList.add('navigation-open');
     panel.hidden = false;
     backdrop.hidden = false;
@@ -80,6 +84,7 @@
   });
   menuMedia.addEventListener('change', () => { if (!menuMedia.matches) close(); });
   addEventListener('pagehide', () => close());
+  addEventListener('pageshow', () => close());
   if (page === 'index.html' || page === 'story.html' || page.startsWith('jiu-jitsu-')) {
     const actionBar = document.createElement('nav');
     actionBar.className = 'mobile-action-bar';

@@ -74,18 +74,7 @@
   const updateConnection = () => { offline.hidden = navigator.onLine !== false; };
   addEventListener('online', updateConnection); addEventListener('offline', updateConnection); updateConnection();
 
-  // Bounded DOM observation, never a backend listener. Bring staff feedback to
-  // the active section instead of leaving it out of sight beneath a long roster.
-  const ownerMessage = document.getElementById('owner-message');
-  if (ownerMessage) {
-    const observer = new MutationObserver(() => {
-      if (!ownerMessage.hidden && ownerMessage.textContent.trim()) {
-        const rect = ownerMessage.getBoundingClientRect();
-        if (rect.top < 76 || rect.bottom > innerHeight) ownerMessage.scrollIntoView({ behavior: behavior(), block: 'center' });
-      }
-    });
-    observer.observe(ownerMessage, { childList: true, attributes: true, attributeFilter: ['hidden'] });
-  }
+  // Status messages are announced by aria-live without moving the viewport.
   const panelPairs = [
     ['toggle-member-profile', 'member-profile-panel'], ['toggle-change-password', 'change-password-panel'],
     ['toggle-add-member', 'add-member-panel'], ['toggle-add-owner', 'add-owner-panel'], ['toggle-add-kiosk', 'add-kiosk-panel']
@@ -96,7 +85,7 @@
     button.setAttribute('aria-controls', panelId);
     new MutationObserver(() => {
       button.setAttribute('aria-expanded', String(!panel.hidden));
-      if (!panel.hidden) panel.querySelector('input:not([type=hidden]),select')?.focus();
+      if (!panel.hidden && !matchMedia('(pointer: coarse)').matches) panel.querySelector('input:not([type=hidden]),select')?.focus({ preventScroll: true });
     }).observe(panel, { attributes: true, attributeFilter: ['hidden'] });
   });
 

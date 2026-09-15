@@ -72,6 +72,22 @@ test('Focus trap cycles, outside dismiss restores scroll and resize closes menu'
 test('Member dashboard attendance is outside summary grid; roster is first; print library exists',()=>{
  const m=makeDom('members.html');assert.equal(m.d.querySelector('.attendance-history-panel').closest('.compact-member-grid'),null);m.close();const o=makeDom('owner.html');assert.equal(o.d.querySelector('#owner-app>.owner-card').id,'staff-members');assert.ok(o.d.querySelector('#staff-waivers #owner-waiver-panel'));o.close();
 });
+test('Member attendance is a hidden monthly view opened by one dashboard button',()=>{
+ const m=makeDom('members.html');const button=m.d.getElementById('toggle-member-attendance');const panel=m.d.getElementById('member-attendance-panel');assert.ok(button);assert.equal(panel.hidden,true);assert.ok(m.d.getElementById('attendance-prev-month'));assert.ok(m.d.getElementById('attendance-next-month'));assert.equal(panel.querySelectorAll('[data-attendance-action]').length,0);m.close();
+});
+test('Phone check-in is available and shared kiosk is feature-disabled',async()=>{
+ const m=makeDom('members.html');assert.equal(m.d.getElementById('member-checkin-button'),null);m.close();const c=makeDom('checkin.html');assert.ok(c.d.getElementById('checkin-confirm-button'));c.close();
+ const k=makeDom('kiosk.html');await load(k,'kiosk.js');assert.equal(k.d.getElementById('kiosk-auth-view').hidden,true);assert.ok(k.d.querySelector('[data-kiosk-disabled="true"]'));k.close();
+ const config=read('launch-config.js');assert.match(config,/memberPhoneCheckIn:\s*true/);assert.match(config,/kioskAttendance:\s*false/);
+});
+test('Staff attendance options provide explicit kiosk enable and disable modes',()=>{
+ const e=makeDom('owner.html');const select=e.d.getElementById('kiosk-mode-select');assert.deepEqual([...select.options].map(option=>option.value),['disabled','enabled']);assert.equal(select.value,'disabled');e.close();
+});
+test('Member phone check-in writes only the signed-in member attendance record',async()=>{
+ const e=makeDom('checkin.html');const user={email:'alex@example.invalid',emailVerified:true};const records={'members/alex@example.invalid':{email:user.email,name:'Alex Tester',plan:'Adult',enabled:true,active:true,archived:false}};
+ const x=await load(e,'checkin.js','',{user,records});e.d.getElementById('checkin-email').value=user.email;e.d.getElementById('checkin-password').value='password';submit(e,'#checkin-login-form');await tick();await tick();click(e,'#checkin-confirm-button');await tick();await tick();
+ assert.equal(x.calls.writes.length,1);assert.equal(x.calls.writes[0].ref.group,'attendance');assert.equal(x.calls.writes[0].payload.memberEmail,user.email);assert.equal(x.calls.writes[0].payload.checkedInBy,user.email);assert.equal(x.calls.writes[0].payload.source,'member');assert.equal(e.d.getElementById('checkin-confirm-button').textContent,'Checked In');e.close();
+});
 test('Owner, developer and coach UI permissions remain separate',async()=>{
  for(const role of ['owner','developer','coach']){
   const e=makeDom('owner.html');const email=role+'@example.invalid';const rec={name:'Test '+role,enabled:true,active:true,coachAccess:true};const group=role==='developer'?'developers':role==='owner'?'owners':'members';

@@ -1,6 +1,6 @@
 {
   "name": "red-road-jiujitsu",
-  "version": "49.0.0",
+  "version": "64.0.0",
   "private": true,
   "type": "module",
   "description": "Static Red Road site; npm dependencies are for isolated development checks only.",

@@ -63,15 +63,23 @@ Current rules:
 - No Cloud Functions.
 
 ## Attendance setup and use
-1. Deploy the included release49 Firestore rules. See MOBILE-RELEASE-49.md for the standalone waiver setup and printing check.
-2. Developer approves the dedicated iPad email under **iPad Kiosk Access**.
-3. Activate that account once on `kiosk.html` and leave the iPad connected.
-4. For every existing member, open **Edit**, enter a new four-digit Check-In PIN, and save. New members require a PIN when staff adds them.
-5. At class, the member types their name, selects it, enters the PIN, and presses **Check In**.
-6. Tuesday/Thursday records are labeled No-Gi automatically; Kids plans record Kids class and other plans record Adult class.
-7. Staff can review today’s attendance and undo mistakes. Members see their own recent history.
 
-For an iPad, add the kiosk page to the Home Screen and enable iOS Guided Access after setup so members stay inside the check-in screen.
+Current release: members check in on their own phones. Print the QR image at
+`assets/red-road-check-in-qr.png`; it opens
+`https://redroadbjj.com/checkin.html`. A verified, active member signs
+in and presses **Check In**. Staff review or undo attendance in the dashboard.
+The deterministic attendance record blocks a second check-in for the same
+member, class and date.
+
+The shared iPad kiosk is retained only as inactive fallback code. Its launch
+flag is `kioskAttendance: false` in `launch-config.js`; do not configure a
+kiosk account unless that feature is deliberately restored.
+1. Deploy the included Release 61 Firestore rules with the website.
+2. Download the QR image from the staff Attendance card and print it for the entrance.
+3. Confirm an active member can scan, sign in and press **Check In**.
+4. Confirm a second press is rejected as a duplicate.
+5. Tuesday/Thursday records are labeled No-Gi automatically; Kids plans record Kids class and other plans record Adult class.
+6. Confirm staff can review today’s attendance and undo a mistake.
 
 ## Member behavior
 1. Staff adds a member roster record first.

@@ -188,7 +188,7 @@
 <div><label for="owner-emergency-name">Emergency Contact</label><input id="owner-emergency-name" maxlength="160" name="emergencyName"></div>
 <div><label for="owner-emergency-phone">Emergency Phone</label><input id="owner-emergency-phone" maxlength="40" name="emergencyPhone" type="tel"></div>
 <div><label for="owner-guardian-name">Parent / Legal Guardian</label><input id="owner-guardian-name" maxlength="160" name="guardianName"></div>
-<div><label for="owner-kiosk-pin">4-Digit Check-In PIN</label><input id="owner-kiosk-pin" autocomplete="new-password" inputmode="numeric" maxlength="4" minlength="4" name="kioskPin" pattern="[0-9]{4}" placeholder="0000" required="" type="password"></div>
+<div data-kiosk-feature hidden=""><label for="owner-kiosk-pin">4-Digit Check-In PIN</label><input id="owner-kiosk-pin" autocomplete="new-password" inputmode="numeric" maxlength="4" minlength="4" name="kioskPin" pattern="[0-9]{4}" placeholder="0000" type="password"></div>
 <div class="owner-checks">
 <label>
 <input checked="" name="paid" type="checkbox"> Paid / Current</label>
@@ -258,7 +258,7 @@
 <div><label for="edit-member-emergency-name">Emergency Contact</label><input id="edit-member-emergency-name" maxlength="160" name="emergencyName"></div>
 <div><label for="edit-member-emergency-phone">Emergency Phone</label><input id="edit-member-emergency-phone" maxlength="40" name="emergencyPhone" type="tel"></div>
 <div><label for="edit-member-guardian-name">Parent / Legal Guardian</label><input id="edit-member-guardian-name" maxlength="160" name="guardianName"></div>
-<div><label for="edit-member-kiosk-pin">New Check-In PIN</label><input id="edit-member-kiosk-pin" autocomplete="new-password" inputmode="numeric" maxlength="4" minlength="4" name="kioskPin" pattern="[0-9]{4}" placeholder="Leave blank to keep current" type="password"><small class="field-help">Enter four digits only when setting or changing this member’s kiosk PIN.</small></div>
+<div data-kiosk-feature hidden=""><label for="edit-member-kiosk-pin">New Check-In PIN</label><input id="edit-member-kiosk-pin" autocomplete="new-password" inputmode="numeric" maxlength="4" minlength="4" name="kioskPin" pattern="[0-9]{4}" placeholder="Leave blank to keep current" type="password"><small class="field-help">Enter four digits only when setting or changing this member’s kiosk PIN.</small></div>
 <div class="owner-checks">
 <label>
 <input id="edit-member-paid" name="paid" type="checkbox"> Paid / Current</label>
@@ -298,12 +298,15 @@
 <div>
 <div class="kicker">Class Check-In</div>
 <h2>Attendance</h2>
-<p class="portal-muted">Open the dedicated iPad kiosk for member check-in, or review and correct today’s attendance here.</p>
+<p class="portal-muted">Members scan the gym QR code and check in securely from their own phones. Review and correct today’s attendance here.</p>
 </div>
 <div class="owner-toolbar-actions">
-<a class="btn btn-red" href="kiosk.html" target="_blank" rel="noopener">Open iPad Kiosk</a>
 <button class="btn btn-dark" id="attendance-refresh" type="button">Refresh Attendance</button>
 </div>
+</div>
+<div class="attendance-qr-card">
+<img src="assets/red-road-check-in-qr.png" alt="QR code linking to Red Road member phone check-in" width="900" height="900" loading="lazy" decoding="async">
+<div><h3>Gym Check-In QR</h3><p class="portal-muted">Print and post this code at the entrance. Scanning it opens the dedicated check-in page.</p><a class="btn btn-dark btn-mini" href="assets/red-road-check-in-qr.png" download="red-road-check-in-qr.png">Download QR Code</a></div>
 </div>
 <div class="attendance-summary">
 <div><span>Checked In Today</span><strong id="attendance-today-count">0</strong></div>
@@ -319,6 +322,15 @@
 
 
 <div class="dash-card owner-card security-card" id="staff-settings">
+<div class="member-settings-panel">
+<div class="portal-card-head"><div><div class="kicker">Attendance Options</div><h3>Kiosk Mode</h3></div></div>
+<p class="portal-muted">Phone and QR check-in stays available. Enable this only if Red Road decides to use a shared check-in device.</p>
+<form class="owner-form launch-owner-form" id="attendance-options-form" method="post" data-service-form="">
+<div><label for="kiosk-mode-select">Shared kiosk</label><select id="kiosk-mode-select" name="kioskMode"><option value="disabled">Disabled</option><option value="enabled">Enabled</option></select></div>
+<button class="btn btn-dark owner-form-submit" type="submit">Save Attendance Options</button>
+</form>
+<div class="flash-message" hidden="" id="attendance-options-message"></div>
+</div>
 <div class="owner-member-head">
 <div>
 <div class="kicker">Account Security</div>
@@ -376,7 +388,7 @@
 <span>Maximum 50 owner records per manual load.</span>
 <span>Coach access is assigned from the member record below.</span>
 </div>
-<div class="kiosk-access-block">
+<div class="kiosk-access-block" data-kiosk-feature hidden="">
 <div class="owner-member-head">
 <div><div class="kicker">Check-In Device</div><h3>iPad Kiosk Access</h3><p class="portal-muted">Approve a dedicated account for the front-desk iPad. It can only see the check-in directory and create attendance records.</p></div>
 <button aria-expanded="false" class="btn btn-dark" id="toggle-add-kiosk" type="button">+ Add Kiosk</button>
@@ -395,7 +407,7 @@
 </div>
 </section>
 </main>
-<script src="portal.js?v=60" type="module">
+<script src="portal.js?v=64" type="module">
 </script>
 
 

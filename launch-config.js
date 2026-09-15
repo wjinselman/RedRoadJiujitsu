@@ -9,3 +9,9 @@ export const DEVELOPER = {
   name: 'William Inselman',
   email: 'wjinselman@gmail.com'
 };
+
+// Release controls let us retire an experience without deleting its code.
+export const FEATURES = Object.freeze({
+  memberPhoneCheckIn: true,
+  kioskAttendance: false
+});

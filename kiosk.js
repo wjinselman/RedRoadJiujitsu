@@ -1,4 +1,5 @@
 import { listenAsync } from './ui-utils.js?v=49';
+import { FEATURES } from './launch-config.js';
 import {
   firebaseConfigured,
   auth,
@@ -214,7 +215,24 @@ async function checkIn(pin) {
   }
 }
 
-function setup() {
+async function setup() {
+  let kioskEnabled = FEATURES.kioskAttendance === true;
+  if (firebaseConfigured) {
+    try {
+      const settings = await getDoc(doc(db, 'appSettings', 'attendance'));
+      if (settings.exists()) kioskEnabled = settings.data()?.kioskEnabled === true;
+    } catch (_) {}
+  }
+  if (!kioskEnabled) {
+    $('#kiosk-auth-view').hidden = true;
+    $('#kiosk-app').hidden = true;
+    const notice = document.createElement('section');
+    notice.className = 'kiosk-auth';
+    notice.dataset.kioskDisabled = 'true';
+    notice.innerHTML = '<div class="kicker">Check-In Updated</div><h1>Use Your Phone.</h1><p>The shared kiosk is not active. Scan the Red Road QR code posted at the gym.</p>';
+    document.querySelector('.kiosk-header').after(notice);
+    return;
+  }
   updateClock();
   setInterval(updateClock, 30000);
   if (!firebaseConfigured) {

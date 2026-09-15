@@ -53,6 +53,11 @@ input,select,textarea{max-width:100%;min-width:0}
 .staff-page .owner-checks label{min-height:44px}
 .staff-page .owner-search input{width:min(100%,360px)}
 .member-page .attendance-history-panel{margin-top:24px}
+.attendance-month-nav{display:flex;justify-content:space-between;gap:12px;margin:0 0 16px}
+.attendance-qr-card{display:flex;align-items:center;gap:18px;margin:18px 0;padding:16px;border:1px solid rgba(255,255,255,.1);border-radius:14px;background:rgba(255,255,255,.025)}
+.attendance-qr-card img{width:112px;height:112px;padding:7px;border-radius:8px;background:#fff}.attendance-qr-card h3{margin:0 0 4px}.attendance-qr-card p{margin:0 0 12px}
+@media(max-width:540px){.attendance-qr-card{align-items:flex-start;flex-direction:column}.attendance-qr-card img{width:140px;height:140px}}
+.checkin-page{min-height:100vh;background:#07080a}.checkin-shell{width:min(100% - 28px,520px);margin:0 auto;padding:38px 0 70px}.checkin-logo{display:block;width:104px;height:104px;margin:0 auto 24px}.checkin-page .login-card{text-align:left}.checkin-page h1{margin:5px 0 8px}.checkin-confirm{text-align:center!important}.checkin-confirm .btn{margin-top:18px}
 .member-page .member-actions{margin:22px 0}
 .member-page .compact-member-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
 .portal-card-head{flex-wrap:wrap}

@@ -1,5 +1,6 @@
 import { listenAsync, localDate } from './ui-utils.js?v=49';
 import { attachWaiverPrint } from './waiver-pdf.js?v=49';
+import { FEATURES } from './launch-config.js';
 /*
   Red Road Jiu Jitsu — production portal
   ---------------------------------------
@@ -60,6 +61,9 @@ const waiverPages = {
 };
 let ownerIdentity = null;
 let currentMember = null;
+let memberAttendance = [];
+let memberAttendanceMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+let kioskModeEnabled = FEATURES.kioskAttendance === true;
 let memberRestoreAttempted = false;
 let ownerRestoreAttempted = false;
 
@@ -104,6 +108,18 @@ function clearFlash(el) {
   el.hidden = true;
   el.textContent = '';
   delete el.dataset.tone;
+}
+
+function renderKioskMode() {
+  const select = $('#kiosk-mode-select');
+  if (select) select.value = kioskModeEnabled ? 'enabled' : 'disabled';
+  document.querySelectorAll('[data-kiosk-feature]').forEach(element => { element.hidden = !kioskModeEnabled; });
+}
+
+async function loadAttendanceOptions() {
+  const snap = await getDoc(doc(db, 'appSettings', 'attendance'));
+  kioskModeEnabled = snap.exists() ? snap.data()?.kioskEnabled === true : FEATURES.kioskAttendance === true;
+  renderKioskMode();
 }
 
 function friendlyError(error) {
@@ -241,7 +257,6 @@ async function openMemberForUser(user) {
       return;
     }
     renderMemberDashboard(member, user.email);
-    await loadMemberAttendance(user.email).catch(() => {});
   } catch (error) {
     flash(message, friendlyError(error), 'error');
   }
@@ -280,16 +295,27 @@ async function loadMemberAttendance(email) {
   const snap = await getDocs(query(
     collection(db, 'attendance'),
     where('memberEmail', '==', normalizedEmail(email)),
-    limit(50)
+    limit(250)
   ));
-  const records = snap.docs.map(item => ({ id: item.id, ...item.data() }))
+  memberAttendance = snap.docs.map(item => ({ id: item.id, ...item.data() }))
     .sort((a, b) => (b.checkedInAt?.toMillis?.() || 0) - (a.checkedInAt?.toMillis?.() || 0));
+  renderMemberAttendanceMonth();
+}
+
+function renderMemberAttendanceMonth() {
+  const list = $('#member-attendance-list');
+  if (!list) return;
+  const key = `${memberAttendanceMonth.getFullYear()}-${String(memberAttendanceMonth.getMonth() + 1).padStart(2, '0')}`;
+  const records = memberAttendance.filter(record => String(record.classDate || '').startsWith(key));
+  $('#member-attendance-month').textContent = memberAttendanceMonth.toLocaleDateString([], { month: 'long', year: 'numeric' });
   $('#member-attendance-count').textContent = String(records.length);
+  const now = new Date();
+  $('#attendance-next-month').disabled = memberAttendanceMonth.getFullYear() === now.getFullYear() && memberAttendanceMonth.getMonth() === now.getMonth();
   if (!records.length) {
-    list.innerHTML = '<p class="portal-muted">No check-ins recorded yet.</p>';
+    list.innerHTML = '<p class="portal-muted">No check-ins recorded for this month.</p>';
     return;
   }
-  list.innerHTML = records.slice(0, 12).map(record => {
+  list.innerHTML = records.map(record => {
     const date = record.checkedInAt?.toDate?.();
     return `<div class="member-attendance-item"><strong>${esc(record.className || 'Class')}</strong><span>${esc(date ? date.toLocaleString([], { month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit' }) : record.classDate || '—')}</span></div>`;
   }).join('');
@@ -356,7 +382,23 @@ function setupMemberPage() {
     loginView.hidden = false;
     password.value = '';
     currentMember = null;
+    memberAttendance = [];
   });
+
+  listenAsync($('#toggle-member-attendance'), 'click', async () => {
+    const panel = $('#member-attendance-panel');
+    panel.hidden = !panel.hidden;
+    $('#toggle-member-attendance').setAttribute('aria-expanded', String(!panel.hidden));
+    if (!panel.hidden && currentMember) {
+      memberAttendanceMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      try { await loadMemberAttendance(currentMember.email); }
+      catch (error) { $('#member-attendance-list').innerHTML = '<p class="portal-muted">Attendance could not be loaded. Please try again.</p>'; }
+    }
+  });
+
+  $('#attendance-prev-month')?.addEventListener('click', () => { memberAttendanceMonth.setMonth(memberAttendanceMonth.getMonth() - 1); renderMemberAttendanceMonth(); });
+  $('#attendance-next-month')?.addEventListener('click', () => { if (!$('#attendance-next-month').disabled) { memberAttendanceMonth.setMonth(memberAttendanceMonth.getMonth() + 1); renderMemberAttendanceMonth(); } });
 
   $('#toggle-member-profile')?.addEventListener('click', () => {
     const panel = $('#member-profile-panel');
@@ -524,7 +566,7 @@ function statusPills(member) {
   if (member.coachAccess === true) pills.push('<span class="status-chip active">Coach</span>');
   pills.push(`<span class="status-chip ${member.enabled ? 'active' : 'paused'}">${member.enabled ? 'Portal On' : 'Portal Off'}</span>`);
   pills.push(`<span class="status-chip ${member.waiverSigned ? 'active' : 'past-due'}">${member.waiverSigned ? 'Waiver Signed' : 'Waiver Missing'}</span>`);
-  pills.push(`<span class="status-chip ${member.kioskReady ? 'active' : 'paused'}">${member.kioskReady ? 'Kiosk Ready' : member.kioskReady === false ? 'Set Check-In PIN' : 'Check PIN Setup'}</span>`);
+  if (kioskModeEnabled) pills.push(`<span class="status-chip ${member.kioskReady ? 'active' : 'paused'}">${member.kioskReady ? 'Kiosk Ready' : member.kioskReady === false ? 'Set Check-In PIN' : 'Check PIN Setup'}</span>`);
   if (member.archived) pills.push('<span class="status-chip archived">Archived</span>');
   return pills.join('');
 }
@@ -611,6 +653,13 @@ async function saveMember(member, previous = null) {
     createdAt: previous?.createdAt || member.createdAt || serverTimestamp(),
     updatedAt: member.updatedAt || serverTimestamp()
   };
+
+  if (!kioskModeEnabled) {
+    await setDoc(doc(db, 'members', email), payload, { merge: false });
+    member.kioskReady = null;
+    member.kioskPin = '';
+    return;
+  }
 
   const pin = String(member.kioskPin || '');
   if (pin && !/^\d{4}$/.test(pin)) throw new Error('Check-in PIN must be exactly four digits.');
@@ -919,7 +968,8 @@ async function authorizeStaffOnce(user) {
     $('#attendance-last-time').textContent = '—';
   });
   await loadStandaloneWaivers().catch(()=>flash($('#waiver-library-message'),'Waiver-only submissions could not be loaded. Check the new waiver-storage rules. Existing member and trial waivers remain available.','error'));
-  if (developer) await Promise.allSettled([loadOwnerAccess(), loadKioskAccess()]);
+  await loadAttendanceOptions().catch(() => { kioskModeEnabled = FEATURES.kioskAttendance === true; renderKioskMode(); });
+  if (developer) await Promise.allSettled([loadOwnerAccess(), ...(kioskModeEnabled ? [loadKioskAccess()] : [])]);
   if (!rosterError) clearFlash(loadStatus);
   return access;
 }
@@ -927,11 +977,33 @@ async function authorizeStaffOnce(user) {
 function setupOwnerPage() {
   const form = $('#owner-login-form');
   if (!form || showSetupIfNeeded()) return;
+  renderKioskMode();
 
   const email = $('#owner-login-email');
   const password = $('#owner-login-password');
   const loginMessage = $('#owner-login-message');
   const ownerMessage = $('#owner-message');
+
+  listenAsync($('#attendance-options-form'), 'submit', async event => {
+    event.preventDefault();
+    const message = $('#attendance-options-message');
+    clearFlash(message);
+    if (!['owner', 'developer'].includes(ownerIdentity?.role)) return flash(message, 'Owner access is required to change attendance options.', 'error');
+    const enabled = $('#kiosk-mode-select').value === 'enabled';
+    try {
+      await setDoc(doc(db, 'appSettings', 'attendance'), {
+        kioskEnabled: enabled,
+        updatedAt: serverTimestamp(),
+        updatedBy: normalizedEmail(auth.currentUser?.email)
+      }, { merge: false });
+      kioskModeEnabled = enabled;
+      renderKioskMode();
+      if (enabled && ownerIdentity?.role === 'developer') await loadKioskAccess().catch(() => {});
+      flash(message, enabled ? 'Kiosk mode enabled. The shared-device setup is now available.' : 'Kiosk mode disabled. QR phone check-in remains active.');
+    } catch (error) {
+      flash(message, friendlyError(error), 'error');
+    }
+  });
 
   listenAsync(form, 'submit', async event => {
     event.preventDefault();
@@ -1050,7 +1122,7 @@ function setupOwnerPage() {
       await loadTrialRequests();
       await loadAttendance();
       await loadStandaloneWaivers();
-      if (ownerIdentity?.role === 'developer') await Promise.all([loadOwnerAccess(), loadKioskAccess()]);
+      if (ownerIdentity?.role === 'developer') await Promise.all([loadOwnerAccess(), ...(kioskModeEnabled ? [loadKioskAccess()] : [])]);
       flash(ownerMessage, ownerIdentity?.role === 'developer' ? 'Members and owner access refreshed once.' : 'Member list refreshed once.');
       clearFlash($('#dashboard-load-status'));
     } catch (error) {
@@ -1303,7 +1375,7 @@ function setupOwnerPage() {
     clearFlash(ownerMessage);
     if (ownerIdentity?.role === 'coach') return flash(ownerMessage, 'Owner access required.', 'error');
     const member = memberPayloadFromForm(form);
-    if (!/^\d{4}$/.test(member.kioskPin)) {
+    if (kioskModeEnabled && !/^\d{4}$/.test(member.kioskPin)) {
       flash(ownerMessage, 'Enter a four-digit check-in PIN for the new member.', 'error');
       return;
     }

@@ -95,7 +95,7 @@
     document.body.append(actionBar);
     document.body.classList.add('has-mobile-action-bar');
     const signupButton = actionBar.querySelector('.mobile-action-primary');
-    import('./member-button.js?v=58')
+    import('./member-button.js?v=59')
       .then(module => module.bindMemberButton(signupButton))
       .catch(() => { /* Keep Sign Up Now if Auth cannot load. */ });
   }

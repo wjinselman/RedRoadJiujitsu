@@ -5,7 +5,7 @@ export function bindMemberButton(button) {
   if (!button || !firebaseConfigured || !auth) return;
   return onAuthStateChanged(auth, user => {
     const signedIn = Boolean(user && !user.isAnonymous && user.email);
-    button.textContent = signedIn ? 'Members' : 'Sign Up Now';
+    button.textContent = signedIn ? 'My Account' : 'Sign Up Now';
     button.setAttribute('href', signedIn ? 'members.html' : 'enroll.html');
   });
 }

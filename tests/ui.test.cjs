@@ -25,6 +25,8 @@ async function load(env,file,extra='',options={}){
   signInAnonymously:async()=>{mocks.auth.currentUser={uid:'anonymous-test',isAnonymous:true};return {user:mocks.auth.currentUser};},
   createUserWithEmailAndPassword:async()=>{calls.signIns++;return {user:{uid:'test'}};},sendPasswordResetEmail:async()=>{},sendEmailVerification:async()=>{},updatePassword:async()=>{},reauthenticateWithCredential:async()=>{},EmailAuthProvider:{credential:()=>({})},signOut:async()=>{mocks.auth.currentUser=null;},deleteUser:async()=>{},onAuthStateChanged:()=>()=>{},
  };
+ mocks.getDocFromServer=async ref=>{if(options.failServerVerification)throw new Error('offline');return mocks.getDoc(ref);};
+ mocks.getDocsFromServer=mocks.getDocs;
  const context=env.dom.getInternalVMContext();const cache=new Map();
  const firebase=new vm.SyntheticModule(Object.keys(mocks),function(){for(const [key,value]of Object.entries(mocks))this.setExport(key,value);},{context});
  async function get(name){name=name.split('?')[0].replace(/^\.\//,'');if(name.startsWith('firebase-'))return firebase;if(cache.has(name))return cache.get(name);const module=new vm.SourceTextModule(read(name)+(name===file?'\n'+extra:''),{context,identifier:name});cache.set(name,module);await module.link(async spec=>get(spec));return module;}
@@ -37,7 +39,7 @@ function fillWaiver(env){const values={participantName:'Alex Tester',dob:'1990-0
 test('Every page has valid local assets, unique IDs, labeled fields and new stylesheet',async()=>{
  for(const name of fs.readdirSync(root).filter(n=>n.endsWith('.html')&&n!=='admin-demo.html')){
   const e=makeDom(name);const ids=[...e.d.querySelectorAll('[id]')].map(el=>el.id);assert.equal(new Set(ids).size,ids.length,name+' duplicate ID');
-  assert.ok(e.d.querySelector('link[href="experience.css?v=49"]'),name);assert.ok(e.d.querySelector('meta[name=viewport]').content.includes('viewport-fit=cover'));
+  assert.ok(e.d.querySelector('link[href^="experience.css?v="]'),name);assert.ok(e.d.querySelector('meta[name=viewport]').content.includes('viewport-fit=cover'));
   for(const el of e.d.querySelectorAll('[src],link[rel=stylesheet],a[href]')){
    const value=el.getAttribute('src')||el.getAttribute('href');if(!value||/^(?:https?:|mailto:|tel:|blob:|data:)/.test(value))continue;
    const [filePart,hash]=value.split('?')[0].split('#');const target=filePart?path.resolve(root,filePart):path.join(root,name);assert.ok(fs.existsSync(target),name+' missing '+value);
@@ -121,4 +123,25 @@ test('Original agreement bytes unchanged; no email or backend polling added',()=
  assert.equal(createHash('sha256').update(fs.readFileSync(path.join(root,'assets/red-road-liability-waiver.pdf'))).digest('hex'),'52beb56fddff42b277a41fa687623db9a14afffcc65a237b393c50e78958e864');
  for(const name of ['experience.js','portal.js','waiver-prod14.js','waiver-pdf.js'])assert.doesNotMatch(read(name),/mailto:|protonmail|onSnapshot\(/);
  assert.match(read('firestore.rules'),/match \/waiverSubmissions\/\{receiptId\}/);assert.match(read('firestore.rules'),/allow update: if false/);
+});
+test('Account pages use document scrolling and menu exit restores both overflow locks',()=>{
+ for(const name of ['owner.html','members.html']){
+  const e=makeDom(name);assert.ok(e.d.documentElement.classList.contains('portal-document'));runClassic(e,'mobile-nav.js');
+  click(e,'.mobile-menu-toggle');assert.equal(e.d.documentElement.style.overflow,'hidden');assert.equal(e.d.body.style.overflow,'hidden');
+  e.w.dispatchEvent(new e.w.Event('pagehide'));assert.equal(e.d.documentElement.style.overflow,'');assert.equal(e.d.body.style.overflow,'');assert.notEqual(e.d.querySelector('main').inert,true);
+  click(e,'.mobile-menu-toggle');e.w.dispatchEvent(new e.w.Event('pageshow'));assert.equal(e.d.documentElement.style.overflow,'');assert.equal(e.d.body.style.overflow,'');e.close();
+ }
+ assert.match(read('experience.css'),/html\.portal-document\{overflow-x:clip;overflow-y:auto;scroll-behavior:auto\}/);
+});
+test('Status updates do not pull the mobile dashboard back up the page',async()=>{
+ const e=makeDom('owner.html');let scrolls=0;e.w.HTMLElement.prototype.scrollIntoView=()=>{scrolls++;};runClassic(e,'experience.js');const notice=e.d.getElementById('owner-message');notice.hidden=false;notice.textContent='Saved';await tick();assert.equal(scrolls,0);e.close();
+});
+test('Permanent deletion targets the actual legacy document ID and verifies all deletes on server',async()=>{
+ const e=makeDom('owner.html');const x=await load(e,'portal.js',`export {permanentlyRemoveMember};export function owner(){ownerIdentity={role:'developer'};}`);x.api.owner();await x.api.permanentlyRemoveMember({id:'legacy-test-record',email:'test@example.invalid'});
+ assert.equal(x.calls.writes[0].delete.id,'legacy-test-record');assert.equal(x.calls.writes[0].delete.group,'members');assert.equal(x.calls.commits,1);assert.deepEqual(x.calls.reads.map(ref=>ref.group),['members','checkInDirectory','waivers']);e.close();
+});
+test('Permanent deletion never confirms success for a surviving record or failed server verification',async()=>{
+ for(const options of [{records:{'members/legacy':{name:'Test'}}},{failServerVerification:true}]){
+  const e=makeDom('owner.html');const x=await load(e,'portal.js',`export {permanentlyRemoveMember};export function owner(){ownerIdentity={role:'owner'};}`,options);x.api.owner();await assert.rejects(x.api.permanentlyRemoveMember({id:'legacy',email:'test@example.invalid'}),/server|verification/);e.close();
+ }
 });

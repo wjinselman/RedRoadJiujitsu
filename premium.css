@@ -177,9 +177,9 @@ body{background:#07080a}
   inset:0;
   z-index:0;
   pointer-events:none;
-  background:url('assets/bullyproof-training-background.png') center 48% / cover no-repeat;
-  filter:brightness(1.18) saturate(.8) contrast(1.06);
-  opacity:.86;
+  background:url('assets/bullyproof-training-background.png') left 48% / 116% auto no-repeat;
+  filter:brightness(.94) saturate(.8) contrast(1.06);
+  opacity:.78;
 }
 @media(min-width:701px){
   .hero-logo-mode .hero-action-photo{
@@ -210,9 +210,10 @@ body{background:#07080a}
 
 @media(max-width:700px){
   .hero-logo-mode .hero-action-photo{
-    background-position:47% center;
-    filter:brightness(1.08) saturate(.78) contrast(1.05);
-    opacity:.8;
+    background-size:auto 100%;
+    background-position:42% center;
+    filter:brightness(.9) saturate(.78) contrast(1.05);
+    opacity:.72;
   }
   .hero-logo-mode .hero-bg{
     background:

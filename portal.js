@@ -1176,17 +1176,21 @@ function setupOwnerPage() {
 
     if (button.dataset.action === 'remove') {
       const confirmed = window.confirm(
-        `Permanently remove ${member.name} from Red Road?\n\nThis deletes the membership record and removes them from roster/stats. Disable should be used when you only want to block access.`
+        `Permanently remove ${member.name} from Red Road?\n\nThis deletes the membership record, kiosk entry and attached waiver. Disable should be used when you only want to block access.`
       );
       if (!confirmed) return;
       try {
+        const memberRef = doc(db, 'members', normalizedEmail(member.email));
         const batch = writeBatch(db);
-        batch.delete(doc(db, 'members', normalizedEmail(member.email)));
+        batch.delete(memberRef);
         batch.delete(doc(db, 'checkInDirectory', normalizedEmail(member.email)));
+        batch.delete(doc(db, 'waivers', normalizedEmail(member.email)));
         await batch.commit();
+        const verification = await getDoc(memberRef);
+        if (verification.exists()) throw new Error('Firestore still returned this member after deletion. Refresh the rules and try again.');
         ownerMembers = ownerMembers.filter(m => normalizedEmail(m.email) !== normalizedEmail(member.email));
         renderOwner();
-        flash(ownerMessage, `${member.name} permanently removed from the Red Road membership roster.`);
+        flash(ownerMessage, `${member.name} permanently removed. Their roster record, kiosk entry and waiver are gone.`);
       } catch (error) {
         flash(ownerMessage, friendlyError(error), 'error');
       }

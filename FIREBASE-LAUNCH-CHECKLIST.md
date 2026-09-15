@@ -42,7 +42,7 @@ Current rules:
 - let members read only their own member document;
 - let Owner/Developer staff query members only with an explicit maximum limit of 250;
 - let only Developers query/manage Owner access, capped at 50;
-- allow staff to permanently delete member roster documents;
+- allow staff to permanently delete a member roster document, kiosk entry and attached waiver;
 - prohibit browser/client creation, modification, listing, or deletion of Developer access.
 - limit kiosk accounts to the check-in directory and append-only attendance creation;
 - allow anonymous visitors one append-only free-trial waiver write with no read access;
@@ -55,7 +55,7 @@ Current rules:
 - Developer additionally loads one bounded owner query.
 - Refresh happens only when the staff member presses Refresh.
 - Add/edit/enable/disable: one explicit atomic batch that keeps the member and kiosk directory in sync.
-- Remove: one explicit Firestore delete.
+- Remove: one explicit atomic delete batch plus one verification read.
 - Password changes and password-reset emails use Firebase Authentication, not Firestore.
 - No `onSnapshot()`.
 - No polling.
@@ -63,7 +63,7 @@ Current rules:
 - No Cloud Functions.
 
 ## Attendance setup and use
-1. Deploy the included prod43 Firestore rules.
+1. Deploy the included prod44 Firestore rules.
 2. Developer approves the dedicated iPad email under **iPad Kiosk Access**.
 3. Activate that account once on `kiosk.html` and leave the iPad connected.
 4. For every existing member, open **Edit**, enter a new four-digit Check-In PIN, and save. New members require a PIN when staff adds them.
@@ -84,7 +84,7 @@ For an iPad, add the kiosk page to the Home Screen and enable iOS Guided Access 
 
 ## Disable vs Remove
 - **Disable** keeps the Firestore member record and turns portal access off.
-- **Remove** permanently deletes the Firestore member record and removes the person from roster/stats.
+- **Remove** permanently deletes the Firestore member record, kiosk entry and attached waiver, then verifies the member document is gone.
 - On the Spark/no-backend architecture, another user's Firebase Authentication identity cannot be securely Admin-deleted by browser code. A removed member's dormant Auth identity may therefore remain, but without a member document it has no member portal access.
 - If a removed person is later re-added, they may need to sign in with/reset the existing Auth password rather than activate a brand-new Auth identity.
 

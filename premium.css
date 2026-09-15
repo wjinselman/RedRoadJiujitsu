@@ -19,7 +19,7 @@ body{background:#07080a}
 .program-card .btn{width:100%;margin-top:8px}
 .program-card>span{display:block;color:#d6d8dd;font-size:10px;font-weight:950;letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px}
 .program-card>strong{color:#fff;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
-.program-kids{--program-image:url('assets/kids-training.jpg')}
+.program-kids{--program-image:url('assets/bullyproof-kids-new-gym.png')}
 .program-adults{--program-image:url('assets/action.jpg');--program-position:56% center}
 .program-service{--program-image:url('assets/coaches.png')}
 
@@ -41,7 +41,7 @@ body{background:#07080a}
       rgba(7,8,10,.98) 93%,
       #07080a 100%),
     radial-gradient(ellipse at center,rgba(8,9,11,.24) 0%,rgba(8,9,11,.5) 66%,rgba(8,9,11,.88) 100%),
-    url('assets/bullyproof-kids-new-gym.png') center 46% / cover no-repeat!important;
+    url('assets/bullyproof-training-background.png') center 46% / cover no-repeat!important;
 }
 .home-page .bullyproof-section::before{
   content:none!important;
@@ -55,7 +55,7 @@ body{background:#07080a}
   .home-page .bullyproof-section{
     background:
       linear-gradient(180deg,rgba(8,9,11,.62),rgba(8,9,11,.32) 44%,rgba(8,9,11,.8)),
-      url('assets/bullyproof-kids-new-gym.png') center 48% / cover no-repeat!important;
+      url('assets/bullyproof-training-background.png') center 48% / cover no-repeat!important;
   }
 }
 
@@ -488,9 +488,16 @@ body{background:#07080a}
 .photo-initials{max-width:260px;margin:16px 0 0 31px}
 .trial-request-row .member-row-meta{align-items:start}
 .trial-request-row .member-row-meta>span{display:block}
+.launch-member-row{grid-template-columns:minmax(190px,.8fr) minmax(330px,1.25fr) auto!important;gap:12px!important;padding:13px 15px!important}
+.launch-member-row .member-row-meta{display:grid!important;grid-template-columns:auto auto!important;align-items:center;justify-content:start;gap:5px 12px!important;min-width:0}
+.launch-member-row .member-pills{grid-column:1/-1;display:flex!important;flex-flow:row nowrap!important;justify-content:flex-start!important;align-items:center;gap:4px!important;min-width:0}
+.launch-member-row .status-chip{flex:0 0 auto;padding:3px 6px!important;font-size:7px!important;line-height:1.15!important;letter-spacing:.045em!important;white-space:nowrap}
+.launch-member-row .member-row-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:5px!important}
+.launch-member-row .member-row-actions .btn-mini{min-height:31px;padding:6px 8px!important;font-size:8px!important;white-space:nowrap}
 .waiver-detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:18px 0 0}
 .waiver-detail-grid>div{padding:13px;border:1px solid rgba(255,255,255,.08);border-radius:8px;background:#0d0f13}
-@media(max-width:600px){.trial-class-fields{padding:18px 14px}.optional-release{padding:15px}.photo-initials{max-width:none;margin-left:0}.trial-request-row .member-row-actions{grid-template-columns:1fr}.trial-request-row .member-row-actions .btn:last-child{grid-column:auto}}
+@media(max-width:900px){.launch-member-row{grid-template-columns:1fr!important}.launch-member-row .member-row-meta{grid-template-columns:auto auto!important}.launch-member-row .member-pills{flex-wrap:wrap!important}.launch-member-row .member-row-actions{justify-content:flex-start}}
+@media(max-width:600px){.trial-class-fields{padding:18px 14px}.optional-release{padding:15px}.photo-initials{max-width:none;margin-left:0}.trial-request-row .member-row-actions{display:grid;grid-template-columns:1fr}.trial-request-row .member-row-actions .btn:last-child{grid-column:auto}.launch-member-row .member-row-meta{grid-template-columns:1fr!important;text-align:left}.launch-member-row .member-pills{grid-column:auto;justify-content:flex-start!important}.launch-member-row .member-row-actions{display:grid;grid-template-columns:1fr 1fr}.launch-member-row .member-row-actions .btn:last-child{grid-column:1/-1}}
 .waiver-detail-grid dt{color:#818690;font-size:9px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
 .waiver-detail-grid dd{margin:5px 0 0;color:#f1f1ee;font-size:13px;overflow-wrap:anywhere}
 @media(max-width:1100px){

@@ -340,7 +340,8 @@ service cloud.firestore {
     }
 
     // Full signed records are append-only from the member flow. Members may read
-    // their own record; staff can review it. Client updates and deletes are denied.
+    // their own record; staff can review it. Only staff may purge a waiver when
+    // permanently removing the associated member.
     match /waivers/{waiverEmail} {
       allow get: if (signedIn() && authEmail() == waiverEmail) || isStaff();
       allow list: if isStaff()
@@ -350,7 +351,8 @@ service cloud.firestore {
                     && authEmail() == waiverEmail
                     && !exists(/databases/$(database)/documents/waivers/$(waiverEmail))
                     && validWaiver(request.resource.data, waiverEmail);
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if isStaff();
     }
 
     // Free-trial visitors authenticate anonymously for one append-only write.

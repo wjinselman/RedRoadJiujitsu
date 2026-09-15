@@ -89,12 +89,11 @@
     const actionBar = document.createElement('nav');
     actionBar.className = 'mobile-action-bar';
     actionBar.setAttribute('aria-label', 'Quick actions');
-    actionBar.innerHTML = `<a class="mobile-action-link mobile-action-primary" href="enroll.html" data-account-link>Sign Up</a>`;
+    actionBar.innerHTML = `<a class="mobile-action-link" href="${home}#schedule">Schedule</a>
+      <a class="mobile-action-link mobile-action-primary" href="waiver.html?trial=1">Try a free class</a>
+      <a class="mobile-action-link" href="members.html">Members</a>`;
     document.body.append(actionBar);
     document.body.classList.add('has-mobile-action-bar');
-    import('./account-nav.js?v=56').then(module => module.bindAccountNavigation()).catch(() => {
-      // Keep public links usable if authentication cannot be reached.
-    });
   }
   const updateCurrent = () => {
     document.querySelectorAll('.mobile-nav-links a, .mobile-action-link').forEach(link => {

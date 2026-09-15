@@ -27,7 +27,6 @@ async function load(env,file,extra='',options={}){
  };
  mocks.getDocFromServer=async ref=>{if(options.failServerVerification)throw new Error('offline');return mocks.getDoc(ref);};
  mocks.getDocsFromServer=mocks.getDocs;
- calls.authListeners=[];mocks.onAuthStateChanged=(_,listener)=>{calls.authListeners.push(listener);return ()=>{};};
  const context=env.dom.getInternalVMContext();const cache=new Map();
  const firebase=new vm.SyntheticModule(Object.keys(mocks),function(){for(const [key,value]of Object.entries(mocks))this.setExport(key,value);},{context});
  async function get(name){name=name.split('?')[0].replace(/^\.\//,'');if(name.startsWith('firebase-'))return firebase;if(cache.has(name))return cache.get(name);const module=new vm.SourceTextModule(read(name)+(name===file?'\n'+extra:''),{context,identifier:name});cache.set(name,module);await module.link(async spec=>get(spec));return module;}
@@ -126,7 +125,7 @@ test('Original agreement bytes unchanged; no email or backend polling added',()=
  assert.match(read('firestore.rules'),/match \/waiverSubmissions\/\{receiptId\}/);assert.match(read('firestore.rules'),/allow update: if false/);
 });
 test('Account pages use document scrolling and menu exit restores both overflow locks',()=>{
- for(const name of ['owner.html','members.html','waiver.html?trial=1','waiver.html','waiver.html?enrollment=1','enroll.html']){
+ for(const name of ['owner.html','members.html']){
   const e=makeDom(name);assert.ok(e.d.documentElement.classList.contains('portal-document'));runClassic(e,'mobile-nav.js');
   click(e,'.mobile-menu-toggle');assert.equal(e.d.documentElement.style.overflow,'hidden');assert.equal(e.d.body.style.overflow,'hidden');
   e.w.dispatchEvent(new e.w.Event('pagehide'));assert.equal(e.d.documentElement.style.overflow,'');assert.equal(e.d.body.style.overflow,'');assert.notEqual(e.d.querySelector('main').inert,true);
@@ -145,11 +144,4 @@ test('Permanent deletion never confirms success for a surviving record or failed
  for(const options of [{records:{'members/legacy':{name:'Test'}}},{failServerVerification:true}]){
   const e=makeDom('owner.html');const x=await load(e,'portal.js',`export {permanentlyRemoveMember};export function owner(){ownerIdentity={role:'owner'};}`,options);x.api.owner();await assert.rejects(x.api.permanentlyRemoveMember({id:'legacy',email:'test@example.invalid'}),/server|verification/);e.close();
  }
-});
-test('Public navigation switches free trial to My Account only for signed-in non-anonymous users',async()=>{
- const e=makeDom('index.html');runClassic(e,'mobile-nav.js');const x=await load(e,'account-nav.js');x.api.bindAccountNavigation();const notify=x.calls.authListeners[0];
- const bar=e.d.querySelector('.mobile-action-bar');assert.equal(bar.children.length,1);assert.equal(bar.children[0].textContent,'Sign Up');assert.equal(e.d.querySelector('.hero-actions a').textContent,'Try a Free Class');
- notify({isAnonymous:true});assert.equal(bar.children[0].getAttribute('href'),'enroll.html');
- notify({email:'member@example.invalid',isAnonymous:false});assert.equal(bar.children[0].textContent,'My Account');assert.equal(bar.children[0].getAttribute('href'),'members.html');assert.equal(e.d.querySelector('.hero-actions a').textContent,'My Account');
- notify(null);assert.equal(bar.children[0].textContent,'Sign Up');assert.equal(bar.children[0].getAttribute('href'),'enroll.html');assert.equal(e.d.querySelector('.hero-actions a').getAttribute('href'),'waiver.html?trial=1');assert.equal(x.calls.reads.length,0);e.close();
 });

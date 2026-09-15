@@ -90,7 +90,7 @@
     actionBar.className = 'mobile-action-bar';
     actionBar.setAttribute('aria-label', 'Quick actions');
     actionBar.innerHTML = `<a class="mobile-action-link" href="${home}#schedule">Schedule</a>
-      <a class="mobile-action-link mobile-action-primary" href="waiver.html?trial=1">Try a free class</a>
+      <a class="mobile-action-link mobile-action-primary" href="enroll.html">Sign Up Now</a>
       <a class="mobile-action-link" href="members.html">Members</a>`;
     document.body.append(actionBar);
     document.body.classList.add('has-mobile-action-bar');

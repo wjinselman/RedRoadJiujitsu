@@ -2,10 +2,11 @@
 @font-face{font-family:Road Display;src:url('assets/fonts/barlow-condensed-latin-800-normal.woff2') format('woff2');font-style:normal;font-weight:800;font-display:swap}
 :root{--rr-muted:#b1b5bd;--rr-line:#30343c;--rr-panel:#111318;--rr-header:76px;--rr-focus:#ffb1b5}
 html{scroll-padding-top:calc(var(--rr-header) + 20px);-webkit-text-size-adjust:100%}
-/* Keep the document as the only vertical scroller in account pages. */
-html.portal-document{overflow-x:clip;overflow-y:auto;scroll-behavior:auto}
-body.staff-page,body.member-page{overflow:visible;overscroll-behavior-y:auto}
-.staff-page main,.member-page main{overflow:visible;min-width:0}
+/* One vertical page scroller, including public pages, forms and kiosk. */
+html.rr-scroll-document{overflow-x:clip;overflow-y:auto}
+html.rr-scroll-document body{overflow:visible;overscroll-behavior-y:auto}
+html.rr-scroll-document main{overflow:visible;min-width:0}
+html.portal-document{scroll-behavior:auto}
 body{font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding-bottom:0}
 img{max-width:100%;height:auto}
 [hidden],.attendance-history-panel[hidden]{display:none!important}

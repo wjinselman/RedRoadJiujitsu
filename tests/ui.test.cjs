@@ -125,13 +125,14 @@ test('Original agreement bytes unchanged; no email or backend polling added',()=
  assert.match(read('firestore.rules'),/match \/waiverSubmissions\/\{receiptId\}/);assert.match(read('firestore.rules'),/allow update: if false/);
 });
 test('Account pages use document scrolling and menu exit restores both overflow locks',()=>{
- for(const name of ['owner.html','members.html']){
-  const e=makeDom(name);assert.ok(e.d.documentElement.classList.contains('portal-document'));runClassic(e,'mobile-nav.js');
+ for(const name of ['index.html','story.html','owner.html','members.html','waiver.html?trial=1','waiver.html','waiver.html?enrollment=1','enroll.html']){
+  const e=makeDom(name);assert.ok(e.d.documentElement.classList.contains('rr-scroll-document'));runClassic(e,'mobile-nav.js');
   click(e,'.mobile-menu-toggle');assert.equal(e.d.documentElement.style.overflow,'hidden');assert.equal(e.d.body.style.overflow,'hidden');
   e.w.dispatchEvent(new e.w.Event('pagehide'));assert.equal(e.d.documentElement.style.overflow,'');assert.equal(e.d.body.style.overflow,'');assert.notEqual(e.d.querySelector('main').inert,true);
   click(e,'.mobile-menu-toggle');e.w.dispatchEvent(new e.w.Event('pageshow'));assert.equal(e.d.documentElement.style.overflow,'');assert.equal(e.d.body.style.overflow,'');e.close();
  }
- assert.match(read('experience.css'),/html\.portal-document\{overflow-x:clip;overflow-y:auto;scroll-behavior:auto\}/);
+ assert.match(read('experience.css'),/html\.rr-scroll-document\{overflow-x:clip;overflow-y:auto\}/);
+ assert.match(read('experience.css'),/html\.rr-scroll-document body\{overflow:visible;overscroll-behavior-y:auto\}/);
 });
 test('Status updates do not pull the mobile dashboard back up the page',async()=>{
  const e=makeDom('owner.html');let scrolls=0;e.w.HTMLElement.prototype.scrollIntoView=()=>{scrolls++;};runClassic(e,'experience.js');const notice=e.d.getElementById('owner-message');notice.hidden=false;notice.textContent='Saved';await tick();assert.equal(scrolls,0);e.close();
@@ -144,4 +145,7 @@ test('Permanent deletion never confirms success for a surviving record or failed
  for(const options of [{records:{'members/legacy':{name:'Test'}}},{failServerVerification:true}]){
   const e=makeDom('owner.html');const x=await load(e,'portal.js',`export {permanentlyRemoveMember};export function owner(){ownerIdentity={role:'owner'};}`,options);x.api.owner();await assert.rejects(x.api.permanentlyRemoveMember({id:'legacy',email:'test@example.invalid'}),/server|verification/);e.close();
  }
+});
+test('Homepage preserves hero trial and the three-button bar with only its center changed',()=>{
+ const e=makeDom('index.html',385);runClassic(e,'mobile-nav.js');const hero=e.d.querySelector('.hero-actions');assert.equal(hero.children[0].textContent,'Try One Class Free');assert.equal(hero.children[0].getAttribute('href'),'waiver.html?trial=1');assert.equal(hero.children[1].textContent,'See Class Times');const buttons=[...e.d.querySelectorAll('.mobile-action-bar a')];assert.deepEqual(buttons.map(a=>a.textContent),['Schedule','Sign Up Now','Members']);assert.deepEqual(buttons.map(a=>a.getAttribute('href')),['#schedule','enroll.html','members.html']);assert.doesNotMatch(read('mobile-nav.js'),/account-nav/);e.close();
 });

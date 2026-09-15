@@ -36,6 +36,7 @@ import {
   query,
   where,
   orderBy,
+  startAfter,
   limit,
   serverTimestamp,
   writeBatch
@@ -78,6 +79,7 @@ export {
   query,
   where,
   orderBy,
+  startAfter,
   limit,
   serverTimestamp,
   writeBatch

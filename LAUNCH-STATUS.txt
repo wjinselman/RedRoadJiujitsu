@@ -1,4 +1,5 @@
 RED ROAD JIU JITSU — PRODUCTION CANDIDATE
+Release 49: mobile finishing and automatic standalone waiver storage; NOT DEPLOYED. See MOBILE-RELEASE-49.md for required setup and uncompleted device/live tests.
 Domain: redroadbjj.com
 Firebase project: red-road-jiujitsu
 Owner: Jeff Davis <redroadjiujitsu@protonmail.com>
@@ -16,5 +17,5 @@ Testing build: CNAME intentionally removed; use GitHub Pages URL until redroadbj
 Staff access: DEVELOPER + OWNER + VERIFIED COACH MEMBER ROLE
 Coach setup: OWNER/DEVELOPER CHECKS COACH DASHBOARD ACCESS ON THE MEMBER; PAYMENT EXEMPTION IS AUTOMATIC
 Owner creation: DEVELOPER DASHBOARD ONLY (HIDDEN FROM JEFF/OWNER AND COACH ACCOUNTS)
-Required before attendance/free-trial/coach testing: publish the included prod48 firestore.rules, enable Anonymous Authentication, approve/activate one kiosk email, and assign each active member a four-digit PIN.
+Required before attendance/free-trial/waiver-only/coach testing: publish the included release49 firestore.rules, enable Anonymous Authentication, approve/activate one kiosk email, and assign each active member a four-digit PIN.
 Required before custom-domain go-live: authorize redroadbjj.com in Firebase Auth, add the domain to API-key website restrictions, and complete one real end-to-end test member.

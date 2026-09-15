@@ -1,3 +1,5 @@
+import { listenAsync, localDate } from './ui-utils.js?v=49';
+import { attachWaiverPrint } from './waiver-pdf.js?v=49';
 /*
   Red Road Jiu Jitsu — production portal
   ---------------------------------------
@@ -33,10 +35,11 @@ import {
   query,
   where,
   orderBy,
+  startAfter,
   limit,
   serverTimestamp,
   writeBatch
-} from './firebase-client.js';
+} from './firebase-client.js?v=49';
 
 const MAX_OWNER_MEMBERS = 250;
 let ownerMembers = [];
@@ -44,6 +47,12 @@ let ownerAccess = [];
 let kioskAccess = [];
 let ownerAttendance = [];
 let ownerTrials = [];
+let standaloneWaivers = [];
+const waiverPages = {
+  members: { cursor: null, more: false },
+  trials: { cursor: null, more: false },
+  standalone: { cursor: null, more: false }
+};
 let ownerIdentity = null;
 let currentMember = null;
 let memberRestoreAttempted = false;
@@ -52,7 +61,7 @@ let ownerRestoreAttempted = false;
 const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
 const normalizedEmail = value => String(value || '').trim().toLowerCase();
-const todayIso = () => new Date().toISOString().slice(0, 10);
+const todayIso = () => localDate();
 const clean = (value, max = 240) => String(value || '').trim().slice(0, max);
 const localDateKey = (date = new Date()) => {
   const year = date.getFullYear();
@@ -252,6 +261,7 @@ function renderWaiverDetails(record, target) {
       ${record.trialClass === true ? `<div><dt>Trial Class</dt><dd>${esc(record.trialProgram || '—')}</dd></div><div><dt>Preferred Date</dt><dd>${esc(record.trialDate || '—')}</dd></div><div><dt>Trial Pass Valid Through</dt><dd>${esc(record.trialExpiresOn || '—')}</dd></div>` : ''}
       <div><dt>Waiver Version</dt><dd>${esc(record.waiverVersion || '—')}</dd></div>
     </dl>`;
+  attachWaiverPrint(record,target);
 }
 
 async function loadWaiverRecord(email) {
@@ -290,7 +300,7 @@ function setupMemberPage() {
   const password = $('#member-password');
   const message = $('#member-login-message');
 
-  form.addEventListener('submit', async event => {
+  listenAsync(form, 'submit', async event => {
     event.preventDefault();
     clearFlash(message);
     try {
@@ -301,7 +311,7 @@ function setupMemberPage() {
     }
   });
 
-  $('#member-activate')?.addEventListener('click', async () => {
+  listenAsync($('#member-activate'), 'click', async () => {
     clearFlash(message);
     const memberEmail = normalizedEmail(email.value);
     const memberPassword = password.value;
@@ -320,7 +330,7 @@ function setupMemberPage() {
     }
   });
 
-  $('#member-reset')?.addEventListener('click', async () => {
+  listenAsync($('#member-reset'), 'click', async () => {
     clearFlash(message);
     const memberEmail = normalizedEmail(email.value);
     if (!memberEmail) {
@@ -335,7 +345,7 @@ function setupMemberPage() {
     }
   });
 
-  $('#member-logout')?.addEventListener('click', async () => {
+  listenAsync($('#member-logout'), 'click', async () => {
     await signOut(auth).catch(() => {});
     dashboard.hidden = true;
     loginView.hidden = false;
@@ -349,7 +359,7 @@ function setupMemberPage() {
     $('#toggle-member-profile').setAttribute('aria-expanded', String(!panel.hidden));
   });
 
-  $('#member-profile-form')?.addEventListener('submit', async event => {
+  listenAsync($('#member-profile-form'), 'submit', async event => {
     event.preventDefault();
     if (!currentMember) return;
     const dashboardMessage = $('#member-dashboard-message');
@@ -385,7 +395,7 @@ function setupMemberPage() {
     }
   });
 
-  $('#member-view-waiver')?.addEventListener('click', async () => {
+  listenAsync($('#member-view-waiver'), 'click', async () => {
     if (!currentMember) return;
     const dashboardMessage = $('#member-dashboard-message');
     clearFlash(dashboardMessage);
@@ -505,7 +515,7 @@ function statusPills(member) {
   if (member.coachAccess === true) pills.push('<span class="status-chip active">Coach</span>');
   pills.push(`<span class="status-chip ${member.enabled ? 'active' : 'paused'}">${member.enabled ? 'Portal On' : 'Portal Off'}</span>`);
   pills.push(`<span class="status-chip ${member.waiverSigned ? 'active' : 'past-due'}">${member.waiverSigned ? 'Waiver Signed' : 'Waiver Missing'}</span>`);
-  pills.push(`<span class="status-chip ${member.kioskReady ? 'active' : 'paused'}">${member.kioskReady ? 'Kiosk Ready' : 'Set Check-In PIN'}</span>`);
+  pills.push(`<span class="status-chip ${member.kioskReady ? 'active' : 'paused'}">${member.kioskReady ? 'Kiosk Ready' : member.kioskReady === false ? 'Set Check-In PIN' : 'Check PIN Setup'}</span>`);
   if (member.archived) pills.push('<span class="status-chip archived">Archived</span>');
   return pills.join('');
 }
@@ -537,18 +547,25 @@ function renderOwnerList() {
 function renderOwner() {
   renderOwnerStats();
   renderOwnerList();
+  renderWaiverLibrary();
 }
 
-async function loadOwnerMembers() {
+async function loadOwnerMembers(append = false) {
   // The roster remains usable during a rules rollout; kiosk readiness is an
   // optional second bounded read until the prod40 rules are deployed.
-  const snap = await getDocs(query(collection(db, 'members'), limit(MAX_OWNER_MEMBERS)));
+  const page = waiverPages.members;
+  const snap = await getDocs(query(collection(db, 'members'), ...(append && page.cursor ? [startAfter(page.cursor)] : []), limit(MAX_OWNER_MEMBERS)));
   let kioskReady = new Set();
+  let directoryComplete = false;
   try {
     const directorySnap = await getDocs(query(collection(db, 'checkInDirectory'), limit(MAX_OWNER_MEMBERS)));
     kioskReady = new Set(directorySnap.docs.map(item => normalizedEmail(item.id)));
+    directoryComplete = directorySnap.docs.length < MAX_OWNER_MEMBERS;
   } catch (_) {}
-  ownerMembers = snap.docs.map(d => { const data = d.data(); return { id: d.id, ...data, stripes: stripeCount(data.stripes), kioskReady: kioskReady.has(normalizedEmail(d.id)) }; });
+  const records = snap.docs.map(d => { const data = d.data(); return { id: d.id, ...data, stripes: stripeCount(data.stripes), kioskReady: kioskReady.has(normalizedEmail(d.id)) ? true : directoryComplete ? false : null }; });
+  ownerMembers = append ? [...ownerMembers, ...records] : records;
+  page.cursor = snap.docs.at(-1) || page.cursor;
+  page.more = snap.docs.length === MAX_OWNER_MEMBERS;
   renderOwner();
 }
 
@@ -633,7 +650,8 @@ function openEditMember(member) {
   $('#edit-member-active').checked = member.active === true;
   $('#edit-member-enabled').checked = member.enabled === true;
   $('#edit-member-kiosk-pin').value = '';
-  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  panel.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  $('#edit-member-name').focus({ preventScroll: true });
 }
 
 function renderOwnerAccess() {
@@ -737,6 +755,7 @@ async function loadAttendance() {
 }
 
 function renderTrialRequests() {
+  renderWaiverLibrary();
   const list = $('#trial-request-list');
   if (!list) return;
   if (!ownerTrials.length) {
@@ -764,15 +783,48 @@ function renderTrialRequests() {
   renderOwnerStats();
 }
 
-async function loadTrialRequests() {
-  const snap = await getDocs(query(collection(db, 'trialWaivers'), orderBy('createdAt', 'desc'), limit(250)));
-  ownerTrials = snap.docs.map(item => ({ id: item.id, ...item.data() }));
+async function loadTrialRequests(append = false) {
+  const page = waiverPages.trials;
+  const snap = await getDocs(query(collection(db, 'trialWaivers'), orderBy('createdAt', 'desc'), ...(append && page.cursor ? [startAfter(page.cursor)] : []), limit(250)));
+  const records = snap.docs.map(item => ({ id: item.id, ...item.data() }));
+  ownerTrials = append ? [...ownerTrials, ...records] : records;
+  page.cursor = snap.docs.at(-1) || page.cursor;
+  page.more = snap.docs.length === 250;
   renderTrialRequests();
+}
+
+function waiverLibraryEntries() {
+  return [
+    ...ownerMembers.filter(member=>member.waiverSigned).map(member=>({key:`member:${member.email}`,name:member.name,email:member.email,date:member.waiverSignedAt,receipt:member.waiverReceiptId,type:'Member'})),
+    ...ownerTrials.map(record=>({key:`trial:${record.id}`,name:record.participantName,email:record.email,date:record.signedAt,receipt:record.receiptId,type:'Trial',record})),
+    ...standaloneWaivers.map(record=>({key:`standalone:${record.id}`,name:record.participantName,email:record.email,date:record.signedAt,receipt:record.receiptId,type:'Waiver only',record:{...record,standalone:true}}))
+  ].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+}
+
+function renderWaiverLibrary() {
+  const list=$('#signed-waiver-list');
+  if(!list)return;
+  $('#waiver-load-more').hidden = !Object.values(waiverPages).some(page => page.more);
+  const term=String($('#waiver-search')?.value||'').trim().toLowerCase();
+  const records=waiverLibraryEntries().filter(record=>[record.name,record.email,record.receipt].some(value=>String(value||'').toLowerCase().includes(term)));
+  $('#signed-waiver-count').textContent=`${records.length} saved ${records.length===1?'record':'records'} in loaded lists`;
+  list.innerHTML=records.length?records.map(record=>`<article class="member-row launch-member-row"><div class="member-row-main"><strong>${esc(record.name||'Participant')}</strong><span>${esc(record.email)}</span></div><div class="member-row-meta"><span>${esc(record.type)} · ${esc(record.date?String(record.date).slice(0,10):'Date not recorded')}</span><span>Receipt ${esc(record.receipt||'Not recorded')}</span></div><div class="member-row-actions"><button type="button" class="btn btn-dark btn-mini" data-waiver-key="${esc(record.key)}">View / Print</button></div></article>`).join(''):'<div class="owner-empty">No signed waivers match the loaded records.</div>';
+}
+
+async function loadStandaloneWaivers(append = false) {
+  const page = waiverPages.standalone;
+  const snap=await getDocs(query(collection(db,'waiverSubmissions'),orderBy('createdAt','desc'),...(append && page.cursor ? [startAfter(page.cursor)] : []),limit(250)));
+  const records=snap.docs.map(item=>({id:item.id,...item.data()}));
+  standaloneWaivers=append ? [...standaloneWaivers,...records] : records;
+  page.cursor=snap.docs.at(-1) || page.cursor;
+  page.more=snap.docs.length===250;
+  $('#waiver-library-message').hidden=true;
+  renderWaiverLibrary();
 }
 
 function csvCell(value) {
   let text = String(value ?? '');
-  if (/^[=+\-@]/.test(text)) text = `'${text}`;
+  if (/^[\s]*[=+\-@]|^[\t\r\n]/.test(text)) text = `'${text}`;
   return `"${text.replace(/"/g, '""')}"`;
 }
 
@@ -809,13 +861,24 @@ async function authorizeStaff(user) {
   $('#dashboard-role-label').textContent = `${roleName} Dashboard`;
   const developerCard = $('#developer-access-card');
   if (developerCard) developerCard.hidden = !developer;
+  const developerLink = $('#staff-developer-link');
+  if (developerLink) developerLink.hidden = !developer;
   const addMemberButton = $('#toggle-add-member');
   if (addMemberButton) addMemberButton.hidden = coach;
   $('#owner-login-view').hidden = true;
   $('#owner-app').hidden = false;
   await loadOwnerMembers();
-  await loadTrialRequests().catch(() => { ownerTrials = []; renderTrialRequests(); });
-  await loadAttendance().catch(() => { ownerAttendance = []; renderAttendance(); });
+  await loadTrialRequests().catch(() => {
+    $('#trial-request-list').innerHTML = '<div class="owner-empty" role="status">Trial requests could not be loaded. Use Refresh Trials to try again.</div>';
+    $('#stat-trials').textContent = '—';
+    $('#stat-trials-note').textContent = 'Not loaded';
+  });
+  await loadAttendance().catch(() => {
+    $('#attendance-list').innerHTML = '<div class="owner-empty" role="status">Attendance could not be loaded. Use Refresh Attendance to try again.</div>';
+    $('#attendance-today-count').textContent = '—';
+    $('#attendance-last-time').textContent = '—';
+  });
+  await loadStandaloneWaivers().catch(()=>flash($('#waiver-library-message'),'Waiver-only submissions could not be loaded. Check the new waiver-storage rules. Existing member and trial waivers remain available.','error'));
   if (developer) await Promise.allSettled([loadOwnerAccess(), loadKioskAccess()]);
   return access;
 }
@@ -829,7 +892,7 @@ function setupOwnerPage() {
   const loginMessage = $('#owner-login-message');
   const ownerMessage = $('#owner-message');
 
-  form.addEventListener('submit', async event => {
+  listenAsync(form, 'submit', async event => {
     event.preventDefault();
     clearFlash(loginMessage);
     try {
@@ -844,7 +907,7 @@ function setupOwnerPage() {
     }
   });
 
-  $('#owner-activate')?.addEventListener('click', async () => {
+  listenAsync($('#owner-activate'), 'click', async () => {
     clearFlash(loginMessage);
     const ownerEmail = normalizedEmail(email.value);
     const ownerPassword = password.value;
@@ -865,7 +928,7 @@ function setupOwnerPage() {
     }
   });
 
-  $('#owner-reset')?.addEventListener('click', async () => {
+  listenAsync($('#owner-reset'), 'click', async () => {
     clearFlash(loginMessage);
     const ownerEmail = normalizedEmail(email.value);
     if (!ownerEmail) {
@@ -880,13 +943,18 @@ function setupOwnerPage() {
     }
   });
 
-  $('#owner-logout')?.addEventListener('click', async () => {
+  listenAsync($('#owner-logout'), 'click', async () => {
     await signOut(auth).catch(() => {});
     ownerMembers = [];
     ownerAccess = [];
     kioskAccess = [];
     ownerAttendance = [];
     ownerTrials = [];
+    standaloneWaivers = [];
+    Object.values(waiverPages).forEach(page => { page.cursor = null; page.more = false; });
+    $('#owner-waiver-details').replaceChildren();
+    $('#owner-waiver-panel').hidden = true;
+    $('#signed-waiver-list').replaceChildren();
     ownerIdentity = null;
     $('#owner-app').hidden = true;
     $('#owner-login-view').hidden = false;
@@ -900,7 +968,7 @@ function setupOwnerPage() {
     if (!panel.hidden) $('#staff-current-password')?.focus();
   });
 
-  $('#change-password-form')?.addEventListener('submit', async event => {
+  listenAsync($('#change-password-form'), 'submit', async event => {
     event.preventDefault();
     const form = event.currentTarget;
     clearFlash(ownerMessage);
@@ -933,12 +1001,13 @@ function setupOwnerPage() {
     }
   });
 
-  $('#owner-refresh')?.addEventListener('click', async () => {
+  listenAsync($('#owner-refresh'), 'click', async () => {
     clearFlash(ownerMessage);
     try {
       await loadOwnerMembers();
       await loadTrialRequests();
       await loadAttendance();
+      await loadStandaloneWaivers();
       if (ownerIdentity?.role === 'developer') await Promise.all([loadOwnerAccess(), loadKioskAccess()]);
       flash(ownerMessage, ownerIdentity?.role === 'developer' ? 'Members and owner access refreshed once.' : 'Member list refreshed once.');
     } catch (error) {
@@ -946,7 +1015,7 @@ function setupOwnerPage() {
     }
   });
 
-  $('#attendance-refresh')?.addEventListener('click', async () => {
+  listenAsync($('#attendance-refresh'), 'click', async () => {
     clearFlash(ownerMessage);
     try {
       await loadAttendance();
@@ -956,7 +1025,7 @@ function setupOwnerPage() {
     }
   });
 
-  $('#trial-refresh')?.addEventListener('click', async () => {
+  listenAsync($('#trial-refresh'), 'click', async () => {
     clearFlash(ownerMessage);
     try {
       await loadTrialRequests();
@@ -966,7 +1035,7 @@ function setupOwnerPage() {
     }
   });
 
-  $('#trial-request-list')?.addEventListener('click', async event => {
+  listenAsync($('#trial-request-list'), 'click', async event => {
     const button = event.target.closest('button[data-trial-action]');
     if (!button) return;
     const row = button.closest('[data-trial-id]');
@@ -1005,7 +1074,7 @@ function setupOwnerPage() {
     }
   });
 
-  $('#attendance-list')?.addEventListener('click', async event => {
+  listenAsync($('#attendance-list'), 'click', async event => {
     const button = event.target.closest('[data-attendance-action="remove"]');
     if (!button) return;
     const row = button.closest('[data-attendance-id]');
@@ -1028,7 +1097,7 @@ function setupOwnerPage() {
     $('#toggle-add-owner').setAttribute('aria-expanded', String(!panel.hidden));
   });
 
-  $('#add-owner-form')?.addEventListener('submit', async event => {
+  listenAsync($('#add-owner-form'), 'submit', async event => {
     event.preventDefault();
     const form = event.currentTarget;
     clearFlash(ownerMessage);
@@ -1064,7 +1133,7 @@ function setupOwnerPage() {
     }
   });
 
-  $('#owner-access-list')?.addEventListener('click', async event => {
+  listenAsync($('#owner-access-list'), 'click', async event => {
     const button = event.target.closest('button[data-owner-action]');
     if (!button || ownerIdentity?.role !== 'developer') return;
     const row = button.closest('[data-owner-email]');
@@ -1088,7 +1157,7 @@ function setupOwnerPage() {
     $('#toggle-add-kiosk').setAttribute('aria-expanded', String(!panel.hidden));
   });
 
-  $('#add-kiosk-form')?.addEventListener('submit', async event => {
+  listenAsync($('#add-kiosk-form'), 'submit', async event => {
     event.preventDefault();
     const form = event.currentTarget;
     clearFlash(ownerMessage);
@@ -1110,7 +1179,7 @@ function setupOwnerPage() {
     }
   });
 
-  $('#kiosk-access-list')?.addEventListener('click', async event => {
+  listenAsync($('#kiosk-access-list'), 'click', async event => {
     const button = event.target.closest('[data-kiosk-action="toggle"]');
     if (!button || ownerIdentity?.role !== 'developer') return;
     const row = button.closest('[data-kiosk-email]');
@@ -1128,6 +1197,32 @@ function setupOwnerPage() {
   });
 
   $('#owner-search')?.addEventListener('input', renderOwnerList);
+  $('#waiver-search')?.addEventListener('input',renderWaiverLibrary);
+  listenAsync($('#waiver-load-more'),'click',async()=>{
+    const results = await Promise.allSettled([
+      waiverPages.members.more && loadOwnerMembers(true),
+      waiverPages.trials.more && loadTrialRequests(true),
+      waiverPages.standalone.more && loadStandaloneWaivers(true)
+    ]);
+    renderWaiverLibrary();
+    if(results.some(result=>result.status==='rejected')) flash($('#waiver-library-message'),'Some older records could not be loaded. The records already shown are unchanged; use Load More to retry.','error');
+  });
+  listenAsync($('#waiver-refresh'),'click',async()=>{
+    try { await Promise.all([loadOwnerMembers(),loadTrialRequests(),loadStandaloneWaivers()]);renderWaiverLibrary(); }
+    catch(error){flash($('#waiver-library-message'),friendlyError(error),'error');}
+  });
+  listenAsync($('#signed-waiver-list'),'click',async event=>{
+    const button=event.target.closest('[data-waiver-key]');if(!button)return;
+    const item=waiverLibraryEntries().find(record=>record.key===button.dataset.waiverKey);if(!item)return;
+    try {
+      const record=item.record||await loadWaiverRecord(item.email);
+      if(!record)throw new Error('The signed record could not be found.');
+      $('#owner-waiver-title').textContent=`${item.name||'Participant'} · Signed Waiver`;
+      renderWaiverDetails(record,$('#owner-waiver-details'));
+      $('#owner-waiver-panel').hidden=false;
+      $('#owner-waiver-panel').scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+    }catch(error){flash($('#waiver-library-message'),friendlyError(error),'error');}
+  });
   $('#owner-status-filter')?.addEventListener('change', renderOwnerList);
   $('#owner-plan-filter')?.addEventListener('change', renderOwnerList);
   $('#owner-export')?.addEventListener('click', () => {
@@ -1158,7 +1253,7 @@ function setupOwnerPage() {
     });
   });
 
-  $('#add-member-form')?.addEventListener('submit', async event => {
+  listenAsync($('#add-member-form'), 'submit', async event => {
     event.preventDefault();
     const form = event.currentTarget;
     clearFlash(ownerMessage);
@@ -1186,7 +1281,7 @@ function setupOwnerPage() {
     }
   });
 
-  $('#owner-member-list')?.addEventListener('click', async event => {
+  listenAsync($('#owner-member-list'), 'click', async event => {
     const button = event.target.closest('button[data-action]');
     if (!button) return;
     const row = button.closest('[data-member-email]');
@@ -1258,7 +1353,7 @@ function setupOwnerPage() {
     }
   });
 
-  $('#edit-member-form')?.addEventListener('submit', async event => {
+  listenAsync($('#edit-member-form'), 'submit', async event => {
     event.preventDefault();
     clearFlash(ownerMessage);
     if (ownerIdentity?.role === 'coach') return flash(ownerMessage, 'Owner access required.', 'error');
@@ -1299,3 +1394,4 @@ function setupOwnerPage() {
 
 setupMemberPage();
 setupOwnerPage();
+if (firebaseConfigured) document.querySelectorAll('form[data-service-form]').forEach(form => { form.dataset.serviceReady = 'true'; });

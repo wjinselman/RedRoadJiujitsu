@@ -378,6 +378,41 @@ service cloud.firestore {
       allow delete: if isManager();
     }
 
+    // Waiver-only visitors receive no collection read access. A saved signature
+    // is append-only; staff may view it and managers may remove it deliberately.
+    match /waiverSubmissions/{receiptId} {
+      allow get: if isStaff();
+      allow list: if isStaff() && request.query.limit != null && request.query.limit <= 250;
+      allow create: if request.auth != null
+                    && request.resource.data.email is string
+                    && validWaiver(request.resource.data, request.resource.data.email.lower())
+                    && request.resource.data.receiptId == receiptId
+                    && request.resource.data.createdAt == request.time
+                    && request.resource.data.waiverVersion is string
+                    && request.resource.data.waiverVersion.size() <= 160
+                    && request.resource.data.signedAt is string
+                    && request.resource.data.signedAt.size() <= 40
+                    && request.resource.data.dob is string
+                    && request.resource.data.dob.size() == 10
+                    && request.resource.data.signatureDate is string
+                    && request.resource.data.signatureDate.size() == 10
+                    && request.resource.data.email.size() <= 254
+                    && request.resource.data.phone is string
+                    && request.resource.data.phone.size() <= 40
+                    && request.resource.data.address is string
+                    && request.resource.data.address.size() <= 240
+                    && request.resource.data.emergencyName is string
+                    && request.resource.data.emergencyName.size() <= 160
+                    && request.resource.data.emergencyPhone is string
+                    && request.resource.data.emergencyPhone.size() <= 40
+                    && request.resource.data.guardianName is string
+                    && request.resource.data.guardianName.size() <= 160
+                    && request.resource.data.relationship is string
+                    && request.resource.data.relationship.size() <= 80;
+      allow update: if false;
+      allow delete: if isManager();
+    }
+
     // Free-trial visitors authenticate anonymously for one append-only write.
     // They receive no read access and no member account/document is created.
     match /trialWaivers/{trialId} {

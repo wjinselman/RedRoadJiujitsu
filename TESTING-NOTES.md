@@ -1,5 +1,7 @@
 # Red Road Jiu Jitsu — GitHub Testing Build
 
+This is historical context. See `MOBILE-RELEASE-49.md` for the current release, required Firebase deployment and verification limits.
+
 ## Changes in this build
 - Added a dedicated iPad attendance kiosk at `kiosk.html` with member name search, four-digit PIN confirmation, duplicate blocking and automatic reset.
 - Added staff attendance review/undo, Developer-controlled kiosk access, per-member PIN setup and member attendance history.
@@ -12,7 +14,7 @@
 - Added View / Sign Waiver access from the homepage and member-login flow.
 
 ## Important: electronic waiver storage
-The form flow is fully testable on static GitHub Pages and creates a local/downloadable signed receipt. GitHub Pages is static hosting and is not a suitable legal-record database by itself. Before treating these signatures as the academy's production records, connect the submit action to secure server-side/Firebase storage and review the final electronic-signature workflow with the academy's attorney.
+Release 49 saves standalone waivers to Firebase, alongside the existing Firebase-backed member and trial flows. It requires the included rules and Anonymous Authentication to be enabled. Jeff can find saved records in Signed Waivers and print a signature record plus the original agreement. GitHub Pages only serves the interface; it does not store private signatures. See `MOBILE-RELEASE-49.md` for deployment, retention warnings and remaining live tests.
 
 ## GitHub Pages domain testing
 This ZIP does not contain a `CNAME` file. If GitHub still redirects to `redroadbjj.com`, clear the Custom domain field in Repository > Settings > Pages while testing. You can add the custom domain back after the domain is purchased and ready.

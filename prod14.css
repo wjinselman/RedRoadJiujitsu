@@ -11,7 +11,7 @@
 .coach-intro p{color:#aeb2b9;font-size:17px}.coach-intro .btn{align-self:flex-start;margin-top:10px}
 .coaches-roster{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
 .coach-card{position:relative;overflow:hidden;min-height:190px;padding:25px 22px;border:1px solid #30343a;background:linear-gradient(145deg,#111317,#171a1f)}
-.coach-card::after{content:"";position:absolute;width:110px;aspect-ratio:1;right:-34px;bottom:-36px;background:url('assets/red-road-master-crest.png') center/contain no-repeat;opacity:.05;pointer-events:none}
+.coach-card::after{content:"";position:absolute;width:110px;aspect-ratio:1;right:-34px;bottom:-36px;background:url('assets/red-road-master-crest.webp') center/contain no-repeat;opacity:.05;pointer-events:none}
 .coach-role{display:block;color:var(--red);font-size:10px;font-weight:950;letter-spacing:.14em;text-transform:uppercase;margin-bottom:18px}
 .coach-card h3{font-family:Impact,Haettenschweiler,'Arial Narrow Bold',sans-serif;font-size:31px;line-height:1;text-transform:uppercase;margin-bottom:14px}
 .coach-card p{color:#aeb2b9;margin:0}.coach-card strong{color:#fff}

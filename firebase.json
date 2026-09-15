@@ -10,6 +10,9 @@
       "**/node_modules/**",
       "LAUNCH-STATUS.txt",
       "SECURITY-NOTES.md",
+      "tests/**",
+      "package.json",
+      "package-lock.json",
       "**/*.md"
     ],
     "headers": [

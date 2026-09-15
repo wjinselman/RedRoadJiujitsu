@@ -1,25 +1,23 @@
-<!doctype html>
-<html lang="en">
-<head>
+<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#08090b">
 <title>Liability Waiver | Red Road Jiu Jitsu</title>
 <meta name="description" content="Review and electronically sign the Red Road Jiu Jitsu liability waiver.">
-<link rel="stylesheet" href="redroad-v25.css?v=prod-14">
+<link rel="stylesheet" href="redroad-v25.css?v=prod-49">
 <link rel="icon" href="assets/favicon-64.png" sizes="64x64" type="image/png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="stylesheet" href="prod14.css?v=prod-37">
-<link rel="stylesheet" href="premium.css?v=prod-43">
-<script src="mobile-nav.js?v=prod43" defer></script></head>
-<body>
+<link rel="stylesheet" href="premium.css?v=prod-49">
+<script src="mobile-nav.js?v=49" defer=""></script><meta name="referrer" content="no-referrer"><link rel="stylesheet" href="experience.css?v=49"><script src="experience.js?v=49" defer=""></script></head>
+<body class="waiver-page"><noscript>&lt;p style="padding:16px;background:#241116;color:white"&gt;JavaScript is required for secure sign-in, check-in and waiver submission. Please enable it before completing a form.&lt;/p&gt;</noscript>
 <header class="top">
 <div class="shell nav">
 <a class="brand" href="index.html">
-<img alt="Red Road Jiu Jitsu logo" src="assets/red-road-master-crest.png">
+<img alt="Red Road Jiu Jitsu logo" src="assets/red-road-master-crest.webp" width="760" height="760" decoding="async" loading="eager">
 <div>
 <strong>Red Road BJJ</strong>
-<span>Waiver & Release</span>
+<span>Waiver &amp; Release</span>
 </div>
 </a>
 <a class="btn btn-dark nav-return" href="index.html">Back to Website</a>
@@ -44,17 +42,16 @@
 <div class="flow-actions">
 <a class="btn btn-dark" href="assets/red-road-liability-waiver.pdf" target="_blank" rel="noopener">Open Full Waiver PDF</a>
 </div>
-<iframe class="waiver-viewer" title="Red Road Jiu Jitsu Liability Waiver" src="assets/red-road-liability-waiver.pdf#view=FitH">
+<iframe class="waiver-viewer" title="Red Road Jiu Jitsu Liability Waiver" src="assets/red-road-liability-waiver.pdf#view=FitH" loading="lazy">
 </iframe>
 </div>
 <div class="flow-card" id="sign">
 <div class="kicker">Electronic Signature</div>
 <h2>Sign the Waiver</h2>
-<p class="flow-muted">Your typed legal name is used as your electronic signature for this test build.</p>
-<div class="flow-warning" id="waiver-storage-note">
-<strong>Secure member flow:</strong> New-member waivers are attached to the signed-in Firebase account and saved for staff review. Waiver-only visitors receive a downloadable device receipt; use New Member Signup when the waiver must appear automatically in the member dashboard.</div>
-<form id="waiver-form">
-<div class="trial-class-fields" id="trial-class-fields" hidden>
+<p class="flow-muted">Use your full legal name below. A parent or legal guardian must sign for anyone under 18. After you submit, your signed record is saved with Red Road.</p>
+<div class="flow-warning" id="waiver-storage-note"><strong>Saved with Red Road:</strong> Your signed waiver is stored for staff review and printing. No email or download is required.</div>
+<form id="waiver-form" method="post" data-service-form="">
+<div class="trial-class-fields" id="trial-class-fields" hidden="">
 <div class="kicker">One Free Class · No Account Required</div>
 <h3>Choose Your Trial Class</h3>
 <p class="flow-muted">Your signed waiver and visit request will be sent to Red Road staff. This does not create a membership account.</p>
@@ -76,56 +73,56 @@
 <div class="form-grid">
 <div class="form-field">
 <label for="participantName">Participant full legal name</label>
-<input id="participantName" name="participantName" autocomplete="name" required>
+<input id="participantName" name="participantName" autocomplete="name" required="" maxlength="160">
 </div>
 <div class="form-field">
 <label for="dob">Date of birth</label>
-<input id="dob" name="dob" type="date" required>
+<input id="dob" name="dob" type="date" required="">
 </div>
 <div class="form-field">
 <label for="email">Email</label>
-<input id="email" name="email" type="email" autocomplete="email" required>
+<input id="email" name="email" type="email" autocomplete="email" required="" maxlength="254">
 </div>
 <div class="form-field">
 <label for="phone">Phone</label>
-<input id="phone" name="phone" type="tel" autocomplete="tel" required>
+<input id="phone" name="phone" type="tel" autocomplete="tel" required="" maxlength="40">
 </div>
 <div class="form-field full">
 <label for="address">Address</label>
-<input id="address" name="address" autocomplete="street-address" required>
+<input id="address" name="address" autocomplete="street-address" required="" maxlength="240">
 </div>
 <div class="form-field">
 <label for="emergencyName">Emergency contact</label>
-<input id="emergencyName" name="emergencyName" required>
+<input id="emergencyName" name="emergencyName" required="" maxlength="160">
 </div>
 <div class="form-field">
 <label for="emergencyPhone">Emergency contact phone</label>
-<input id="emergencyPhone" name="emergencyPhone" type="tel" required>
+<input id="emergencyPhone" name="emergencyPhone" type="tel" required="" maxlength="40">
 </div>
 </div>
-<div id="minor-fields" hidden>
+<div id="minor-fields" hidden="">
 <div class="form-grid" style="margin-top:18px">
 <div class="form-field">
 <label for="guardianName">Parent / legal guardian</label>
-<input id="guardianName" name="guardianName">
+<input id="guardianName" name="guardianName" maxlength="160">
 </div>
 <div class="form-field">
 <label for="relationship">Relationship</label>
-<input id="relationship" name="relationship">
+<input id="relationship" name="relationship" maxlength="80">
 </div>
 </div>
 </div>
 <div style="margin-top:22px">
 <div class="check-row">
-<input id="readAgreement" name="readAgreement" type="checkbox" required>
+<input id="readAgreement" name="readAgreement" type="checkbox" required="">
 <label for="readAgreement">I certify that I have read the complete waiver and understand that Brazilian Jiu Jitsu, judo, wrestling, self-defense and related combat sports involve significant risks, including serious injury.</label>
 </div>
 <div class="check-row">
-<input id="voluntary" name="voluntary" type="checkbox" required>
+<input id="voluntary" name="voluntary" type="checkbox" required="">
 <label for="voluntary">I voluntarily agree to the waiver, assumption of risk, release, medical authorization and other terms contained in the agreement to the fullest extent permitted by law.</label>
 </div>
 <div class="check-row">
-<input id="electronicConsent" name="electronicConsent" type="checkbox" required>
+<input id="electronicConsent" name="electronicConsent" type="checkbox" required="">
 <label for="electronicConsent">I consent to use an electronic signature and understand that typing my legal name below is intended to have the same effect as signing my name.</label>
 </div>
 <div class="optional-release">
@@ -133,7 +130,7 @@
 <input id="photoVideoRelease" name="photoVideoRelease" type="checkbox">
 <label for="photoVideoRelease"><strong>Optional photography and video release:</strong> I authorize Red Road Jiujitsu LLC to photograph or record me, or the minor Participant for whom I am signing, during Gym activities and to use those photographs or recordings for legitimate Gym-related website, social media, advertising, promotional, educational, and marketing purposes. I understand this is voluntary and declining will not affect eligibility to participate.</label>
 </div>
-<div class="form-field photo-initials" id="photo-initials-field" hidden>
+<div class="form-field photo-initials" id="photo-initials-field" hidden="">
 <label for="photoVideoInitials">Participant / parent initials</label>
 <input id="photoVideoInitials" name="photoVideoInitials" maxlength="12" placeholder="Initials">
 </div>
@@ -143,27 +140,29 @@
 <div class="form-grid">
 <div class="form-field">
 <label for="signatureName">Type legal name as signature</label>
-<input id="signatureName" name="signatureName" required>
+<input id="signatureName" name="signatureName" required="" maxlength="160">
 </div>
 <div class="form-field">
 <label for="signatureDate">Date</label>
-<input id="signatureDate" name="signatureDate" type="date" required>
+<input id="signatureDate" name="signatureDate" type="date" required="">
 </div>
 </div>
 <div class="signature-preview" id="signaturePreview">Your signature</div>
 </div>
 <div class="flow-actions">
-<button class="btn btn-red btn-fullish" id="waiver-submit" type="submit">Sign &amp; Create Receipt</button>
+<button class="btn btn-red btn-fullish" id="waiver-submit" type="submit">Sign &amp; Save Waiver</button>
 <a class="btn btn-dark" href="enroll.html">Return to Enrollment</a>
 </div>
-<div class="flow-success" id="waiver-success" hidden>
+<div class="flow-success" id="waiver-success" hidden="">
 </div>
 </form>
 </div>
 </div>
 </section>
 </main>
-<script src="waiver-prod14.js?v=prod-48" type="module">
+<script src="waiver-prod14.js?v=49" type="module">
 </script>
-</body>
-</html>
+
+
+
+</body></html>

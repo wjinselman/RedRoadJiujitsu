@@ -1,3 +1,4 @@
+import { listenAsync } from './ui-utils.js?v=49';
 import {
   firebaseConfigured,
   auth,
@@ -15,7 +16,7 @@ import {
   query,
   limit,
   serverTimestamp
-} from './firebase-kiosk-client.js';
+} from './firebase-kiosk-client.js?v=49';
 
 const $ = selector => document.querySelector(selector);
 const normalizedEmail = value => String(value || '').trim().toLowerCase();
@@ -24,6 +25,8 @@ let selectedMember = null;
 let kioskIdentity = null;
 let restoreAttempted = false;
 let resetTimer = null;
+let idleTimer = null;
+let checkInPending = false;
 
 function flash(el, message, tone = 'ok') {
   el.textContent = message;
@@ -107,7 +110,7 @@ function renderResults() {
     target.innerHTML = '<p class="kiosk-result-note">No matching active member. Ask a coach for help.</p>';
     return;
   }
-  target.innerHTML = matches.map(member => `<button class="kiosk-member-result" data-member-id="${member.id}" type="button"><strong>${escapeHtml(member.displayName)}</strong><span>${escapeHtml(member.plan || 'Member')}</span></button>`).join('');
+  target.innerHTML = matches.map(member => `<button class="kiosk-member-result" data-member-id="${escapeHtml(member.id)}" type="button"><strong>${escapeHtml(member.displayName)}</strong><span>${escapeHtml(member.plan || 'Member')}</span></button>`).join('');
 }
 
 function escapeHtml(value) {
@@ -115,6 +118,7 @@ function escapeHtml(value) {
 }
 
 function selectMember(member) {
+  if (checkInPending) return;
   selectedMember = member;
   $('#kiosk-search-step').hidden = true;
   $('#kiosk-pin-step').hidden = false;
@@ -123,17 +127,28 @@ function selectMember(member) {
   $('#kiosk-pin').value = '';
   clearFlash($('#kiosk-message'));
   $('#kiosk-pin').focus();
+  restartIdleTimer();
 }
 
 function resetKiosk() {
+  if (checkInPending) return;
   clearTimeout(resetTimer);
+  clearTimeout(idleTimer);
   selectedMember = null;
   $('#kiosk-success').hidden = true;
   $('#kiosk-pin-step').hidden = true;
   $('#kiosk-search-step').hidden = false;
   $('#kiosk-member-search').value = '';
+  $('#kiosk-pin').value = '';
+  $('#kiosk-device-panel').hidden = true;
+  $('#kiosk-device-button').setAttribute('aria-expanded', 'false');
   $('#kiosk-results').innerHTML = '<p class="kiosk-result-note">Enter at least two letters.</p>';
   $('#kiosk-member-search').focus();
+}
+
+function restartIdleTimer() {
+  clearTimeout(idleTimer);
+  if (kioskIdentity && !checkInPending) idleTimer = setTimeout(resetKiosk, 45000);
 }
 
 async function authorizeKiosk(user) {
@@ -149,38 +164,53 @@ async function authorizeKiosk(user) {
 }
 
 async function checkIn(pin) {
-  if (!selectedMember || !kioskIdentity) return;
-  const proof = await sha256(`${normalizedEmail(selectedMember.memberEmail)}|${pin}`);
-  if (proof !== selectedMember.pinHash) {
-    flash($('#kiosk-message'), 'That PIN does not match. Try again or ask a coach.', 'error');
-    $('#kiosk-pin').value = '';
-    $('#kiosk-pin').focus();
-    return;
-  }
-  const className = classFor(selectedMember);
-  const ref = doc(db, 'attendance', attendanceId(selectedMember, className));
-  const payload = {
-    memberEmail: normalizedEmail(selectedMember.memberEmail),
-    memberName: String(selectedMember.displayName || '').slice(0, 120),
-    className,
-    classDate: localDateKey(),
-    checkedInAt: serverTimestamp(),
-    checkedInBy: kioskIdentity.email,
-    source: 'kiosk'
-  };
+  if (!selectedMember || !kioskIdentity || checkInPending) return;
+  checkInPending = true;
+  clearTimeout(idleTimer);
+  const button = $('#kiosk-pin-form button[type=submit]');
+  button.disabled = true;
+  button.textContent = 'Checking In…';
+  $('#kiosk-back').disabled = true;
+  $('#kiosk-pin-form').setAttribute('aria-busy', 'true');
   try {
+    const proof = await sha256(`${normalizedEmail(selectedMember.memberEmail)}|${pin}`);
+    if (proof !== selectedMember.pinHash) {
+      flash($('#kiosk-message'), 'That PIN does not match. Try again or ask a coach.', 'error');
+      $('#kiosk-pin').value = '';
+      $('#kiosk-pin').focus();
+      return;
+    }
+    const className = classFor(selectedMember);
+    const ref = doc(db, 'attendance', attendanceId(selectedMember, className));
+    const payload = {
+      memberEmail: normalizedEmail(selectedMember.memberEmail),
+      memberName: String(selectedMember.displayName || '').slice(0, 120),
+      className,
+      classDate: localDateKey(),
+      checkedInAt: serverTimestamp(),
+      checkedInBy: kioskIdentity.email,
+      source: 'kiosk'
+    };
     await setDoc(ref, payload);
     $('#kiosk-pin-step').hidden = true;
     $('#kiosk-success-name').textContent = `Welcome, ${selectedMember.displayName.split(/\s+/)[0]}.`;
     $('#kiosk-success-class').textContent = `${className} · You’re checked in.`;
     $('#kiosk-success').hidden = false;
+    $('#kiosk-pin').value = '';
     resetTimer = setTimeout(resetKiosk, 4500);
   } catch (error) {
     if (String(error?.code || '').includes('permission-denied')) {
-      flash($('#kiosk-message'), 'You are already checked in for this class today.', 'error');
+      flash($('#kiosk-message'), 'Check-in could not be confirmed. You may already be checked in, or this device may need staff attention. Ask a coach to check today’s attendance.', 'error');
     } else {
       flash($('#kiosk-message'), friendlyError(error), 'error');
     }
+  } finally {
+    checkInPending = false;
+    button.disabled = false;
+    button.textContent = 'Check In';
+    $('#kiosk-back').disabled = false;
+    $('#kiosk-pin-form').removeAttribute('aria-busy');
+    if ($('#kiosk-success').hidden) restartIdleTimer();
   }
 }
 
@@ -192,7 +222,7 @@ function setup() {
     return;
   }
 
-  $('#kiosk-login-form').addEventListener('submit', async event => {
+  listenAsync($('#kiosk-login-form'), 'submit', async event => {
     event.preventDefault();
     const email = normalizedEmail($('#kiosk-email').value);
     const password = $('#kiosk-password').value;
@@ -208,7 +238,7 @@ function setup() {
     }
   });
 
-  $('#kiosk-activate').addEventListener('click', async () => {
+  listenAsync($('#kiosk-activate'), 'click', async () => {
     const email = normalizedEmail($('#kiosk-email').value);
     const password = $('#kiosk-password').value;
     if (!email || password.length < 8) return flash($('#kiosk-auth-message'), 'Enter the approved kiosk email and a password of at least eight characters.', 'error');
@@ -223,7 +253,8 @@ function setup() {
     }
   });
 
-  $('#kiosk-member-search').addEventListener('input', renderResults);
+  $('#kiosk-member-search').addEventListener('input', () => { renderResults(); restartIdleTimer(); });
+  $('#kiosk-pin').addEventListener('input', restartIdleTimer);
   $('#kiosk-results').addEventListener('click', event => {
     const button = event.target.closest('[data-member-id]');
     if (!button) return;
@@ -231,16 +262,19 @@ function setup() {
     if (member) selectMember(member);
   });
   $('#kiosk-back').addEventListener('click', resetKiosk);
-  $('#kiosk-pin-form').addEventListener('submit', event => {
+  $('#kiosk-pin-form').addEventListener('submit', async event => {
     event.preventDefault();
     const pin = $('#kiosk-pin').value;
-    if (/^\d{4}$/.test(pin)) checkIn(pin);
+    if (/^\d{4}$/.test(pin)) await checkIn(pin);
   });
-  $('#kiosk-device-button').addEventListener('click', () => { $('#kiosk-device-panel').hidden = !$('#kiosk-device-panel').hidden; });
-  $('#kiosk-reload').addEventListener('click', async () => {
+  $('#kiosk-device-button').addEventListener('click', () => {
+    $('#kiosk-device-panel').hidden = !$('#kiosk-device-panel').hidden;
+    $('#kiosk-device-button').setAttribute('aria-expanded', String(!$('#kiosk-device-panel').hidden));
+  });
+  listenAsync($('#kiosk-reload'), 'click', async () => {
     try { await loadDirectory(); resetKiosk(); } catch (error) { $('#kiosk-directory-status').textContent = friendlyError(error); }
   });
-  $('#kiosk-logout').addEventListener('click', async () => {
+  listenAsync($('#kiosk-logout'), 'click', async () => {
     await signOut(auth).catch(() => {});
     location.reload();
   });
@@ -248,8 +282,15 @@ function setup() {
   onAuthStateChanged(auth, async user => {
     if (restoreAttempted) return;
     restoreAttempted = true;
-    if (user && !await authorizeKiosk(user)) await signOut(auth);
+    if (!user) return;
+    try { if (!await authorizeKiosk(user)) await signOut(auth); }
+    catch (error) {
+      $('#kiosk-app').hidden = true;
+      $('#kiosk-auth-view').hidden = false;
+      flash($('#kiosk-auth-message'), friendlyError(error), 'error');
+    }
   });
 }
 
 setup();
+if (firebaseConfigured) document.querySelectorAll('form[data-service-form]').forEach(form => { form.dataset.serviceReady = 'true'; });

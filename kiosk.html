@@ -1,21 +1,19 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
+<!DOCTYPE html><html lang="en"><head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#07080a">
 <meta name="robots" content="noindex,nofollow">
 <title>Class Check-In | Red Road BJJ</title>
 <link href="assets/favicon-64.png" rel="icon" sizes="64x64" type="image/png">
 <link href="assets/apple-touch-icon.png" rel="apple-touch-icon">
-<link href="redroad-v25.css?v=prod-14" rel="stylesheet">
+<link href="redroad-v25.css?v=prod-49" rel="stylesheet">
 <link href="prod14.css?v=prod-37" rel="stylesheet">
-<link href="premium.css?v=prod-40" rel="stylesheet">
-</head>
-<body class="kiosk-page">
+<link href="premium.css?v=prod-49" rel="stylesheet">
+<meta name="referrer" content="no-referrer"><link rel="stylesheet" href="experience.css?v=49"><script src="experience.js?v=49" defer=""></script></head>
+<body class="kiosk-page"><noscript>&lt;p style="padding:16px;background:#241116;color:white"&gt;JavaScript is required for secure sign-in, check-in and waiver submission. Please enable it before completing a form.&lt;/p&gt;</noscript>
 <main class="kiosk-shell">
 <header class="kiosk-header">
-<div class="kiosk-brand"><img alt="Red Road BJJ" src="assets/red-road-master-crest.png"><div><strong>Red Road BJJ</strong><span>Class Check-In</span></div></div>
+<div class="kiosk-brand"><img alt="Red Road BJJ" src="assets/red-road-master-crest.webp" width="760" height="760" decoding="async" loading="eager"><div><strong>Red Road BJJ</strong><span>Class Check-In</span></div></div>
 <div class="kiosk-clock"><strong id="kiosk-time">--:--</strong><span id="kiosk-date">Loading…</span></div>
 </header>
 
@@ -23,16 +21,16 @@
 <div class="kicker">Staff Setup</div>
 <h1>Connect This <span class="red">iPad.</span></h1>
 <p>Use the dedicated kiosk email approved by the Developer. Members will never see this setup screen after the device is connected.</p>
-<form class="portal-form kiosk-auth-form" id="kiosk-login-form">
-<div><label for="kiosk-email">Kiosk Email</label><input autocomplete="username" id="kiosk-email" inputmode="email" required type="email"></div>
-<div><label for="kiosk-password">Kiosk Password</label><input autocomplete="current-password" id="kiosk-password" minlength="8" required type="password"></div>
+<form class="portal-form kiosk-auth-form" id="kiosk-login-form" method="post" data-service-form="">
+<div><label for="kiosk-email">Kiosk Email</label><input autocomplete="username" id="kiosk-email" inputmode="email" required="" type="email"></div>
+<div><label for="kiosk-password">Kiosk Password</label><input autocomplete="current-password" id="kiosk-password" minlength="8" required="" type="password"></div>
 <button class="btn btn-red btn-full" type="submit">Connect Kiosk</button>
 </form>
 <button class="text-action" id="kiosk-activate" type="button">First setup? Activate approved kiosk</button>
-<div class="flash-message" hidden id="kiosk-auth-message"></div>
+<div class="flash-message" hidden="" id="kiosk-auth-message"></div>
 </section>
 
-<section class="kiosk-checkin" hidden id="kiosk-app">
+<section class="kiosk-checkin" hidden="" id="kiosk-app">
 <div class="kiosk-welcome" id="kiosk-search-step">
 <div class="kicker">Welcome to Red Road</div>
 <h1>Find Your <span class="red">Name.</span></h1>
@@ -42,28 +40,28 @@
 <div aria-live="polite" class="kiosk-results" id="kiosk-results"></div>
 </div>
 
-<div class="kiosk-pin-step" hidden id="kiosk-pin-step">
+<div class="kiosk-pin-step" hidden="" id="kiosk-pin-step">
 <button class="kiosk-back" id="kiosk-back" type="button">← Choose another name</button>
 <div class="kicker">Confirm Check-In</div>
 <h1 id="kiosk-selected-name">Member</h1>
 <p id="kiosk-class-label">Today’s class</p>
-<form id="kiosk-pin-form">
+<form id="kiosk-pin-form" method="post" data-service-form="">
 <label class="kiosk-search-label" for="kiosk-pin">Enter your four-digit PIN</label>
-<input autocomplete="off" class="kiosk-pin-input" id="kiosk-pin" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="••••" required type="password">
+<input autocomplete="off" class="kiosk-pin-input" id="kiosk-pin" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="••••" required="" type="password" aria-describedby="kiosk-message">
 <button class="btn btn-red kiosk-checkin-button" type="submit">Check In</button>
 </form>
-<div class="flash-message" hidden id="kiosk-message"></div>
+<div class="flash-message" hidden="" id="kiosk-message"></div>
 </div>
 
-<div class="kiosk-success" hidden id="kiosk-success">
+<div class="kiosk-success" hidden="" id="kiosk-success">
 <div class="kiosk-checkmark">✓</div>
 <div class="kicker">Checked In</div>
 <h1 id="kiosk-success-name">You’re In.</h1>
 <p id="kiosk-success-class">Have a great class.</p>
 </div>
 
-<button class="kiosk-device-button" id="kiosk-device-button" type="button" aria-label="Kiosk device settings">Device</button>
-<div class="kiosk-device-panel" hidden id="kiosk-device-panel">
+<button class="kiosk-device-button" id="kiosk-device-button" type="button" aria-label="Kiosk device settings" aria-controls="kiosk-device-panel" aria-expanded="false">Device</button>
+<div class="kiosk-device-panel" hidden="" id="kiosk-device-panel">
 <strong id="kiosk-device-name">Front Desk iPad</strong>
 <span id="kiosk-directory-status">Directory ready</span>
 <button class="btn btn-dark btn-mini" id="kiosk-reload" type="button">Reload Members</button>
@@ -71,6 +69,8 @@
 </div>
 </section>
 </main>
-<script src="kiosk.js?v=prod-40" type="module"></script>
-</body>
-</html>
+<script src="kiosk.js?v=49" type="module"></script>
+
+
+
+</body></html>

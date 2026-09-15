@@ -63,7 +63,7 @@ Current rules:
 - No Cloud Functions.
 
 ## Attendance setup and use
-1. Deploy the included prod48 Firestore rules.
+1. Deploy the included release49 Firestore rules. See MOBILE-RELEASE-49.md for the standalone waiver setup and printing check.
 2. Developer approves the dedicated iPad email under **iPad Kiosk Access**.
 3. Activate that account once on `kiosk.html` and leave the iPad connected.
 4. For every existing member, open **Edit**, enter a new four-digit Check-In PIN, and save. New members require a PIN when staff adds them.

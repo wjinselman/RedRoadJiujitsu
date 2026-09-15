@@ -1,8 +1,9 @@
-import { firebaseConfigured, auth, createUserWithEmailAndPassword, signOut } from './firebase-client.js';
+import { firebaseConfigured, auth, createUserWithEmailAndPassword, signOut } from './firebase-client.js?v=49';
 
 const form = document.querySelector('#enroll-form');
 const message = document.querySelector('#enroll-success');
 const normalizeEmail = value => String(value || '').trim().toLowerCase();
+let submitting = false;
 
 function show(text) {
   message.hidden = false;
@@ -25,6 +26,7 @@ if (form) {
 
   form.addEventListener('submit', async event => {
     event.preventDefault();
+    if (submitting) return;
     if (!form.reportValidity()) return;
     if (!firebaseConfigured) return show('Member signup is not connected yet. Firebase configuration is required.');
 
@@ -38,21 +40,28 @@ if (form) {
     delete record.confirmPassword;
     record.email = normalizeEmail(record.email);
     record.createdAt = new Date().toISOString();
+    // Validate tab storage before creating an account. Personal details never
+    // belong in a URL, referrer or browser-history entry.
+    try { sessionStorage.setItem('redroad:pendingEnrollment', JSON.stringify(record)); }
+    catch (_) { return show('Allow this site to use tab storage before continuing. No account was created.'); }
     const submit = form.querySelector('button[type="submit"]');
+    submitting = true;
+    form.setAttribute('aria-busy', 'true');
     submit.disabled = true;
     submit.textContent = 'Creating Account…';
     message.hidden = true;
 
     try {
       await createUserWithEmailAndPassword(auth, record.email, password);
-      sessionStorage.setItem('redroad:pendingEnrollment', JSON.stringify(record));
-      const query = new URLSearchParams({ enrollment: '1', name: record.name || '', dob: record.dob || '', email: record.email || '', phone: record.phone || '' });
-      location.href = `waiver.html?${query}`;
+      location.href = 'waiver.html?enrollment=1';
     } catch (error) {
       await signOut(auth).catch(() => {});
       show(friendlyError(error));
+      submitting = false;
+      form.removeAttribute('aria-busy');
       submit.disabled = false;
       submit.textContent = 'Create Account & Continue to Waiver';
     }
   });
+  form.dataset.serviceReady = 'true';
 }

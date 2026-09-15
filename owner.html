@@ -181,8 +181,8 @@
 <div class="owner-member-head">
 <div>
 <div class="kicker">Developer Access</div>
-<h2>Owners &amp; Coaches</h2>
-<p class="portal-muted">Developer-only access control. Owners can manage members, but cannot create Developers.</p>
+<h2>Owner Access</h2>
+<p class="portal-muted">Developer-only access control. This section is hidden from owners and coaches.</p>
 </div>
 <button aria-expanded="false" class="btn btn-red" id="toggle-add-owner" type="button">+ Add Owner</button>
 </div>
@@ -207,7 +207,7 @@
 </div>
 <div class="owner-list-foot">
 <span>Maximum 50 owner records per manual load.</span>
-<span>Developer accounts remain console-only.</span>
+<span>Coach access is assigned from the member record below.</span>
 </div>
 <div class="kiosk-access-block">
 <div class="owner-member-head">
@@ -238,7 +238,7 @@
 <input id="owner-search" placeholder="Name, email, phone or household" type="search"/>
 </label>
 <label class="owner-filter"><span>Status</span><select id="owner-status-filter"><option value="all">All Statuses</option><option value="pending">Pending Approval</option><option value="active">Active</option><option value="past-due">Past Due</option><option value="missing-waiver">Missing Waiver</option><option value="inactive">Inactive</option><option value="archived">Archived</option></select></label>
-<label class="owner-filter"><span>Program</span><select id="owner-plan-filter"><option value="all">All Programs</option><option>Adult</option><option>Kids</option><option value="service">Military / First Responder</option><option>Family</option></select></label>
+<label class="owner-filter"><span>Program</span><select id="owner-plan-filter"><option value="all">All Programs</option><option>Adult</option><option>Kids</option><option value="service">Military / First Responder</option><option>Family</option><option>Coach</option></select></label>
 <button class="btn btn-dark" id="owner-export" type="button">Export CSV</button>
 <button aria-expanded="false" class="btn btn-red" id="toggle-add-member" type="button">+ Add Member</button>
 </div>
@@ -262,6 +262,7 @@
 <option>Kids</option>
 <option>Military / First Responder</option>
 <option>Family</option>
+<option>Coach</option>
 </select>
 </div>
 <div>
@@ -302,6 +303,10 @@
 <input checked="" name="active" type="checkbox"/> Active Membership</label>
 <label>
 <input checked="" name="enabled" type="checkbox"/> Portal Enabled</label>
+<label>
+<input name="coachAccess" type="checkbox"/> Coach Dashboard Access</label>
+<label>
+<input name="paymentExempt" type="checkbox"/> Payment Exempt</label>
 </div>
 <button class="btn btn-red btn-full owner-form-submit" type="submit">Add Member</button>
 </form>
@@ -327,6 +332,7 @@
 <option>Kids</option>
 <option>Military / First Responder</option>
 <option>Family</option>
+<option>Coach</option>
 </select>
 </div>
 <div>
@@ -367,6 +373,10 @@
 <input id="edit-member-active" name="active" type="checkbox"/> Active Membership</label>
 <label>
 <input id="edit-member-enabled" name="enabled" type="checkbox"/> Portal Enabled</label>
+<label>
+<input id="edit-member-coach-access" name="coachAccess" type="checkbox"/> Coach Dashboard Access</label>
+<label>
+<input id="edit-member-payment-exempt" name="paymentExempt" type="checkbox"/> Payment Exempt</label>
 </div>
 <button class="btn btn-red btn-full owner-form-submit" type="submit">Save Changes</button>
 </form>
@@ -387,7 +397,7 @@
 </div>
 </section>
 </main>
-<script src="portal.js?v=prod-44" type="module">
+<script src="portal.js?v=prod-48" type="module">
 </script>
 </body>
 </html>

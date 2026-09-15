@@ -3,7 +3,7 @@
   ---------------------------------------
   Deliberately bounded Firestore usage:
     - Member page: one getDoc on login/session restore.
-    - Staff page: Developer check (and Owner check if needed) + one bounded member query. Developer additionally loads a bounded owner list.
+    - Staff page: bounded role checks + one bounded member query. Developer additionally loads a bounded owner list.
     - Refresh happens ONLY when the owner presses Refresh.
     - Writes happen ONLY when the owner presses Add/Save/Enable/Disable/Remove.
     - NO realtime listeners (no onSnapshot).
@@ -129,6 +129,20 @@ async function getStaffAccess(email) {
     return { id: ownerSnap.id, role: 'owner', ...ownerSnap.data() };
   }
 
+  // Coach access lives on the member record so waiver, attendance and staff
+  // access always belong to one person instead of duplicated records.
+  // A verified email is required before Firestore permits the member record
+  // lookup. Skipping it here preserves the normal verification flow.
+  if (auth.currentUser?.emailVerified === true) {
+    const coachSnap = await getDoc(doc(db, 'members', cleanEmail));
+    if (coachSnap.exists()) {
+      const coach = coachSnap.data();
+      if (coach.coachAccess === true && coach.enabled === true && coach.active === true && coach.archived !== true) {
+        return { id: coachSnap.id, role: 'coach', ...coach };
+      }
+    }
+  }
+
   return null;
 }
 
@@ -156,14 +170,15 @@ function renderMemberDashboard(member, userEmail) {
 
   const membershipActive = member.active === true && member.archived !== true;
   const portalEnabled = member.enabled === true && member.archived !== true;
-  const paid = member.paid === true;
+  const paymentExempt = member.paymentExempt === true;
+  const paid = member.paid === true || paymentExempt;
   const waiverSigned = member.waiverSigned === true;
 
   const activeLabel = $('#member-active-label');
   const paidLabel = $('#member-paid-label');
   const waiverLabel = $('#member-waiver-label');
   activeLabel.textContent = membershipActive ? 'Active' : 'Inactive';
-  paidLabel.textContent = paid ? 'Paid / Current' : 'Past Due';
+  paidLabel.textContent = paymentExempt ? 'Payment Exempt' : (paid ? 'Paid / Current' : 'Past Due');
   activeLabel.dataset.state = membershipActive ? 'good' : 'bad';
   paidLabel.dataset.state = paid ? 'good' : 'bad';
   waiverLabel.textContent = waiverSigned ? 'Signed' : 'Missing';
@@ -397,13 +412,16 @@ function setupMemberPage() {
 function memberPayloadFromForm(form, previous = null) {
   const fd = new FormData(form);
   const email = normalizedEmail(fd.get('email') || previous?.email);
+  const coachAccess = fd.get('coachAccess') === 'on';
   return {
     email,
     name: String(fd.get('name') || '').trim(),
     rank: String(fd.get('rank') || 'White Belt'),
     stripes: stripeCount(fd.get('stripes')),
     plan: String(fd.get('plan') || 'Adult'),
-    paid: fd.get('paid') === 'on',
+    paid: coachAccess ? false : fd.get('paid') === 'on',
+    paymentExempt: coachAccess || fd.get('paymentExempt') === 'on',
+    coachAccess,
     active: fd.get('active') === 'on',
     enabled: fd.get('enabled') === 'on',
     archived: previous?.archived === true,
@@ -436,7 +454,7 @@ function visibleRoster() {
       if (plan !== 'all' && plan !== 'service' && member.plan !== plan) return false;
       if (status === 'pending' && !(member.waiverSigned === true && member.active !== true && member.archived !== true)) return false;
       if (status === 'active' && !(member.active === true && member.archived !== true)) return false;
-      if (status === 'past-due' && !(member.active === true && member.paid !== true && member.archived !== true)) return false;
+      if (status === 'past-due' && !(member.active === true && member.paid !== true && member.paymentExempt !== true && member.archived !== true)) return false;
       if (status === 'missing-waiver' && !(member.waiverSigned !== true && member.archived !== true)) return false;
       if (status === 'inactive' && !(member.active !== true && member.archived !== true)) return false;
       if (status === 'archived' && member.archived !== true) return false;
@@ -454,12 +472,13 @@ function renderOwnerStats() {
   const roster = ownerMembers.filter(m => m.archived !== true);
   const total = roster.length;
   const active = roster.filter(m => m.active === true);
-  const paid = active.filter(m => m.paid === true);
-  const pastDue = active.filter(m => m.paid !== true);
+  const billable = active.filter(m => m.paymentExempt !== true);
+  const paid = billable.filter(m => m.paid === true);
+  const pastDue = billable.filter(m => m.paid !== true);
   const waivers = roster.filter(m => m.waiverSigned === true);
   const pending = roster.filter(m => m.waiverSigned === true && m.active !== true);
   const activePercent = total ? Math.round((active.length / total) * 100) : 0;
-  const paidPercent = active.length ? Math.round((paid.length / active.length) * 100) : 0;
+  const paidPercent = billable.length ? Math.round((paid.length / billable.length) * 100) : 100;
 
   $('#stat-members').textContent = String(total);
   $('#stat-pending').textContent = String(pending.length);
@@ -480,7 +499,10 @@ function statusPills(member) {
   const pills = [];
   if (member.waiverSigned === true && member.active !== true && member.archived !== true) pills.push('<span class="status-chip pending">Pending Approval</span>');
   pills.push(`<span class="status-chip ${member.active ? 'active' : 'paused'}">${member.active ? 'Active' : 'Inactive'}</span>`);
-  pills.push(`<span class="status-chip ${member.paid ? 'active' : 'past-due'}">${member.paid ? 'Paid' : 'Past Due'}</span>`);
+  pills.push(member.paymentExempt === true
+    ? '<span class="status-chip">Payment Exempt</span>'
+    : `<span class="status-chip ${member.paid ? 'active' : 'past-due'}">${member.paid ? 'Paid' : 'Past Due'}</span>`);
+  if (member.coachAccess === true) pills.push('<span class="status-chip active">Coach</span>');
   pills.push(`<span class="status-chip ${member.enabled ? 'active' : 'paused'}">${member.enabled ? 'Portal On' : 'Portal Off'}</span>`);
   pills.push(`<span class="status-chip ${member.waiverSigned ? 'active' : 'past-due'}">${member.waiverSigned ? 'Waiver Signed' : 'Waiver Missing'}</span>`);
   pills.push(`<span class="status-chip ${member.kioskReady ? 'active' : 'paused'}">${member.kioskReady ? 'Kiosk Ready' : 'Set Check-In PIN'}</span>`);
@@ -497,16 +519,17 @@ function renderOwnerList() {
     list.innerHTML = '<div class="owner-empty">No members match this view.</div>';
     return;
   }
+  const canManage = ownerIdentity?.role === 'developer' || ownerIdentity?.role === 'owner';
   list.innerHTML = members.map(member => `
     <article class="member-row launch-member-row ${member.archived ? 'is-archived' : ''} ${member.waiverSigned === true && member.active !== true && member.archived !== true ? 'is-pending' : ''}" data-member-email="${esc(member.email)}">
       <div class="member-row-main"><strong>${esc(member.name)}</strong><span>${esc(member.email)}</span></div>
       <div class="member-row-meta"><span>${esc(formatRank(member))}</span><span>${esc(member.plan)}</span>${member.householdEmail ? `<span>Household: ${esc(member.householdEmail)}</span>` : ''}<div class="member-pills">${statusPills(member)}</div></div>
       <div class="member-row-actions">
-        <button class="btn btn-mini btn-dark" type="button" data-action="edit">Edit</button>
+        ${canManage ? '<button class="btn btn-mini btn-dark" type="button" data-action="edit">Edit</button>' : ''}
         ${member.waiverSigned ? '<button class="btn btn-mini btn-dark" type="button" data-action="view-waiver">Waiver</button>' : ''}
-        <button class="btn btn-mini btn-dark" type="button" data-action="reset-password">Reset Password</button>
-        <button class="btn btn-mini btn-dark" type="button" data-action="toggle-enabled">${member.enabled ? 'Disable' : 'Enable'}</button>
-        <button class="btn btn-mini btn-quiet" type="button" data-action="remove">Remove</button>
+        ${canManage ? '<button class="btn btn-mini btn-dark" type="button" data-action="reset-password">Reset Password</button>' : ''}
+        ${canManage ? `<button class="btn btn-mini btn-dark" type="button" data-action="toggle-enabled">${member.enabled ? 'Disable' : 'Enable'}</button>` : ''}
+        ${canManage ? '<button class="btn btn-mini btn-quiet" type="button" data-action="remove">Remove</button>' : ''}
       </div>
     </article>`).join('');
 }
@@ -543,6 +566,8 @@ async function saveMember(member, previous = null) {
     stripes: stripeCount(member.stripes),
     plan: String(member.plan || 'Adult'),
     paid: member.paid === true,
+    paymentExempt: member.paymentExempt === true,
+    coachAccess: member.coachAccess === true,
     active: member.active === true,
     enabled: member.enabled === true,
     archived: member.archived === true,
@@ -603,6 +628,8 @@ function openEditMember(member) {
   $('#edit-member-guardian-name').value = member.guardianName || '';
   $('#edit-member-household-email').value = member.householdEmail || '';
   $('#edit-member-paid').checked = member.paid === true;
+  $('#edit-member-payment-exempt').checked = member.paymentExempt === true;
+  $('#edit-member-coach-access').checked = member.coachAccess === true;
   $('#edit-member-active').checked = member.active === true;
   $('#edit-member-enabled').checked = member.enabled === true;
   $('#edit-member-kiosk-pin').value = '';
@@ -613,7 +640,7 @@ function renderOwnerAccess() {
   const list = $('#owner-access-list');
   if (!list) return;
   if (!ownerAccess.length) {
-    list.innerHTML = '<div class="owner-empty">No owners or coaches configured yet.</div>';
+    list.innerHTML = '<div class="owner-empty">No owners configured yet.</div>';
     return;
   }
   list.innerHTML = ownerAccess
@@ -750,10 +777,10 @@ function csvCell(value) {
 }
 
 function exportRosterCsv() {
-  const columns = ['Name','Email','Phone','Plan','Rank','Stripes','Active','Paid','Waiver','Guardian','Household Email','Emergency Contact','Emergency Phone','Joined'];
+  const columns = ['Name','Email','Phone','Plan','Rank','Stripes','Active','Paid','Payment Exempt','Coach Access','Waiver','Guardian','Household Email','Emergency Contact','Emergency Phone','Joined'];
   const rows = visibleRoster().map(member => [
     member.name, member.email, member.phone, member.plan, member.rank, member.stripes,
-    member.active ? 'Yes' : 'No', member.paid ? 'Yes' : 'No', member.waiverSigned ? 'Yes' : 'No',
+    member.active ? 'Yes' : 'No', member.paid ? 'Yes' : 'No', member.paymentExempt ? 'Yes' : 'No', member.coachAccess ? 'Yes' : 'No', member.waiverSigned ? 'Yes' : 'No',
     member.guardianName, member.householdEmail, member.emergencyName, member.emergencyPhone,
     member.joinedAt
   ]);
@@ -773,13 +800,17 @@ async function authorizeStaff(user) {
   if (!access) return null;
   ownerIdentity = { email: normalizedEmail(user.email), ...access };
   const developer = access.role === 'developer';
-  $('#owner-welcome').textContent = access.name ? `Welcome, ${access.name}.` : (developer ? 'Red Road Developer' : 'Red Road Owner');
+  const coach = access.role === 'coach';
+  const roleName = developer ? 'Developer' : (coach ? 'Coach' : 'Owner');
+  $('#owner-welcome').textContent = access.name ? `Welcome, ${access.name}.` : `Red Road ${roleName}`;
   $('#owner-email-display').textContent = user.email;
-  $('#staff-role-brand').textContent = developer ? 'Developer' : 'Owner';
-  $('#staff-role-kicker').textContent = developer ? 'Developer' : 'Owner';
-  $('#dashboard-role-label').textContent = developer ? 'Developer Dashboard' : 'Owner Dashboard';
+  $('#staff-role-brand').textContent = roleName;
+  $('#staff-role-kicker').textContent = roleName;
+  $('#dashboard-role-label').textContent = `${roleName} Dashboard`;
   const developerCard = $('#developer-access-card');
   if (developerCard) developerCard.hidden = !developer;
+  const addMemberButton = $('#toggle-add-member');
+  if (addMemberButton) addMemberButton.hidden = coach;
   $('#owner-login-view').hidden = true;
   $('#owner-app').hidden = false;
   await loadOwnerMembers();
@@ -1105,16 +1136,33 @@ function setupOwnerPage() {
   });
 
   $('#toggle-add-member')?.addEventListener('click', () => {
+    if (ownerIdentity?.role === 'coach') return;
     const panel = $('#add-member-panel');
     panel.hidden = !panel.hidden;
     $('#toggle-add-member').setAttribute('aria-expanded', String(!panel.hidden));
     if (!panel.hidden && !$('#owner-joined').value) $('#owner-joined').value = todayIso();
   });
 
+  document.querySelectorAll('input[name="coachAccess"]').forEach(input => {
+    input.addEventListener('change', () => {
+      if (!input.checked) return;
+      const form = input.closest('form');
+      const exempt = form?.querySelector('input[name="paymentExempt"]');
+      const paid = form?.querySelector('input[name="paid"]');
+      const active = form?.querySelector('input[name="active"]');
+      const enabled = form?.querySelector('input[name="enabled"]');
+      if (exempt) exempt.checked = true;
+      if (paid) paid.checked = false;
+      if (active) active.checked = true;
+      if (enabled) enabled.checked = true;
+    });
+  });
+
   $('#add-member-form')?.addEventListener('submit', async event => {
     event.preventDefault();
     const form = event.currentTarget;
     clearFlash(ownerMessage);
+    if (ownerIdentity?.role === 'coach') return flash(ownerMessage, 'Owner access required.', 'error');
     const member = memberPayloadFromForm(form);
     if (!/^\d{4}$/.test(member.kioskPin)) {
       flash(ownerMessage, 'Enter a four-digit check-in PIN for the new member.', 'error');
@@ -1213,6 +1261,7 @@ function setupOwnerPage() {
   $('#edit-member-form')?.addEventListener('submit', async event => {
     event.preventDefault();
     clearFlash(ownerMessage);
+    if (ownerIdentity?.role === 'coach') return flash(ownerMessage, 'Owner access required.', 'error');
     const memberEmail = normalizedEmail($('#edit-member-email').value);
     const previous = ownerMembers.find(m => normalizedEmail(m.email) === memberEmail);
     if (!previous) return;

@@ -16,5 +16,6 @@
 - Member self-activation creates an Auth identity but does **not** grant portal data access immediately.
 - Firebase sends a verification email; the member must verify ownership of the email before Firestore permits self-read access.
 - Firestore member self-read also requires `enabled == true` and `archived != true`.
-- Staff access remains independent and is controlled by the `owners` / `developers` permission records.
+- Developer and owner access remain independent in the `developers` / `owners` permission records. Coach access is an explicit flag on a verified, active member record so waivers and attendance stay linked to one identity.
+- Only developers can create owners. Owners can grant or revoke coach access while editing members; coaches receive read/review access but cannot modify or delete member records.
 - A member who encounters an existing Auth identity can use password reset to reclaim it through control of the mailbox.

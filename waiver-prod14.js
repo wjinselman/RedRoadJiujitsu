@@ -190,6 +190,8 @@ form.addEventListener('submit', async event => {
         stripes: 0,
         plan: String(pending.program || 'Adult'),
         paid: false,
+        paymentExempt: false,
+        coachAccess: false,
         active: false,
         enabled: true,
         archived: false,

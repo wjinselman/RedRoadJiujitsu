@@ -51,6 +51,14 @@ body{background:#07080a}
 }
 .home-page .bullyproof-section>.shell{position:relative;z-index:2!important}
 
+/* Keep the desktop story feature aligned with the same centered content width as the other sections. */
+@media(min-width:901px){
+  .home-page .story-band{
+    width:min(var(--max),calc(100% - 34px));
+    margin-inline:auto;
+  }
+}
+
 @media(max-width:700px){
   .home-page .bullyproof-section{
     background:
@@ -169,7 +177,7 @@ body{background:#07080a}
   inset:0;
   z-index:0;
   pointer-events:none;
-  background:url('assets/red-road-hero-action.png') center 48% / cover no-repeat;
+  background:url('assets/bullyproof-training-background.png') center 48% / cover no-repeat;
   filter:brightness(1.18) saturate(.8) contrast(1.06);
   opacity:.86;
 }
@@ -202,16 +210,16 @@ body{background:#07080a}
 
 @media(max-width:700px){
   .hero-logo-mode .hero-action-photo{
-    background-position:53% center;
-    filter:brightness(1.12) saturate(.72) contrast(1.06);
-    opacity:.68;
+    background-position:47% center;
+    filter:brightness(1.08) saturate(.78) contrast(1.05);
+    opacity:.8;
   }
   .hero-logo-mode .hero-bg{
     background:
       linear-gradient(180deg,
-        rgba(5,6,8,.72) 0%,
-        rgba(5,6,8,.45) 26%,
-        rgba(5,6,8,.74) 52%,
+        rgba(5,6,8,.58) 0%,
+        rgba(5,6,8,.34) 26%,
+        rgba(5,6,8,.66) 52%,
         rgba(5,6,8,.96) 78%,
         #07080a 100%) !important;
   }

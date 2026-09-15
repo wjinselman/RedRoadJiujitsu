@@ -17,6 +17,10 @@ service cloud.firestore {
       return /databases/$(database)/documents/owners/$(authEmail());
     }
 
+    function memberPath() {
+      return /databases/$(database)/documents/members/$(authEmail());
+    }
+
     function kioskPath() {
       return /databases/$(database)/documents/kiosks/$(authEmail());
     }
@@ -33,8 +37,22 @@ service cloud.firestore {
         && get(ownerPath()).data.enabled == true;
     }
 
-    function isStaff() {
+    function isCoach() {
+      return signedIn()
+        && request.auth.token.email_verified == true
+        && exists(memberPath())
+        && get(memberPath()).data.coachAccess == true
+        && get(memberPath()).data.active == true
+        && get(memberPath()).data.enabled == true
+        && get(memberPath()).data.archived != true;
+    }
+
+    function isManager() {
       return isDeveloper() || isOwner();
+    }
+
+    function isStaff() {
+      return isManager() || isCoach();
     }
 
     function isKiosk() {
@@ -106,7 +124,8 @@ service cloud.firestore {
 
     function validMember(data, memberEmail) {
       return data.keys().hasOnly([
-          'email', 'name', 'rank', 'stripes', 'plan', 'paid', 'active',
+          'email', 'name', 'rank', 'stripes', 'plan', 'paid', 'paymentExempt',
+          'coachAccess', 'active',
           'enabled', 'archived', 'joinedAt', 'waiverSigned', 'waiverSignedAt',
           'waiverReceiptId', 'phone', 'address', 'emergencyName',
           'emergencyPhone', 'guardianName', 'householdEmail',
@@ -125,6 +144,8 @@ service cloud.firestore {
         && data.plan is string
         && data.plan.size() <= 80
         && data.paid is bool
+        && data.paymentExempt is bool
+        && data.coachAccess is bool
         && data.active is bool
         && data.enabled is bool
         && data.archived is bool
@@ -178,6 +199,8 @@ service cloud.firestore {
         && data.rank == 'White Belt'
         && data.stripes == 0
         && data.paid == false
+        && data.paymentExempt == false
+        && data.coachAccess == false
         && data.active == false
         && data.enabled == true
         && data.archived == false
@@ -335,12 +358,12 @@ service cloud.firestore {
                         && resource.data.enabled == true
                         && resource.data.archived != true
                         && validMemberProfileUpdate(request.resource.data, memberEmail));
-      // Staff-only permanent roster removal. Authentication identities are managed separately.
-      allow delete: if isStaff();
+      // Manager-only permanent roster removal. Authentication identities are managed separately.
+      allow delete: if isManager();
     }
 
     // Full signed records are append-only from the member flow. Members may read
-    // their own record; staff can review it. Only staff may purge a waiver when
+    // their own record; staff can review it. Only managers may purge a waiver when
     // permanently removing the associated member.
     match /waivers/{waiverEmail} {
       allow get: if (signedIn() && authEmail() == waiverEmail) || isStaff();
@@ -352,7 +375,7 @@ service cloud.firestore {
                     && !exists(/databases/$(database)/documents/waivers/$(waiverEmail))
                     && validWaiver(request.resource.data, waiverEmail);
       allow update: if false;
-      allow delete: if isStaff();
+      allow delete: if isManager();
     }
 
     // Free-trial visitors authenticate anonymously for one append-only write.
@@ -379,9 +402,9 @@ service cloud.firestore {
       allow list: if (isStaff() || isKiosk())
                   && request.query.limit != null
                   && request.query.limit <= 250;
-      allow create, update: if isStaff()
+      allow create, update: if isManager()
                             && validCheckInDirectory(request.resource.data, memberEmail);
-      allow delete: if isStaff();
+      allow delete: if isManager();
     }
 
     // One deterministic document per member/class/date prevents accidental

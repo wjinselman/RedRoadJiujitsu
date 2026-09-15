@@ -45,10 +45,13 @@ import {
 
 const MAX_OWNER_MEMBERS = 250;
 let ownerMembers = [];
+let ownerRosterLoaded = false;
+let staffAuthorization = null;
 let ownerAccess = [];
 let kioskAccess = [];
 let ownerAttendance = [];
 let ownerTrials = [];
+let ownerTrialsLoaded = false;
 let standaloneWaivers = [];
 const waiverPages = {
   members: { cursor: null, more: false },
@@ -501,10 +504,14 @@ function renderOwnerStats() {
   $('#stat-paid-count').textContent = `${paid.length} current`;
   $('#stat-past-due').textContent = String(pastDue.length);
   $('#stat-waiver-percent').textContent = `${total ? Math.round((waivers.length / total) * 100) : 0}%`;
-  $('#stat-waiver-count').textContent = `${waivers.length} signed`;
+  if (!ownerRosterLoaded) {
+    ['stat-members','stat-pending','stat-active-percent','stat-paid-percent','stat-past-due','stat-waiver-percent'].forEach(id => { $('#'+id).textContent = '—'; });
+    ['stat-pending-note','stat-active-count','stat-paid-count'].forEach(id => { $('#'+id).textContent = 'Roster not loaded'; });
+  }
+  $('#stat-waiver-count').textContent = ownerRosterLoaded ? `${waivers.length} signed` : 'Roster not loaded';
   const newTrials = ownerTrials.filter(trial => trial.status === 'new' && (!trial.trialExpiresOn || trial.trialExpiresOn >= todayIso())).length;
-  $('#stat-trials').textContent = String(ownerTrials.length);
-  $('#stat-trials-note').textContent = newTrials === 1 ? '1 new request' : `${newTrials} new requests`;
+  $('#stat-trials').textContent = ownerTrialsLoaded ? String(ownerTrials.length) : '—';
+  $('#stat-trials-note').textContent = ownerTrialsLoaded ? (newTrials === 1 ? '1 new request' : `${newTrials} new requests`) : 'Trials not loaded';
 }
 
 function statusPills(member) {
@@ -566,6 +573,7 @@ async function loadOwnerMembers(append = false) {
   } catch (_) {}
   const records = snap.docs.map(d => { const data = d.data(); return { ...data, id: d.id, stripes: stripeCount(data.stripes), kioskReady: kioskReady.has(normalizedEmail(d.id)) ? true : directoryComplete ? false : null }; });
   ownerMembers = append ? [...ownerMembers, ...records] : records;
+  ownerRosterLoaded = true;
   page.cursor = snap.docs.at(-1) || page.cursor;
   page.more = snap.docs.length === MAX_OWNER_MEMBERS;
   renderOwner();
@@ -790,6 +798,7 @@ async function loadTrialRequests(append = false) {
   const snap = await getDocs(query(collection(db, 'trialWaivers'), orderBy('createdAt', 'desc'), ...(append && page.cursor ? [startAfter(page.cursor)] : []), limit(250)));
   const records = snap.docs.map(item => ({ id: item.id, ...item.data() }));
   ownerTrials = append ? [...ownerTrials, ...records] : records;
+  ownerTrialsLoaded = true;
   page.cursor = snap.docs.at(-1) || page.cursor;
   page.more = snap.docs.length === 250;
   renderTrialRequests();
@@ -849,7 +858,16 @@ function exportRosterCsv() {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-async function authorizeStaff(user) {
+function authorizeStaff(user) {
+  const email = normalizedEmail(user.email);
+  if (staffAuthorization?.email === email) return staffAuthorization.promise;
+  const entry = { email, promise: null };
+  entry.promise = authorizeStaffOnce(user).finally(() => { if (staffAuthorization === entry) staffAuthorization = null; });
+  staffAuthorization = entry;
+  return entry.promise;
+}
+
+async function authorizeStaffOnce(user) {
   const access = await getStaffAccess(user.email);
   if (!access) return null;
   ownerIdentity = { email: normalizedEmail(user.email), ...access };
@@ -869,7 +887,27 @@ async function authorizeStaff(user) {
   if (addMemberButton) addMemberButton.hidden = coach;
   $('#owner-login-view').hidden = true;
   $('#owner-app').hidden = false;
-  await loadOwnerMembers();
+  ownerRosterLoaded = false;
+  ownerTrialsLoaded = false;
+  $('#attendance-today-count').textContent = '—';
+  $('#attendance-last-time').textContent = '—';
+  renderOwnerStats();
+  const loadStatus = $('#dashboard-load-status');
+  flash(loadStatus, 'Loading your dashboard…');
+  let rosterError = null;
+  try {
+    try { await loadOwnerMembers(); }
+    catch (error) {
+      const code = String(error?.code || '');
+      if (!/unavailable|deadline-exceeded|network-request-failed/.test(code)) throw error;
+      flash(loadStatus, 'Connection interrupted. Retrying dashboard load once…');
+      await loadOwnerMembers();
+    }
+  } catch (error) {
+    rosterError = error;
+    $('#owner-member-list').innerHTML = '<div class="owner-empty" role="status">The roster could not be loaded. Use Refresh to try again.</div>';
+    flash(loadStatus, 'Dashboard data could not be loaded. ' + friendlyError(error) + ' Use Refresh to retry.', 'error');
+  }
   await loadTrialRequests().catch(() => {
     $('#trial-request-list').innerHTML = '<div class="owner-empty" role="status">Trial requests could not be loaded. Use Refresh Trials to try again.</div>';
     $('#stat-trials').textContent = '—';
@@ -882,6 +920,7 @@ async function authorizeStaff(user) {
   });
   await loadStandaloneWaivers().catch(()=>flash($('#waiver-library-message'),'Waiver-only submissions could not be loaded. Check the new waiver-storage rules. Existing member and trial waivers remain available.','error'));
   if (developer) await Promise.allSettled([loadOwnerAccess(), loadKioskAccess()]);
+  if (!rosterError) clearFlash(loadStatus);
   return access;
 }
 
@@ -1005,6 +1044,7 @@ function setupOwnerPage() {
 
   listenAsync($('#owner-refresh'), 'click', async () => {
     clearFlash(ownerMessage);
+    flash($('#dashboard-load-status'), 'Refreshing your dashboard…');
     try {
       await loadOwnerMembers();
       await loadTrialRequests();
@@ -1012,7 +1052,9 @@ function setupOwnerPage() {
       await loadStandaloneWaivers();
       if (ownerIdentity?.role === 'developer') await Promise.all([loadOwnerAccess(), loadKioskAccess()]);
       flash(ownerMessage, ownerIdentity?.role === 'developer' ? 'Members and owner access refreshed once.' : 'Member list refreshed once.');
+      clearFlash($('#dashboard-load-status'));
     } catch (error) {
+      flash($('#dashboard-load-status'), 'Dashboard refresh could not finish. ' + friendlyError(error), 'error');
       flash(ownerMessage, friendlyError(error), 'error');
     }
   });
@@ -1392,8 +1434,8 @@ function setupOwnerPage() {
     try {
       const owner = await authorizeStaff(user);
       if (!owner) await signOut(auth);
-    } catch (_) {
-      // Stop here. No retry loop.
+    } catch (error) {
+      flash($('#owner-app').hidden ? loginMessage : $('#dashboard-load-status'), 'Sign-in could not finish. ' + friendlyError(error), 'error');
     }
   });
 }

@@ -29,8 +29,19 @@ body{background:#07080a}
   isolation:isolate;
   overflow:hidden!important;
   background:
+    linear-gradient(90deg,
+      #07080a 0%,
+      rgba(7,8,10,.98) 7%,
+      rgba(7,8,10,.78) 17%,
+      rgba(7,8,10,.28) 32%,
+      rgba(7,8,10,.12) 43%,
+      rgba(7,8,10,.12) 57%,
+      rgba(7,8,10,.28) 68%,
+      rgba(7,8,10,.78) 83%,
+      rgba(7,8,10,.98) 93%,
+      #07080a 100%),
     radial-gradient(ellipse at center,rgba(8,9,11,.24) 0%,rgba(8,9,11,.5) 66%,rgba(8,9,11,.88) 100%),
-    url('assets/bullyproof-training-background.png') center 46% / cover no-repeat!important;
+    url('assets/bullyproof-kids-new-gym.png') center 46% / cover no-repeat!important;
 }
 .home-page .bullyproof-section::before{
   content:none!important;
@@ -44,7 +55,7 @@ body{background:#07080a}
   .home-page .bullyproof-section{
     background:
       linear-gradient(180deg,rgba(8,9,11,.62),rgba(8,9,11,.32) 44%,rgba(8,9,11,.8)),
-      url('assets/bullyproof-training-background.png') center 48% / cover no-repeat!important;
+      url('assets/bullyproof-kids-new-gym.png') center 48% / cover no-repeat!important;
   }
 }
 

@@ -33,6 +33,8 @@ import {
   deleteDoc,
   collection,
   query,
+  where,
+  orderBy,
   limit,
   serverTimestamp,
   writeBatch
@@ -72,6 +74,8 @@ export {
   deleteDoc,
   collection,
   query,
+  where,
+  orderBy,
   limit,
   serverTimestamp,
   writeBatch

@@ -1,6 +1,8 @@
 # Red Road Jiu Jitsu — GitHub Testing Build
 
 ## Changes in this build
+- Added a dedicated iPad attendance kiosk at `kiosk.html` with member name search, four-digit PIN confirmation, duplicate blocking and automatic reset.
+- Added staff attendance review/undo, Developer-controlled kiosk access, per-member PIN setup and member attendance history.
 - Removed the repository `CNAME` file so this package does not force GitHub Pages toward `redroadbjj.com` during testing.
 - Removed the old coaches/purple-belt homepage placement and replaced homepage photo usage with the new supplied photos.
 - Added the supplied Bully Proofing Program artwork and a dedicated homepage section with an enrollment link.

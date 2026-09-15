@@ -11,9 +11,9 @@
 <style>html,body{background:#07080a!important;color-scheme:dark}body{min-height:100%;margin:0}</style>
 <link href="assets/favicon-64.png" rel="icon" sizes="64x64" type="image/png"/>
 <link href="assets/apple-touch-icon.png" rel="apple-touch-icon"/>
-<link rel="stylesheet" href="prod14.css?v=prod-36">
-<link rel="stylesheet" href="premium.css?v=prod-36">
-<script src="mobile-nav.js?v=prod36" defer></script></head>
+<link rel="stylesheet" href="prod14.css?v=prod-37">
+<link rel="stylesheet" href="premium.css?v=prod-40">
+<script src="mobile-nav.js?v=prod38" defer></script></head>
 <body>
 <div aria-hidden="true" class="site-emblem-bg">
 </div>
@@ -109,6 +109,10 @@
 <strong id="member-rank">—</strong>
 <small>Current belt / rank</small>
 </div>
+<div class="member-settings-panel attendance-history-panel">
+<div class="portal-card-head"><div><div class="kicker">Attendance</div><h3>Your Recent Check-Ins</h3></div><strong id="member-attendance-count">0</strong></div>
+<div class="member-attendance-list" id="member-attendance-list"><p class="portal-muted">No check-ins recorded yet.</p></div>
+</div>
 <div class="dash-stat">
 <span>Plan</span>
 <strong id="member-plan">—</strong>
@@ -122,15 +126,36 @@
 </div>
 <div class="member-access-note" hidden="" id="member-access-note">
 </div>
+<div class="flash-message" hidden id="member-dashboard-message"></div>
 <div class="member-actions">
 <a class="btn btn-red" href="index.html#schedule">Class Schedule</a>
 <a class="btn btn-dark" href="index.html#location">Directions</a>
+<button aria-expanded="false" class="btn btn-dark" id="toggle-member-profile" type="button">Edit Profile</button>
+<button class="btn btn-dark" hidden id="member-view-waiver" type="button">View Signed Waiver</button>
+</div>
+<div class="member-settings-panel" hidden id="member-profile-panel">
+<div class="portal-card-head"><div><div class="kicker">Member Settings</div><h3>Contact &amp; Emergency Information</h3></div></div>
+<p class="portal-muted">You can update contact details here. Membership, payment, rank and waiver status remain staff-controlled.</p>
+<form class="owner-form launch-owner-form" id="member-profile-form">
+<div><label for="profile-phone">Phone</label><input id="profile-phone" maxlength="40" name="phone" type="tel"/></div>
+<div><label for="profile-household-email">Parent / Household Email</label><input id="profile-household-email" maxlength="254" name="householdEmail" type="email"/></div>
+<div class="form-wide"><label for="profile-address">Address</label><input id="profile-address" maxlength="240" name="address"/></div>
+<div><label for="profile-emergency-name">Emergency Contact</label><input id="profile-emergency-name" maxlength="160" name="emergencyName"/></div>
+<div><label for="profile-emergency-phone">Emergency Phone</label><input id="profile-emergency-phone" maxlength="40" name="emergencyPhone" type="tel"/></div>
+<div class="form-wide"><label for="profile-guardian-name">Parent / Legal Guardian</label><input id="profile-guardian-name" maxlength="160" name="guardianName"/></div>
+<button class="btn btn-red btn-full owner-form-submit" type="submit">Save Profile</button>
+</form>
+</div>
+<div class="member-settings-panel waiver-record-panel" hidden id="member-waiver-panel">
+<div class="portal-card-head"><div><div class="kicker">Signed Record</div><h3>Your Liability Waiver</h3></div><button class="btn btn-quiet btn-mini" id="close-member-waiver" type="button">Close</button></div>
+<div id="member-waiver-details"></div>
+<div class="member-actions"><a class="btn btn-dark" href="assets/red-road-liability-waiver.pdf" rel="noopener" target="_blank">Open Agreement PDF</a></div>
 </div>
 </div>
 </div>
 </section>
 </main>
-<script src="portal.js?v=prod-14" type="module">
+<script src="portal.js?v=prod-40" type="module">
 </script>
 </body>
 </html>

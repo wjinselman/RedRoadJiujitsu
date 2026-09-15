@@ -6,6 +6,7 @@
   // All pages live as siblings at the site root, so plain relative paths
   // work from any page without needing an absolute base URL.
   const home='index.html';
+  const page=(location.pathname.split('/').pop()||'index.html').toLowerCase();
   let toggle=nav.querySelector('.mobile-menu');
   const button=document.createElement('button');
   button.type='button';
@@ -43,4 +44,18 @@
   document.addEventListener('click',event=>{if(!header.contains(event.target)) close()});
   document.addEventListener('keydown',event=>{if(event.key==='Escape'){close();toggle.focus()}});
   addEventListener('resize',()=>{if(innerWidth>900) close()},{passive:true});
+
+  // Keep the three highest-value actions within thumb reach on phones.
+  // The staff dashboard intentionally stays distraction-free.
+  if(page!=='owner.html'&&page!=='admin-demo.html'){
+    const actionBar=document.createElement('nav');
+    actionBar.className='mobile-action-bar';
+    actionBar.setAttribute('aria-label','Quick actions');
+    actionBar.innerHTML=`
+      <a class="mobile-action-link${page==='index.html'&&location.hash==='#schedule'?' is-active':''}" href="${home}#schedule">Schedule</a>
+      <a class="mobile-action-link mobile-action-primary${page==='enroll.html'?' is-active':''}" href="enroll.html">Book First Class</a>
+      <a class="mobile-action-link${page==='members.html'?' is-active':''}" href="members.html">Members</a>`;
+    document.body.append(actionBar);
+    document.body.classList.add('has-mobile-action-bar');
+  }
 })();

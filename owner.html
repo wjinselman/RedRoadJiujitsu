@@ -11,9 +11,9 @@
 <style>html,body{background:#07080a!important;color-scheme:dark}body{min-height:100%;margin:0}</style>
 <link href="assets/favicon-64.png" rel="icon" sizes="64x64" type="image/png"/>
 <link href="assets/apple-touch-icon.png" rel="apple-touch-icon"/>
-<link rel="stylesheet" href="prod14.css?v=prod-36">
-<link rel="stylesheet" href="premium.css?v=prod-36">
-<script src="mobile-nav.js?v=prod36" defer></script></head>
+<link rel="stylesheet" href="prod14.css?v=prod-37">
+<link rel="stylesheet" href="premium.css?v=prod-40">
+<script src="mobile-nav.js?v=prod38" defer></script></head>
 <body>
 <div aria-hidden="true" class="site-emblem-bg">
 </div>
@@ -116,6 +116,24 @@
 <small id="stat-waiver-count">0 signed</small>
 </div>
 </div>
+<div class="dash-card owner-card attendance-card">
+<div class="owner-member-head">
+<div>
+<div class="kicker">Class Check-In</div>
+<h2>Attendance</h2>
+<p class="portal-muted">Open the dedicated iPad kiosk for member check-in, or review and correct today’s attendance here.</p>
+</div>
+<div class="owner-toolbar-actions">
+<a class="btn btn-red" href="kiosk.html" target="_blank" rel="noopener">Open iPad Kiosk</a>
+<button class="btn btn-dark" id="attendance-refresh" type="button">Refresh Attendance</button>
+</div>
+</div>
+<div class="attendance-summary">
+<div><span>Checked In Today</span><strong id="attendance-today-count">0</strong></div>
+<div><span>Last Check-In</span><strong id="attendance-last-time">—</strong></div>
+</div>
+<div aria-live="polite" class="member-list attendance-list" id="attendance-list"></div>
+</div>
 <div class="dash-card owner-card security-card">
 <div class="owner-member-head">
 <div>
@@ -175,6 +193,21 @@
 <span>Maximum 50 owner records per manual load.</span>
 <span>Developer accounts remain console-only.</span>
 </div>
+<div class="kiosk-access-block">
+<div class="owner-member-head">
+<div><div class="kicker">Check-In Device</div><h3>iPad Kiosk Access</h3><p class="portal-muted">Approve a dedicated account for the front-desk iPad. It can only see the check-in directory and create attendance records.</p></div>
+<button aria-expanded="false" class="btn btn-dark" id="toggle-add-kiosk" type="button">+ Add Kiosk</button>
+</div>
+<div class="add-member-panel" hidden id="add-kiosk-panel">
+<form class="owner-form launch-owner-form" id="add-kiosk-form">
+<div><label for="kiosk-access-name">Device Name</label><input id="kiosk-access-name" maxlength="120" name="name" placeholder="Front Desk iPad" required></div>
+<div><label for="kiosk-access-email">Kiosk Email</label><input id="kiosk-access-email" name="email" type="email" placeholder="redroadcheckin@gmail.com" required></div>
+<div class="owner-checks"><label><input checked name="enabled" type="checkbox"> Enabled</label></div>
+<button class="btn btn-red btn-full owner-form-submit" type="submit">Approve Kiosk</button>
+</form>
+</div>
+<div aria-live="polite" class="member-list" id="kiosk-access-list"></div>
+</div>
 </div>
 <div class="dash-card owner-card">
 <div class="owner-member-head">
@@ -186,8 +219,11 @@
 <div class="owner-member-tools">
 <label class="owner-search">
 <span>Search</span>
-<input id="owner-search" placeholder="Name or email" type="search"/>
+<input id="owner-search" placeholder="Name, email, phone or household" type="search"/>
 </label>
+<label class="owner-filter"><span>Status</span><select id="owner-status-filter"><option value="all">All Statuses</option><option value="pending">Pending Approval</option><option value="active">Active</option><option value="past-due">Past Due</option><option value="missing-waiver">Missing Waiver</option><option value="inactive">Inactive</option><option value="archived">Archived</option></select></label>
+<label class="owner-filter"><span>Program</span><select id="owner-plan-filter"><option value="all">All Programs</option><option>Adult</option><option>Kids</option><option value="service">Military / First Responder</option><option>Family</option></select></label>
+<button class="btn btn-dark" id="owner-export" type="button">Export CSV</button>
 <button aria-expanded="false" class="btn btn-red" id="toggle-add-member" type="button">+ Add Member</button>
 </div>
 </div>
@@ -236,6 +272,13 @@
 <label for="owner-joined">Joined</label>
 <input id="owner-joined" name="joinedAt" type="date"/>
 </div>
+<div><label for="owner-phone">Phone</label><input id="owner-phone" maxlength="40" name="phone" type="tel"/></div>
+<div><label for="owner-household-email">Parent / Household Email</label><input id="owner-household-email" maxlength="254" name="householdEmail" type="email"/></div>
+<div class="form-wide"><label for="owner-address">Address</label><input id="owner-address" maxlength="240" name="address"/></div>
+<div><label for="owner-emergency-name">Emergency Contact</label><input id="owner-emergency-name" maxlength="160" name="emergencyName"/></div>
+<div><label for="owner-emergency-phone">Emergency Phone</label><input id="owner-emergency-phone" maxlength="40" name="emergencyPhone" type="tel"/></div>
+<div><label for="owner-guardian-name">Parent / Legal Guardian</label><input id="owner-guardian-name" maxlength="160" name="guardianName"/></div>
+<div><label for="owner-kiosk-pin">4-Digit Check-In PIN</label><input id="owner-kiosk-pin" autocomplete="new-password" inputmode="numeric" maxlength="4" minlength="4" name="kioskPin" pattern="[0-9]{4}" placeholder="0000" required type="password"/></div>
 <div class="owner-checks">
 <label>
 <input checked="" name="paid" type="checkbox"/> Paid / Current</label>
@@ -294,6 +337,13 @@
 <label for="edit-member-joined">Joined</label>
 <input id="edit-member-joined" name="joinedAt" type="date"/>
 </div>
+<div><label for="edit-member-phone">Phone</label><input id="edit-member-phone" maxlength="40" name="phone" type="tel"/></div>
+<div><label for="edit-member-household-email">Parent / Household Email</label><input id="edit-member-household-email" maxlength="254" name="householdEmail" type="email"/></div>
+<div class="form-wide"><label for="edit-member-address">Address</label><input id="edit-member-address" maxlength="240" name="address"/></div>
+<div><label for="edit-member-emergency-name">Emergency Contact</label><input id="edit-member-emergency-name" maxlength="160" name="emergencyName"/></div>
+<div><label for="edit-member-emergency-phone">Emergency Phone</label><input id="edit-member-emergency-phone" maxlength="40" name="emergencyPhone" type="tel"/></div>
+<div><label for="edit-member-guardian-name">Parent / Legal Guardian</label><input id="edit-member-guardian-name" maxlength="160" name="guardianName"/></div>
+<div><label for="edit-member-kiosk-pin">New Check-In PIN</label><input id="edit-member-kiosk-pin" autocomplete="new-password" inputmode="numeric" maxlength="4" minlength="4" name="kioskPin" pattern="[0-9]{4}" placeholder="Leave blank to keep current" type="password"/><small class="field-help">Enter four digits only when setting or changing this member’s kiosk PIN.</small></div>
 <div class="owner-checks">
 <label>
 <input id="edit-member-paid" name="paid" type="checkbox"/> Paid / Current</label>
@@ -304,6 +354,11 @@
 </div>
 <button class="btn btn-red btn-full owner-form-submit" type="submit">Save Changes</button>
 </form>
+</div>
+<div class="edit-member-panel waiver-record-panel" hidden id="owner-waiver-panel">
+<div class="portal-card-head"><div><div class="kicker">Signed Record</div><h3 id="owner-waiver-title">Member Waiver</h3></div><button class="btn btn-quiet btn-mini" id="close-owner-waiver" type="button">Close</button></div>
+<div id="owner-waiver-details"></div>
+<div class="member-actions"><a class="btn btn-dark" href="assets/red-road-liability-waiver.pdf" rel="noopener" target="_blank">Open Agreement PDF</a></div>
 </div>
 <div aria-live="polite" class="member-list" id="owner-member-list">
 </div>
@@ -316,7 +371,7 @@
 </div>
 </section>
 </main>
-<script src="portal.js?v=prod-14" type="module">
+<script src="portal.js?v=prod-40" type="module">
 </script>
 </body>
 </html>

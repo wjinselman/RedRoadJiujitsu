@@ -21,6 +21,12 @@ Fields: `email`, `name`, `enabled`, `createdAt`, `updatedAt`.
 
 Developer records are console-managed only. Browser code cannot create/elevate a Developer.
 
+### iPad kiosk account
+- Create or use one real recovery inbox, recommended: `redroadcheckin@gmail.com`.
+- In the Developer dashboard, approve it under **iPad Kiosk Access**.
+- Open `kiosk.html` on the iPad and use **First setup? Activate approved kiosk** once.
+- The kiosk role can read only the limited check-in directory and create attendance. It cannot read member profiles or waivers.
+
 ## Authentication users that must exist
 - `redroadjiujitsu@protonmail.com`
 - `wjinselman@gmail.com`
@@ -36,13 +42,15 @@ Current rules:
 - let only Developers query/manage Owner access, capped at 50;
 - allow staff to permanently delete member roster documents;
 - prohibit browser/client creation, modification, listing, or deletion of Developer access.
+- limit kiosk accounts to the check-in directory and append-only attendance creation;
+- let staff review/delete attendance and members view only their own history.
 
 ## Database usage behavior
-- Member page: bounded one-document access checks/read only.
-- Staff page: one-time access checks plus one bounded member query.
+- Member page: bounded one-document access checks/read plus explicit contact-profile updates.
+- Staff page: one-time access checks plus bounded member, kiosk-directory and attendance queries.
 - Developer additionally loads one bounded owner query.
 - Refresh happens only when the staff member presses Refresh.
-- Add/edit/enable/disable: one explicit Firestore write per action.
+- Add/edit/enable/disable: one explicit atomic batch that keeps the member and kiosk directory in sync.
 - Remove: one explicit Firestore delete.
 - Password changes and password-reset emails use Firebase Authentication, not Firestore.
 - No `onSnapshot()`.
@@ -50,13 +58,25 @@ Current rules:
 - No database timers.
 - No Cloud Functions.
 
+## Attendance setup and use
+1. Deploy the included prod40 Firestore rules.
+2. Developer approves the dedicated iPad email under **iPad Kiosk Access**.
+3. Activate that account once on `kiosk.html` and leave the iPad connected.
+4. For every existing member, open **Edit**, enter a new four-digit Check-In PIN, and save. New members require a PIN when staff adds them.
+5. At class, the member types their name, selects it, enters the PIN, and presses **Check In**.
+6. Tuesday/Thursday records are labeled No-Gi automatically; Kids plans record Kids class and other plans record Adult class.
+7. Staff can review today’s attendance and undo mistakes. Members see their own recent history.
+
+For an iPad, add the kiosk page to the Home Screen and enable iOS Guided Access after setup so members stay inside the check-in screen.
+
 ## Member behavior
 1. Staff adds a member roster record first.
 2. Member uses the normal Member Login page.
 3. First-time activation creates Email/Password Auth only when the exact email is on the roster; an unapproved activation is deleted immediately when possible.
-4. Member can view rank, belt stripes, plan, joined date, paid/current status, active status and portal-enabled status.
-5. Members cannot change their own rank/status in Firestore.
-6. Belt and stripes are coach-controlled. Stripes are constrained to integer `0–4`.
+4. Member can view rank, belt stripes, plan, joined date, paid/current status, active status, portal-enabled status and their signed waiver record.
+5. Members can update only phone, address, emergency contact, guardian and household email fields.
+6. Members cannot change their own rank, plan, payment, active, portal or waiver status in Firestore.
+7. Belt and stripes are coach-controlled. Stripes are constrained to integer `0–4`.
 
 ## Disable vs Remove
 - **Disable** keeps the Firestore member record and turns portal access off.
@@ -73,7 +93,7 @@ Current rules:
 ## Domain launch
 Before going live:
 1. Register/configure `redroadbjj.com` with the host.
-2. This package includes `CNAME` containing `redroadbjj.com` for GitHub Pages.
+2. Testing builds intentionally contain no `CNAME`; use `https://wjinselman.github.io/RedRoadJiujitsu/` until the domain is purchased and configured.
 3. Firebase Authentication → Settings → Authorized domains: add `redroadbjj.com` and `www.redroadbjj.com` if used.
 4. Google Cloud API key → Website restrictions: include `https://redroadbjj.com`, `https://redroadbjj.com/*`, and the www versions if used.
 5. Keep temporary GitHub Pages restrictions until the custom domain is fully tested.
@@ -87,6 +107,9 @@ Use one disposable test member and verify:
 - add member;
 - first-time member activation;
 - member dashboard rank + stripes + paid/active status;
+- member contact/emergency profile update without access to staff-controlled fields;
+- member and staff signed-waiver detail view;
+- roster status/program filters and CSV export;
 - edit member;
 - disable then re-enable portal;
 - owner-triggered password-reset email;
@@ -94,6 +117,11 @@ Use one disposable test member and verify:
 - staff own-password change;
 - permanent Remove;
 - removed member cannot regain member portal access simply by signing in.
+- approve and activate the dedicated kiosk account;
+- assign a four-digit PIN to the test member;
+- successful kiosk check-in and automatic reset;
+- wrong-PIN rejection and duplicate-check-in rejection;
+- staff attendance review/undo and member-only attendance history.
 
 ## Production snapshot
 Once the smoke test passes, archive this exact package as the known-good production baseline before further feature work.

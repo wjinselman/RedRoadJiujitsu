@@ -17,6 +17,10 @@ service cloud.firestore {
       return /databases/$(database)/documents/owners/$(authEmail());
     }
 
+    function kioskPath() {
+      return /databases/$(database)/documents/kiosks/$(authEmail());
+    }
+
     function isDeveloper() {
       return signedIn()
         && exists(developerPath())
@@ -33,6 +37,12 @@ service cloud.firestore {
       return isDeveloper() || isOwner();
     }
 
+    function isKiosk() {
+      return signedIn()
+        && exists(kioskPath())
+        && get(kioskPath()).data.enabled == true;
+    }
+
     function validOwner(data, ownerEmail) {
       return data.keys().hasOnly(['email', 'name', 'enabled', 'createdAt', 'updatedAt'])
         && data.email is string
@@ -45,11 +55,62 @@ service cloud.firestore {
         && data.updatedAt is timestamp;
     }
 
+    function validKiosk(data, kioskEmail) {
+      return data.keys().hasOnly(['email', 'name', 'enabled', 'createdAt', 'updatedAt'])
+        && data.email is string
+        && data.email.lower() == kioskEmail
+        && data.name is string
+        && data.name.size() > 0
+        && data.name.size() <= 120
+        && data.enabled is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function validCheckInDirectory(data, memberEmail) {
+      return data.keys().hasOnly(['memberEmail', 'displayName', 'plan', 'pinHash', 'active', 'updatedAt'])
+        && data.memberEmail is string
+        && data.memberEmail.lower() == memberEmail
+        && data.displayName is string
+        && data.displayName.size() > 0
+        && data.displayName.size() <= 120
+        && data.plan is string
+        && data.plan.size() <= 80
+        && data.pinHash is string
+        && data.pinHash.size() == 64
+        && data.active is bool
+        && data.updatedAt is timestamp;
+    }
+
+    function validAttendance(data) {
+      return data.keys().hasOnly([
+          'memberEmail', 'memberName', 'className', 'classDate',
+          'checkedInAt', 'checkedInBy', 'source'
+        ])
+        && data.memberEmail is string
+        && data.memberEmail == data.memberEmail.lower()
+        && data.memberEmail.size() <= 254
+        && data.memberName is string
+        && data.memberName.size() > 0
+        && data.memberName.size() <= 120
+        && data.className is string
+        && data.className.size() > 0
+        && data.className.size() <= 80
+        && data.classDate is string
+        && data.classDate.size() == 10
+        && data.checkedInAt == request.time
+        && data.checkedInBy is string
+        && data.checkedInBy == authEmail()
+        && data.source == 'kiosk';
+    }
+
     function validMember(data, memberEmail) {
       return data.keys().hasOnly([
           'email', 'name', 'rank', 'stripes', 'plan', 'paid', 'active',
           'enabled', 'archived', 'joinedAt', 'waiverSigned', 'waiverSignedAt',
-          'waiverReceiptId', 'createdAt', 'updatedAt'
+          'waiverReceiptId', 'phone', 'address', 'emergencyName',
+          'emergencyPhone', 'guardianName', 'householdEmail',
+          'createdAt', 'updatedAt'
         ])
         && data.email is string
         && data.email.lower() == memberEmail
@@ -74,7 +135,41 @@ service cloud.firestore {
         && data.waiverSignedAt.size() <= 40
         && data.waiverReceiptId is string
         && data.waiverReceiptId.size() <= 80
+        && data.phone is string
+        && data.phone.size() <= 40
+        && data.address is string
+        && data.address.size() <= 240
+        && data.emergencyName is string
+        && data.emergencyName.size() <= 160
+        && data.emergencyPhone is string
+        && data.emergencyPhone.size() <= 40
+        && data.guardianName is string
+        && data.guardianName.size() <= 160
+        && data.householdEmail is string
+        && data.householdEmail.size() <= 254
         && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function validMemberProfileUpdate(data, memberEmail) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'phone', 'address', 'emergencyName', 'emergencyPhone',
+          'guardianName', 'householdEmail', 'updatedAt'
+        ])
+        && data.email is string
+        && data.email.lower() == memberEmail
+        && data.phone is string
+        && data.phone.size() <= 40
+        && data.address is string
+        && data.address.size() <= 240
+        && data.emergencyName is string
+        && data.emergencyName.size() <= 160
+        && data.emergencyPhone is string
+        && data.emergencyPhone.size() <= 40
+        && data.guardianName is string
+        && data.guardianName.size() <= 160
+        && data.householdEmail is string
+        && data.householdEmail.size() <= 254
         && data.updatedAt is timestamp;
     }
 
@@ -133,6 +228,18 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Dedicated check-in devices are approved by the Developer, then activated
+    // once on the iPad. Kiosk accounts are not owners and cannot read members.
+    match /kiosks/{kioskEmail} {
+      allow get: if (signedIn() && authEmail() == kioskEmail) || isDeveloper();
+      allow list: if isDeveloper()
+                  && request.query.limit != null
+                  && request.query.limit <= 50;
+      allow create, update: if isDeveloper()
+                            && validKiosk(request.resource.data, kioskEmail);
+      allow delete: if false;
+    }
+
     // Member document ID = lowercase member email.
     match /members/{memberEmail} {
       allow get: if (signedIn()
@@ -143,12 +250,20 @@ service cloud.firestore {
       allow list: if isStaff()
                   && request.query.limit != null
                   && request.query.limit <= 250;
-      allow create: if (isStaff() && validMember(request.resource.data, memberEmail))
+      // Developers have full roster control. Owners retain schema-validated control.
+      allow create: if isDeveloper()
+                    || (isOwner() && validMember(request.resource.data, memberEmail))
                     || (signedIn()
                         && authEmail() == memberEmail
                         && validSelfSignup(request.resource.data, memberEmail));
-      allow update: if isStaff()
-                    && validMember(request.resource.data, memberEmail);
+      allow update: if isDeveloper()
+                    || (isOwner() && validMember(request.resource.data, memberEmail))
+                    || (signedIn()
+                        && request.auth.token.email_verified == true
+                        && authEmail() == memberEmail
+                        && resource.data.enabled == true
+                        && resource.data.archived != true
+                        && validMemberProfileUpdate(request.resource.data, memberEmail));
       // Staff-only permanent roster removal. Authentication identities are managed separately.
       allow delete: if isStaff();
     }
@@ -165,6 +280,39 @@ service cloud.firestore {
                     && !exists(/databases/$(database)/documents/waivers/$(waiverEmail))
                     && validWaiver(request.resource.data, waiverEmail);
       allow update, delete: if false;
+    }
+
+    // A deliberately limited directory for the front-desk iPad. It contains
+    // only the fields needed to find a member and verify the four-digit PIN.
+    match /checkInDirectory/{memberEmail} {
+      allow get: if isStaff() || isKiosk();
+      allow list: if (isStaff() || isKiosk())
+                  && request.query.limit != null
+                  && request.query.limit <= 250;
+      allow create, update: if isStaff()
+                            && validCheckInDirectory(request.resource.data, memberEmail);
+      allow delete: if isStaff();
+    }
+
+    // One deterministic document per member/class/date prevents accidental
+    // duplicate check-ins. Members can only query their own recent history.
+    match /attendance/{attendanceId} {
+      allow get: if isStaff()
+                 || (signedIn() && resource.data.memberEmail == authEmail());
+      allow list: if (isStaff()
+                      && request.query.limit != null
+                      && request.query.limit <= 500)
+                  || (signedIn()
+                      && resource.data.memberEmail == authEmail()
+                      && request.query.limit != null
+                      && request.query.limit <= 50);
+      allow create: if isKiosk()
+                    && validAttendance(request.resource.data)
+                    && exists(/databases/$(database)/documents/checkInDirectory/$(request.resource.data.memberEmail))
+                    && get(/databases/$(database)/documents/checkInDirectory/$(request.resource.data.memberEmail)).data.active == true
+                    && !exists(/databases/$(database)/documents/attendance/$(attendanceId));
+      allow update: if false;
+      allow delete: if isStaff();
     }
 
     // Explicit deny-by-default for anything not listed above.

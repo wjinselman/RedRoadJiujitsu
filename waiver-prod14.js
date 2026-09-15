@@ -133,6 +133,12 @@ form.addEventListener('submit', async event => {
         waiverSigned: true,
         waiverSignedAt: signedAt,
         waiverReceiptId: receiptId,
+        phone: record.phone,
+        address: record.address,
+        emergencyName: record.emergencyName,
+        emergencyPhone: record.emergencyPhone,
+        guardianName: record.guardianName,
+        householdEmail: record.minor ? email : '',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };

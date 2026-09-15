@@ -31,14 +31,20 @@ import {
   deleteDoc,
   collection,
   query,
+  where,
+  orderBy,
   limit,
-  serverTimestamp
+  serverTimestamp,
+  writeBatch
 } from './firebase-client.js';
 
 const MAX_OWNER_MEMBERS = 250;
 let ownerMembers = [];
 let ownerAccess = [];
+let kioskAccess = [];
+let ownerAttendance = [];
 let ownerIdentity = null;
+let currentMember = null;
 let memberRestoreAttempted = false;
 let ownerRestoreAttempted = false;
 
@@ -46,6 +52,19 @@ const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
 const normalizedEmail = value => String(value || '').trim().toLowerCase();
 const todayIso = () => new Date().toISOString().slice(0, 10);
+const clean = (value, max = 240) => String(value || '').trim().slice(0, max);
+const localDateKey = (date = new Date()) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+async function sha256(value) {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest('SHA-256', bytes);
+  return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('');
+}
 
 const stripeCount = value => {
   const n = Number(value);
@@ -79,7 +98,7 @@ function friendlyError(error) {
   if (code.includes('weak-password')) return 'Use a password with at least 6 characters.';
   if (code.includes('too-many-requests')) return 'Too many attempts. Wait a moment and try again.';
   if (code.includes('requires-recent-login')) return 'For security, sign out and sign back in before changing the password.';
-  if (code.includes('permission-denied')) return 'This account does not have permission for that action.';
+  if (code.includes('permission-denied')) return 'Permission denied. Staff accounts require the included Firestore rules to be deployed to the Red Road Firebase project.';
   if (code.includes('unavailable') || code.includes('network-request-failed')) return 'The service is temporarily unavailable. Nothing will auto-retry; try again when you are ready.';
   return error?.message ? String(error.message).replace(/^Firebase:\s*/i, '') : 'Something went wrong.';
 }
@@ -119,6 +138,7 @@ async function getMemberRecord(email) {
 }
 
 function renderMemberDashboard(member, userEmail) {
+  currentMember = member;
   $('#member-login-view').hidden = true;
   $('#member-dashboard').hidden = false;
   $('#member-name').textContent = member.name || 'Member';
@@ -126,6 +146,12 @@ function renderMemberDashboard(member, userEmail) {
   $('#member-rank').textContent = formatRank(member);
   $('#member-plan').textContent = member.plan || '—';
   $('#member-joined').textContent = member.joinedAt || '—';
+  $('#profile-phone').value = member.phone || '';
+  $('#profile-address').value = member.address || '';
+  $('#profile-emergency-name').value = member.emergencyName || '';
+  $('#profile-emergency-phone').value = member.emergencyPhone || '';
+  $('#profile-guardian-name').value = member.guardianName || '';
+  $('#profile-household-email').value = member.householdEmail || '';
 
   const membershipActive = member.active === true && member.archived !== true;
   const portalEnabled = member.enabled === true && member.archived !== true;
@@ -141,6 +167,8 @@ function renderMemberDashboard(member, userEmail) {
   paidLabel.dataset.state = paid ? 'good' : 'bad';
   waiverLabel.textContent = waiverSigned ? 'Signed' : 'Missing';
   waiverLabel.dataset.state = waiverSigned ? 'good' : 'bad';
+  const waiverButton = $('#member-view-waiver');
+  if (waiverButton) waiverButton.hidden = !waiverSigned;
 
   const note = $('#member-access-note');
   if (!portalEnabled) {
@@ -183,9 +211,55 @@ async function openMemberForUser(user) {
       return;
     }
     renderMemberDashboard(member, user.email);
+    await loadMemberAttendance(user.email).catch(() => {});
   } catch (error) {
     flash(message, friendlyError(error), 'error');
   }
+}
+
+function renderWaiverDetails(record, target) {
+  if (!target) return;
+  target.innerHTML = `
+    <dl class="waiver-detail-grid">
+      <div><dt>Participant</dt><dd>${esc(record.participantName || '—')}</dd></div>
+      <div><dt>Date of Birth</dt><dd>${esc(record.dob || '—')}</dd></div>
+      <div><dt>Signed</dt><dd>${esc(record.signedAt ? new Date(record.signedAt).toLocaleString() : '—')}</dd></div>
+      <div><dt>Receipt</dt><dd>${esc(record.receiptId || '—')}</dd></div>
+      <div><dt>Signature</dt><dd>${esc(record.electronicSignature || '—')}</dd></div>
+      <div><dt>Phone</dt><dd>${esc(record.phone || '—')}</dd></div>
+      <div><dt>Address</dt><dd>${esc(record.address || '—')}</dd></div>
+      <div><dt>Emergency Contact</dt><dd>${esc(record.emergencyName || '—')}</dd></div>
+      <div><dt>Emergency Phone</dt><dd>${esc(record.emergencyPhone || '—')}</dd></div>
+      <div><dt>Guardian</dt><dd>${esc(record.guardianName || 'Not applicable')}</dd></div>
+      <div><dt>Relationship</dt><dd>${esc(record.relationship || 'Not applicable')}</dd></div>
+      <div><dt>Waiver Version</dt><dd>${esc(record.waiverVersion || '—')}</dd></div>
+    </dl>`;
+}
+
+async function loadWaiverRecord(email) {
+  const snap = await getDoc(doc(db, 'waivers', normalizedEmail(email)));
+  return snap.exists() ? snap.data() : null;
+}
+
+async function loadMemberAttendance(email) {
+  const list = $('#member-attendance-list');
+  if (!list) return;
+  const snap = await getDocs(query(
+    collection(db, 'attendance'),
+    where('memberEmail', '==', normalizedEmail(email)),
+    limit(50)
+  ));
+  const records = snap.docs.map(item => ({ id: item.id, ...item.data() }))
+    .sort((a, b) => (b.checkedInAt?.toMillis?.() || 0) - (a.checkedInAt?.toMillis?.() || 0));
+  $('#member-attendance-count').textContent = String(records.length);
+  if (!records.length) {
+    list.innerHTML = '<p class="portal-muted">No check-ins recorded yet.</p>';
+    return;
+  }
+  list.innerHTML = records.slice(0, 12).map(record => {
+    const date = record.checkedInAt?.toDate?.();
+    return `<div class="member-attendance-item"><strong>${esc(record.className || 'Class')}</strong><span>${esc(date ? date.toLocaleString([], { month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit' }) : record.classDate || '—')}</span></div>`;
+  }).join('');
 }
 
 function setupMemberPage() {
@@ -248,7 +322,67 @@ function setupMemberPage() {
     dashboard.hidden = true;
     loginView.hidden = false;
     password.value = '';
+    currentMember = null;
   });
+
+  $('#toggle-member-profile')?.addEventListener('click', () => {
+    const panel = $('#member-profile-panel');
+    panel.hidden = !panel.hidden;
+    $('#toggle-member-profile').setAttribute('aria-expanded', String(!panel.hidden));
+  });
+
+  $('#member-profile-form')?.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (!currentMember) return;
+    const dashboardMessage = $('#member-dashboard-message');
+    clearFlash(dashboardMessage);
+    const fd = new FormData(event.currentTarget);
+    const updated = {
+      ...currentMember,
+      phone: clean(fd.get('phone'), 40),
+      address: clean(fd.get('address'), 240),
+      emergencyName: clean(fd.get('emergencyName'), 160),
+      emergencyPhone: clean(fd.get('emergencyPhone'), 40),
+      guardianName: clean(fd.get('guardianName'), 160),
+      householdEmail: normalizedEmail(fd.get('householdEmail')),
+      updatedAt: serverTimestamp()
+    };
+    try {
+      const profileUpdate = {
+        phone: updated.phone,
+        address: updated.address,
+        emergencyName: updated.emergencyName,
+        emergencyPhone: updated.emergencyPhone,
+        guardianName: updated.guardianName,
+        householdEmail: updated.householdEmail,
+        updatedAt: updated.updatedAt
+      };
+      await setDoc(doc(db, 'members', normalizedEmail(currentMember.email)), profileUpdate, { merge: true });
+      Object.assign(currentMember, updated);
+      $('#member-profile-panel').hidden = true;
+      $('#toggle-member-profile').setAttribute('aria-expanded', 'false');
+      flash(dashboardMessage, 'Contact and emergency information updated.');
+    } catch (error) {
+      flash(dashboardMessage, friendlyError(error), 'error');
+    }
+  });
+
+  $('#member-view-waiver')?.addEventListener('click', async () => {
+    if (!currentMember) return;
+    const dashboardMessage = $('#member-dashboard-message');
+    clearFlash(dashboardMessage);
+    try {
+      const record = await loadWaiverRecord(currentMember.email);
+      if (!record) return flash(dashboardMessage, 'The signed waiver record could not be found.', 'error');
+      renderWaiverDetails(record, $('#member-waiver-details'));
+      $('#member-waiver-panel').hidden = false;
+      $('#member-waiver-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    } catch (error) {
+      flash(dashboardMessage, friendlyError(error), 'error');
+    }
+  });
+
+  $('#close-member-waiver')?.addEventListener('click', () => { $('#member-waiver-panel').hidden = true; });
 
   onAuthStateChanged(auth, async user => {
     if (memberRestoreAttempted) return;
@@ -274,16 +408,37 @@ function memberPayloadFromForm(form, previous = null) {
     waiverSigned: previous?.waiverSigned === true,
     waiverSignedAt: String(previous?.waiverSignedAt || ''),
     waiverReceiptId: String(previous?.waiverReceiptId || ''),
+    phone: clean(fd.has('phone') ? fd.get('phone') : previous?.phone, 40),
+    address: clean(fd.has('address') ? fd.get('address') : previous?.address, 240),
+    emergencyName: clean(fd.has('emergencyName') ? fd.get('emergencyName') : previous?.emergencyName, 160),
+    emergencyPhone: clean(fd.has('emergencyPhone') ? fd.get('emergencyPhone') : previous?.emergencyPhone, 40),
+    guardianName: clean(fd.has('guardianName') ? fd.get('guardianName') : previous?.guardianName, 160),
+    householdEmail: normalizedEmail(fd.has('householdEmail') ? fd.get('householdEmail') : previous?.householdEmail),
+    kioskPin: clean(fd.get('kioskPin'), 4),
     createdAt: previous?.createdAt || serverTimestamp(),
     updatedAt: serverTimestamp()
   };
 }
 
 function visibleRoster() {
-  const search = normalizedEmail($('#owner-search')?.value);
   const queryText = String($('#owner-search')?.value || '').trim().toLowerCase();
+  const status = $('#owner-status-filter')?.value || 'all';
+  const plan = $('#owner-plan-filter')?.value || 'all';
   return ownerMembers
-    .filter(member => !queryText || member.name?.toLowerCase().includes(queryText) || member.email?.toLowerCase().includes(queryText))
+    .filter(member => {
+      const searchable = [member.name, member.email, member.phone, member.guardianName, member.householdEmail]
+        .some(value => String(value || '').toLowerCase().includes(queryText));
+      if (queryText && !searchable) return false;
+      if (plan === 'service' && !['First Responder', 'Military / First Responder'].includes(member.plan)) return false;
+      if (plan !== 'all' && plan !== 'service' && member.plan !== plan) return false;
+      if (status === 'pending' && !(member.waiverSigned === true && member.active !== true && member.archived !== true)) return false;
+      if (status === 'active' && !(member.active === true && member.archived !== true)) return false;
+      if (status === 'past-due' && !(member.active === true && member.paid !== true && member.archived !== true)) return false;
+      if (status === 'missing-waiver' && !(member.waiverSigned !== true && member.archived !== true)) return false;
+      if (status === 'inactive' && !(member.active !== true && member.archived !== true)) return false;
+      if (status === 'archived' && member.archived !== true) return false;
+      return true;
+    })
     .sort((a, b) => {
       const aPending = a.waiverSigned === true && a.active !== true && a.archived !== true;
       const bPending = b.waiverSigned === true && b.active !== true && b.archived !== true;
@@ -322,6 +477,7 @@ function statusPills(member) {
   pills.push(`<span class="status-chip ${member.paid ? 'active' : 'past-due'}">${member.paid ? 'Paid' : 'Past Due'}</span>`);
   pills.push(`<span class="status-chip ${member.enabled ? 'active' : 'paused'}">${member.enabled ? 'Portal On' : 'Portal Off'}</span>`);
   pills.push(`<span class="status-chip ${member.waiverSigned ? 'active' : 'past-due'}">${member.waiverSigned ? 'Waiver Signed' : 'Waiver Missing'}</span>`);
+  pills.push(`<span class="status-chip ${member.kioskReady ? 'active' : 'paused'}">${member.kioskReady ? 'Kiosk Ready' : 'Set Check-In PIN'}</span>`);
   if (member.archived) pills.push('<span class="status-chip archived">Archived</span>');
   return pills.join('');
 }
@@ -329,6 +485,8 @@ function statusPills(member) {
 function renderOwnerList() {
   const list = $('#owner-member-list');
   const members = visibleRoster();
+  const note = $('#owner-load-note');
+  if (note) note.textContent = `Showing ${members.length} of ${ownerMembers.length} loaded records.`;
   if (!members.length) {
     list.innerHTML = '<div class="owner-empty">No members match this view.</div>';
     return;
@@ -336,9 +494,10 @@ function renderOwnerList() {
   list.innerHTML = members.map(member => `
     <article class="member-row launch-member-row ${member.archived ? 'is-archived' : ''} ${member.waiverSigned === true && member.active !== true && member.archived !== true ? 'is-pending' : ''}" data-member-email="${esc(member.email)}">
       <div class="member-row-main"><strong>${esc(member.name)}</strong><span>${esc(member.email)}</span></div>
-      <div class="member-row-meta"><span>${esc(formatRank(member))}</span><span>${esc(member.plan)}</span><div class="member-pills">${statusPills(member)}</div></div>
+      <div class="member-row-meta"><span>${esc(formatRank(member))}</span><span>${esc(member.plan)}</span>${member.householdEmail ? `<span>Household: ${esc(member.householdEmail)}</span>` : ''}<div class="member-pills">${statusPills(member)}</div></div>
       <div class="member-row-actions">
         <button class="btn btn-mini btn-dark" type="button" data-action="edit">Edit</button>
+        ${member.waiverSigned ? '<button class="btn btn-mini btn-dark" type="button" data-action="view-waiver">Waiver</button>' : ''}
         <button class="btn btn-mini btn-dark" type="button" data-action="reset-password">Reset Password</button>
         <button class="btn btn-mini btn-dark" type="button" data-action="toggle-enabled">${member.enabled ? 'Disable' : 'Enable'}</button>
         <button class="btn btn-mini btn-quiet" type="button" data-action="remove">Remove</button>
@@ -352,10 +511,15 @@ function renderOwner() {
 }
 
 async function loadOwnerMembers() {
-  // ONE bounded query. No listener. No auto-refresh.
-  const q = query(collection(db, 'members'), limit(MAX_OWNER_MEMBERS));
-  const snap = await getDocs(q);
-  ownerMembers = snap.docs.map(d => { const data = d.data(); return { id: d.id, ...data, stripes: stripeCount(data.stripes) }; });
+  // The roster remains usable during a rules rollout; kiosk readiness is an
+  // optional second bounded read until the prod40 rules are deployed.
+  const snap = await getDocs(query(collection(db, 'members'), limit(MAX_OWNER_MEMBERS)));
+  let kioskReady = new Set();
+  try {
+    const directorySnap = await getDocs(query(collection(db, 'checkInDirectory'), limit(MAX_OWNER_MEMBERS)));
+    kioskReady = new Set(directorySnap.docs.map(item => normalizedEmail(item.id)));
+  } catch (_) {}
+  ownerMembers = snap.docs.map(d => { const data = d.data(); return { id: d.id, ...data, stripes: stripeCount(data.stripes), kioskReady: kioskReady.has(normalizedEmail(d.id)) }; });
   renderOwner();
 }
 
@@ -380,11 +544,40 @@ async function saveMember(member, previous = null) {
     waiverSigned: member.waiverSigned === true,
     waiverSignedAt: String(member.waiverSignedAt || previous?.waiverSignedAt || ''),
     waiverReceiptId: String(member.waiverReceiptId || previous?.waiverReceiptId || ''),
+    phone: clean(member.phone, 40),
+    address: clean(member.address, 240),
+    emergencyName: clean(member.emergencyName, 160),
+    emergencyPhone: clean(member.emergencyPhone, 40),
+    guardianName: clean(member.guardianName, 160),
+    householdEmail: normalizedEmail(member.householdEmail),
     createdAt: previous?.createdAt || member.createdAt || serverTimestamp(),
     updatedAt: member.updatedAt || serverTimestamp()
   };
 
-  await setDoc(doc(db, 'members', email), payload, { merge: false }); // exactly one explicit write
+  const pin = String(member.kioskPin || '');
+  if (pin && !/^\d{4}$/.test(pin)) throw new Error('Check-in PIN must be exactly four digits.');
+  const directoryRef = doc(db, 'checkInDirectory', email);
+  const existingDirectory = await getDoc(directoryRef);
+  const existingData = existingDirectory.exists() ? existingDirectory.data() : null;
+  const pinHash = pin ? await sha256(`${email}|${pin}`) : String(existingData?.pinHash || '');
+  const shouldList = payload.active === true && payload.archived !== true && Boolean(pinHash);
+  const batch = writeBatch(db);
+  batch.set(doc(db, 'members', email), payload, { merge: false });
+  if (shouldList) {
+    batch.set(directoryRef, {
+      memberEmail: email,
+      displayName: payload.name,
+      plan: payload.plan,
+      pinHash,
+      active: true,
+      updatedAt: serverTimestamp()
+    }, { merge: false });
+  } else if (existingDirectory.exists()) {
+    batch.delete(directoryRef);
+  }
+  await batch.commit();
+  member.kioskReady = shouldList;
+  member.kioskPin = '';
 }
 
 function openEditMember(member) {
@@ -397,9 +590,16 @@ function openEditMember(member) {
   $('#edit-member-rank').value = member.rank || 'White Belt';
   $('#edit-member-stripes').value = String(stripeCount(member.stripes));
   $('#edit-member-joined').value = member.joinedAt || '';
+  $('#edit-member-phone').value = member.phone || '';
+  $('#edit-member-address').value = member.address || '';
+  $('#edit-member-emergency-name').value = member.emergencyName || '';
+  $('#edit-member-emergency-phone').value = member.emergencyPhone || '';
+  $('#edit-member-guardian-name').value = member.guardianName || '';
+  $('#edit-member-household-email').value = member.householdEmail || '';
   $('#edit-member-paid').checked = member.paid === true;
   $('#edit-member-active').checked = member.active === true;
   $('#edit-member-enabled').checked = member.enabled === true;
+  $('#edit-member-kiosk-pin').value = '';
   panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
@@ -442,6 +642,92 @@ async function saveOwnerAccess(person, previous = null) {
   await setDoc(doc(db, 'owners', email), payload, { merge: false });
 }
 
+function renderKioskAccess() {
+  const list = $('#kiosk-access-list');
+  if (!list) return;
+  if (!kioskAccess.length) {
+    list.innerHTML = '<div class="owner-empty">No iPad kiosk approved yet.</div>';
+    return;
+  }
+  list.innerHTML = kioskAccess
+    .sort((a, b) => String(a.name || a.email).localeCompare(String(b.name || b.email)))
+    .map(device => `
+      <article class="member-row launch-member-row" data-kiosk-email="${esc(device.email)}">
+        <div class="member-row-main"><strong>${esc(device.name || 'Check-In iPad')}</strong><span>${esc(device.email)}</span></div>
+        <div class="member-row-meta"><div class="member-pills"><span class="status-chip ${device.enabled ? 'active' : 'paused'}">${device.enabled ? 'Enabled' : 'Disabled'}</span><span class="status-chip">Kiosk Only</span></div></div>
+        <div class="member-row-actions"><button class="btn btn-mini btn-dark" type="button" data-kiosk-action="toggle">${device.enabled ? 'Disable' : 'Enable'}</button></div>
+      </article>`).join('');
+}
+
+async function loadKioskAccess() {
+  if (ownerIdentity?.role !== 'developer') return;
+  const snap = await getDocs(query(collection(db, 'kiosks'), limit(50)));
+  kioskAccess = snap.docs.map(item => ({ id: item.id, ...item.data() }));
+  renderKioskAccess();
+}
+
+async function saveKioskAccess(device, previous = null) {
+  if (ownerIdentity?.role !== 'developer') throw new Error('Developer access required.');
+  const email = normalizedEmail(device.email);
+  if (!email) throw new Error('Kiosk email is required.');
+  await setDoc(doc(db, 'kiosks', email), {
+    email,
+    name: clean(device.name, 120),
+    enabled: device.enabled === true,
+    createdAt: previous?.createdAt || serverTimestamp(),
+    updatedAt: serverTimestamp()
+  }, { merge: false });
+}
+
+function renderAttendance() {
+  const list = $('#attendance-list');
+  if (!list) return;
+  const today = localDateKey();
+  const records = ownerAttendance.filter(record => record.classDate === today);
+  $('#attendance-today-count').textContent = String(records.length);
+  const last = records[0]?.checkedInAt?.toDate?.();
+  $('#attendance-last-time').textContent = last ? last.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' }) : '—';
+  if (!records.length) {
+    list.innerHTML = '<div class="owner-empty">No one has checked in today yet.</div>';
+    return;
+  }
+  list.innerHTML = records.map(record => {
+    const time = record.checkedInAt?.toDate?.();
+    return `<article class="member-row attendance-row" data-attendance-id="${esc(record.id)}"><div class="member-row-main"><strong>${esc(record.memberName || 'Member')}</strong><span>${esc(record.memberEmail || '')}</span></div><div class="member-row-meta"><strong>${esc(record.className || 'Class')}</strong><time>${esc(time ? time.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' }) : 'Time pending')}</time></div><div class="member-row-actions"><button class="btn btn-mini btn-quiet" data-attendance-action="remove" type="button">Undo</button></div></article>`;
+  }).join('');
+}
+
+async function loadAttendance() {
+  const snap = await getDocs(query(collection(db, 'attendance'), orderBy('checkedInAt', 'desc'), limit(250)));
+  ownerAttendance = snap.docs.map(item => ({ id: item.id, ...item.data() }));
+  renderAttendance();
+}
+
+function csvCell(value) {
+  let text = String(value ?? '');
+  if (/^[=+\-@]/.test(text)) text = `'${text}`;
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function exportRosterCsv() {
+  const columns = ['Name','Email','Phone','Plan','Rank','Stripes','Active','Paid','Waiver','Guardian','Household Email','Emergency Contact','Emergency Phone','Joined'];
+  const rows = visibleRoster().map(member => [
+    member.name, member.email, member.phone, member.plan, member.rank, member.stripes,
+    member.active ? 'Yes' : 'No', member.paid ? 'Yes' : 'No', member.waiverSigned ? 'Yes' : 'No',
+    member.guardianName, member.householdEmail, member.emergencyName, member.emergencyPhone,
+    member.joinedAt
+  ]);
+  const csv = [columns, ...rows].map(row => row.map(csvCell).join(',')).join('\r\n');
+  const url = URL.createObjectURL(new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `red-road-members-${todayIso()}.csv`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
 async function authorizeStaff(user) {
   const access = await getStaffAccess(user.email);
   if (!access) return null;
@@ -457,7 +743,8 @@ async function authorizeStaff(user) {
   $('#owner-login-view').hidden = true;
   $('#owner-app').hidden = false;
   await loadOwnerMembers();
-  if (developer) await loadOwnerAccess();
+  await loadAttendance().catch(() => { ownerAttendance = []; renderAttendance(); });
+  if (developer) await Promise.allSettled([loadOwnerAccess(), loadKioskAccess()]);
   return access;
 }
 
@@ -525,6 +812,8 @@ function setupOwnerPage() {
     await signOut(auth).catch(() => {});
     ownerMembers = [];
     ownerAccess = [];
+    kioskAccess = [];
+    ownerAttendance = [];
     ownerIdentity = null;
     $('#owner-app').hidden = true;
     $('#owner-login-view').hidden = false;
@@ -575,8 +864,35 @@ function setupOwnerPage() {
     clearFlash(ownerMessage);
     try {
       await loadOwnerMembers();
-      if (ownerIdentity?.role === 'developer') await loadOwnerAccess();
+      await loadAttendance();
+      if (ownerIdentity?.role === 'developer') await Promise.all([loadOwnerAccess(), loadKioskAccess()]);
       flash(ownerMessage, ownerIdentity?.role === 'developer' ? 'Members and owner access refreshed once.' : 'Member list refreshed once.');
+    } catch (error) {
+      flash(ownerMessage, friendlyError(error), 'error');
+    }
+  });
+
+  $('#attendance-refresh')?.addEventListener('click', async () => {
+    clearFlash(ownerMessage);
+    try {
+      await loadAttendance();
+      flash(ownerMessage, 'Today’s attendance refreshed once.');
+    } catch (error) {
+      flash(ownerMessage, friendlyError(error), 'error');
+    }
+  });
+
+  $('#attendance-list')?.addEventListener('click', async event => {
+    const button = event.target.closest('[data-attendance-action="remove"]');
+    if (!button) return;
+    const row = button.closest('[data-attendance-id]');
+    const record = ownerAttendance.find(item => item.id === row?.dataset.attendanceId);
+    if (!record || !window.confirm(`Undo ${record.memberName}'s ${record.className} check-in?`)) return;
+    try {
+      await deleteDoc(doc(db, 'attendance', record.id));
+      ownerAttendance = ownerAttendance.filter(item => item.id !== record.id);
+      renderAttendance();
+      flash(ownerMessage, `${record.memberName}'s check-in was removed.`);
     } catch (error) {
       flash(ownerMessage, friendlyError(error), 'error');
     }
@@ -642,7 +958,59 @@ function setupOwnerPage() {
     }
   });
 
+  $('#toggle-add-kiosk')?.addEventListener('click', () => {
+    if (ownerIdentity?.role !== 'developer') return;
+    const panel = $('#add-kiosk-panel');
+    panel.hidden = !panel.hidden;
+    $('#toggle-add-kiosk').setAttribute('aria-expanded', String(!panel.hidden));
+  });
+
+  $('#add-kiosk-form')?.addEventListener('submit', async event => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    clearFlash(ownerMessage);
+    const fd = new FormData(form);
+    const device = { name: clean(fd.get('name'), 120), email: normalizedEmail(fd.get('email')), enabled: fd.get('enabled') === 'on' };
+    if (!device.name || !device.email) return flash(ownerMessage, 'Kiosk device name and email are required.', 'error');
+    if (kioskAccess.some(item => normalizedEmail(item.email) === device.email)) return flash(ownerMessage, 'That kiosk email is already approved.', 'error');
+    try {
+      await saveKioskAccess(device);
+      kioskAccess.push({ ...device, createdAt: new Date(), updatedAt: new Date() });
+      renderKioskAccess();
+      form.reset();
+      form.querySelector('[name="enabled"]').checked = true;
+      $('#add-kiosk-panel').hidden = true;
+      $('#toggle-add-kiosk').setAttribute('aria-expanded', 'false');
+      flash(ownerMessage, `${device.name} approved. Open kiosk.html on the iPad and activate it with ${device.email}.`);
+    } catch (error) {
+      flash(ownerMessage, friendlyError(error), 'error');
+    }
+  });
+
+  $('#kiosk-access-list')?.addEventListener('click', async event => {
+    const button = event.target.closest('[data-kiosk-action="toggle"]');
+    if (!button || ownerIdentity?.role !== 'developer') return;
+    const row = button.closest('[data-kiosk-email]');
+    const device = kioskAccess.find(item => normalizedEmail(item.email) === normalizedEmail(row?.dataset.kioskEmail));
+    if (!device) return;
+    const updated = { ...device, enabled: !device.enabled };
+    try {
+      await saveKioskAccess(updated, device);
+      device.enabled = updated.enabled;
+      renderKioskAccess();
+      flash(ownerMessage, `${device.name} ${device.enabled ? 'enabled' : 'disabled'}.`);
+    } catch (error) {
+      flash(ownerMessage, friendlyError(error), 'error');
+    }
+  });
+
   $('#owner-search')?.addEventListener('input', renderOwnerList);
+  $('#owner-status-filter')?.addEventListener('change', renderOwnerList);
+  $('#owner-plan-filter')?.addEventListener('change', renderOwnerList);
+  $('#owner-export')?.addEventListener('click', () => {
+    exportRosterCsv();
+    flash(ownerMessage, `Exported ${visibleRoster().length} matching member records.`);
+  });
 
   $('#toggle-add-member')?.addEventListener('click', () => {
     const panel = $('#add-member-panel');
@@ -656,6 +1024,10 @@ function setupOwnerPage() {
     const form = event.currentTarget;
     clearFlash(ownerMessage);
     const member = memberPayloadFromForm(form);
+    if (!/^\d{4}$/.test(member.kioskPin)) {
+      flash(ownerMessage, 'Enter a four-digit check-in PIN for the new member.', 'error');
+      return;
+    }
     if (ownerMembers.some(m => normalizedEmail(m.email) === member.email)) {
       flash(ownerMessage, 'That member email already exists. Use Edit instead.', 'error');
       return;
@@ -686,6 +1058,20 @@ function setupOwnerPage() {
       return;
     }
 
+    if (button.dataset.action === 'view-waiver') {
+      try {
+        const record = await loadWaiverRecord(member.email);
+        if (!record) return flash(ownerMessage, 'The signed waiver record could not be found.', 'error');
+        $('#owner-waiver-title').textContent = `${member.name} · Signed Waiver`;
+        renderWaiverDetails(record, $('#owner-waiver-details'));
+        $('#owner-waiver-panel').hidden = false;
+        $('#owner-waiver-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } catch (error) {
+        flash(ownerMessage, friendlyError(error), 'error');
+      }
+      return;
+    }
+
     if (button.dataset.action === 'reset-password') {
       try {
         await sendPasswordResetEmail(auth, member.email);
@@ -702,7 +1088,10 @@ function setupOwnerPage() {
       );
       if (!confirmed) return;
       try {
-        await deleteDoc(doc(db, 'members', normalizedEmail(member.email)));
+        const batch = writeBatch(db);
+        batch.delete(doc(db, 'members', normalizedEmail(member.email)));
+        batch.delete(doc(db, 'checkInDirectory', normalizedEmail(member.email)));
+        await batch.commit();
         ownerMembers = ownerMembers.filter(m => normalizedEmail(m.email) !== normalizedEmail(member.email));
         renderOwner();
         flash(ownerMessage, `${member.name} permanently removed from the Red Road membership roster.`);
@@ -748,6 +1137,7 @@ function setupOwnerPage() {
   $('#close-edit-member')?.addEventListener('click', () => {
     $('#edit-member-panel').hidden = true;
   });
+  $('#close-owner-waiver')?.addEventListener('click', () => { $('#owner-waiver-panel').hidden = true; });
 
   onAuthStateChanged(auth, async user => {
     if (ownerRestoreAttempted) return;

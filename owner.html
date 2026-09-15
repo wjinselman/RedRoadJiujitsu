@@ -12,8 +12,8 @@
 <link href="assets/favicon-64.png" rel="icon" sizes="64x64" type="image/png"/>
 <link href="assets/apple-touch-icon.png" rel="apple-touch-icon"/>
 <link rel="stylesheet" href="prod14.css?v=prod-37">
-<link rel="stylesheet" href="premium.css?v=prod-40">
-<script src="mobile-nav.js?v=prod38" defer></script></head>
+<link rel="stylesheet" href="premium.css?v=prod-43">
+<script src="mobile-nav.js?v=prod43" defer></script></head>
 <body>
 <div aria-hidden="true" class="site-emblem-bg">
 </div>
@@ -115,6 +115,22 @@
 <strong id="stat-waiver-percent">0%</strong>
 <small id="stat-waiver-count">0 signed</small>
 </div>
+<div class="dash-stat">
+<span>Free Trials</span>
+<strong id="stat-trials">0</strong>
+<small id="stat-trials-note">0 new requests</small>
+</div>
+</div>
+<div class="dash-card owner-card trial-card">
+<div class="owner-member-head">
+<div>
+<div class="kicker">First Class Free</div>
+<h2>Trial Requests</h2>
+<p class="portal-muted">Visitors who signed the waiver without creating a membership account appear here.</p>
+</div>
+<button class="btn btn-dark" id="trial-refresh" type="button">Refresh Trials</button>
+</div>
+<div aria-live="polite" class="member-list" id="trial-request-list"></div>
 </div>
 <div class="dash-card owner-card attendance-card">
 <div class="owner-member-head">
@@ -371,7 +387,7 @@
 </div>
 </section>
 </main>
-<script src="portal.js?v=prod-40" type="module">
+<script src="portal.js?v=prod-43" type="module">
 </script>
 </body>
 </html>

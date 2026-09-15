@@ -10,8 +10,8 @@
 <link rel="icon" href="assets/favicon-64.png" sizes="64x64" type="image/png">
 <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="stylesheet" href="prod14.css?v=prod-37">
-<link rel="stylesheet" href="premium.css?v=prod-39">
-<script src="mobile-nav.js?v=prod38" defer></script></head>
+<link rel="stylesheet" href="premium.css?v=prod-43">
+<script src="mobile-nav.js?v=prod43" defer></script></head>
 <body>
 <header class="top">
 <div class="shell nav">
@@ -28,11 +28,11 @@
 <main>
 <section class="portal-hero compact">
 <div class="flow-shell">
-<div class="kicker">Required Before Training</div>
-<h1 class="portal-title">Review. <span class="red">Understand. Sign.</span>
+<div class="kicker" id="waiver-kicker">Required Before Training</div>
+<h1 class="portal-title" id="waiver-title">Review. <span class="red">Understand. Sign.</span>
 </h1>
-<p>Read the complete Red Road Jiu Jitsu liability waiver, then complete the electronic acknowledgment below.</p>
-<div class="flow-steps" aria-label="Enrollment progress"><span class="done"><b>✓</b>Signup</span><span class="current"><b>2</b>Waiver</span><span><b>3</b>Staff Review</span></div>
+<p id="waiver-intro">Read the complete Red Road Jiu Jitsu liability waiver, then complete the electronic acknowledgment below.</p>
+<div class="flow-steps" id="waiver-steps" aria-label="Enrollment progress"><span class="done"><b>✓</b>Signup</span><span class="current"><b>2</b>Waiver</span><span><b>3</b>Staff Review</span></div>
 </div>
 </section>
 <section class="section">
@@ -51,9 +51,28 @@
 <div class="kicker">Electronic Signature</div>
 <h2>Sign the Waiver</h2>
 <p class="flow-muted">Your typed legal name is used as your electronic signature for this test build.</p>
-<div class="flow-warning">
+<div class="flow-warning" id="waiver-storage-note">
 <strong>Secure member flow:</strong> New-member waivers are attached to the signed-in Firebase account and saved for staff review. Waiver-only visitors receive a downloadable device receipt; use New Member Signup when the waiver must appear automatically in the member dashboard.</div>
 <form id="waiver-form">
+<div class="trial-class-fields" id="trial-class-fields" hidden>
+<div class="kicker">One Free Class · No Account Required</div>
+<h3>Choose Your Trial Class</h3>
+<p class="flow-muted">Your signed waiver and visit request will be sent to Red Road staff. This does not create a membership account.</p>
+<div class="form-grid">
+<div class="form-field">
+<label for="trialProgram">Class</label>
+<select id="trialProgram" name="trialProgram">
+<option value="Adult Jiu Jitsu">Adult Jiu Jitsu · 7:00–8:00 PM</option>
+<option value="Kids / Bullyproof">Kids / Bullyproof · 6:00–7:00 PM</option>
+<option value="No-Gi">No-Gi · Tuesday &amp; Thursday</option>
+</select>
+</div>
+<div class="form-field">
+<label for="trialDate">Preferred class date</label>
+<input id="trialDate" name="trialDate" type="date">
+</div>
+</div>
+</div>
 <div class="form-grid">
 <div class="form-field">
 <label for="participantName">Participant full legal name</label>
@@ -109,6 +128,16 @@
 <input id="electronicConsent" name="electronicConsent" type="checkbox" required>
 <label for="electronicConsent">I consent to use an electronic signature and understand that typing my legal name below is intended to have the same effect as signing my name.</label>
 </div>
+<div class="optional-release">
+<div class="check-row">
+<input id="photoVideoRelease" name="photoVideoRelease" type="checkbox">
+<label for="photoVideoRelease"><strong>Optional photography and video release:</strong> I authorize Red Road Jiujitsu LLC to photograph or record me, or the minor Participant for whom I am signing, during Gym activities and to use those photographs or recordings for legitimate Gym-related website, social media, advertising, promotional, educational, and marketing purposes. I understand this is voluntary and declining will not affect eligibility to participate.</label>
+</div>
+<div class="form-field photo-initials" id="photo-initials-field" hidden>
+<label for="photoVideoInitials">Participant / parent initials</label>
+<input id="photoVideoInitials" name="photoVideoInitials" maxlength="12" placeholder="Initials">
+</div>
+</div>
 </div>
 <div class="signature-box">
 <div class="form-grid">
@@ -124,7 +153,7 @@
 <div class="signature-preview" id="signaturePreview">Your signature</div>
 </div>
 <div class="flow-actions">
-<button class="btn btn-red btn-fullish" type="submit">Sign & Create Receipt</button>
+<button class="btn btn-red btn-fullish" id="waiver-submit" type="submit">Sign &amp; Create Receipt</button>
 <a class="btn btn-dark" href="enroll.html">Return to Enrollment</a>
 </div>
 <div class="flow-success" id="waiver-success" hidden>
@@ -134,7 +163,7 @@
 </div>
 </section>
 </main>
-<script src="waiver-prod14.js?v=prod-39" type="module">
+<script src="waiver-prod14.js?v=prod-43" type="module">
 </script>
 </body>
 </html>

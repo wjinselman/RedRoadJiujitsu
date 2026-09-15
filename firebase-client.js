@@ -1,7 +1,7 @@
 /*
   Red Road Jiu Jitsu — intentionally small Firebase client
   ----------------------------------------------------------
-  - Firebase Auth: email/password only
+  - Firebase Auth: email/password plus short-lived anonymous trial submissions
   - Firestore: one-time getDoc/getDocs + explicit button-triggered writes
   - NO onSnapshot listeners
   - NO polling
@@ -13,6 +13,7 @@ import {
   getAuth,
   browserLocalPersistence,
   setPersistence,
+  signInAnonymously,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
@@ -57,6 +58,7 @@ export {
   firebaseConfigured,
   auth,
   db,
+  signInAnonymously,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,

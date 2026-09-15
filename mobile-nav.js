@@ -30,7 +30,8 @@
     <a href="${home}#location">Location</a>
     <a href="waiver.html">Waiver</a>
     <a href="members.html">Member Login</a>
-    <a class="mobile-nav-primary" href="enroll.html">Book First Class</a>
+    <a href="enroll.html">Join / Create Account</a>
+    <a class="mobile-nav-primary" href="waiver.html?trial=1">Free Trial Class</a>
   </nav>`;
   header.append(panel);
 
@@ -53,7 +54,7 @@
     actionBar.setAttribute('aria-label','Quick actions');
     actionBar.innerHTML=`
       <a class="mobile-action-link${page==='index.html'&&location.hash==='#schedule'?' is-active':''}" href="${home}#schedule">Schedule</a>
-      <a class="mobile-action-link mobile-action-primary${page==='enroll.html'?' is-active':''}" href="enroll.html">Book First Class</a>
+      <a class="mobile-action-link mobile-action-primary${page==='waiver.html'&&location.search.includes('trial=1')?' is-active':''}" href="waiver.html?trial=1">Free Trial</a>
       <a class="mobile-action-link${page==='members.html'?' is-active':''}" href="members.html">Members</a>`;
     document.body.append(actionBar);
     document.body.classList.add('has-mobile-action-bar');

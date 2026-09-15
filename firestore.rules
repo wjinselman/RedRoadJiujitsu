@@ -191,7 +191,8 @@ service cloud.firestore {
           'receiptId', 'waiverVersion', 'signedAt', 'participantName', 'dob',
           'email', 'phone', 'address', 'emergencyName', 'emergencyPhone',
           'minor', 'guardianName', 'relationship', 'electronicSignature',
-          'signatureDate', 'signerUid', 'createdAt'
+          'signatureDate', 'photoVideoReleaseAccepted', 'photoVideoInitials',
+          'signerUid', 'createdAt'
         ])
         && data.email is string
         && data.email.lower() == waiverEmail
@@ -206,7 +207,77 @@ service cloud.firestore {
         && data.electronicSignature.size() > 0
         && data.electronicSignature.size() <= 160
         && data.minor is bool
+        && data.photoVideoReleaseAccepted is bool
+        && data.photoVideoInitials is string
+        && data.photoVideoInitials.size() <= 12
+        && (data.photoVideoReleaseAccepted == false || data.photoVideoInitials.size() > 0)
         && data.createdAt is timestamp;
+    }
+
+    function validTrialWaiver(data, trialId) {
+      return data.keys().hasOnly([
+          'receiptId', 'waiverVersion', 'signedAt', 'participantName', 'dob',
+          'email', 'phone', 'address', 'emergencyName', 'emergencyPhone',
+          'minor', 'guardianName', 'relationship', 'electronicSignature',
+          'signatureDate', 'photoVideoReleaseAccepted', 'photoVideoInitials',
+          'trialClass', 'trialProgram', 'trialDate', 'trialExpiresOn', 'status', 'submitterUid',
+          'createdAt', 'updatedAt'
+        ])
+        && data.receiptId == trialId
+        && data.receiptId is string
+        && data.receiptId.size() > 0
+        && data.receiptId.size() <= 80
+        && data.waiverVersion is string
+        && data.waiverVersion.size() <= 160
+        && data.signedAt is string
+        && data.signedAt.size() <= 40
+        && data.participantName is string
+        && data.participantName.size() > 0
+        && data.participantName.size() <= 160
+        && data.dob is string
+        && data.dob.size() <= 10
+        && data.email is string
+        && data.email == data.email.lower()
+        && data.email.size() > 3
+        && data.email.size() <= 254
+        && data.phone is string
+        && data.phone.size() > 0
+        && data.phone.size() <= 40
+        && data.address is string
+        && data.address.size() > 0
+        && data.address.size() <= 240
+        && data.emergencyName is string
+        && data.emergencyName.size() > 0
+        && data.emergencyName.size() <= 160
+        && data.emergencyPhone is string
+        && data.emergencyPhone.size() > 0
+        && data.emergencyPhone.size() <= 40
+        && data.minor is bool
+        && data.guardianName is string
+        && data.guardianName.size() <= 160
+        && data.relationship is string
+        && data.relationship.size() <= 80
+        && data.electronicSignature is string
+        && data.electronicSignature.size() > 0
+        && data.electronicSignature.size() <= 160
+        && data.signatureDate is string
+        && data.signatureDate.size() == 10
+        && data.photoVideoReleaseAccepted is bool
+        && data.photoVideoInitials is string
+        && data.photoVideoInitials.size() <= 12
+        && (data.photoVideoReleaseAccepted == false || data.photoVideoInitials.size() > 0)
+        && data.trialClass == true
+        && data.trialProgram is string
+        && data.trialProgram.size() > 0
+        && data.trialProgram.size() <= 80
+        && data.trialDate is string
+        && data.trialDate.size() == 10
+        && data.trialExpiresOn is string
+        && data.trialExpiresOn.size() == 10
+        && data.status == 'new'
+        && data.submitterUid == request.auth.uid
+        && data.createdAt == request.time
+        && data.updatedAt == request.time;
     }
 
     // ROOT ACCESS: developer records are console-managed only.
@@ -280,6 +351,23 @@ service cloud.firestore {
                     && !exists(/databases/$(database)/documents/waivers/$(waiverEmail))
                     && validWaiver(request.resource.data, waiverEmail);
       allow update, delete: if false;
+    }
+
+    // Free-trial visitors authenticate anonymously for one append-only write.
+    // They receive no read access and no member account/document is created.
+    match /trialWaivers/{trialId} {
+      allow get: if isStaff();
+      allow list: if isStaff()
+                  && request.query.limit != null
+                  && request.query.limit <= 250;
+      allow create: if request.auth != null
+                    && !exists(/databases/$(database)/documents/trialWaivers/$(trialId))
+                    && validTrialWaiver(request.resource.data, trialId);
+      allow update: if isStaff()
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt'])
+                    && request.resource.data.status in ['new', 'contacted', 'completed']
+                    && request.resource.data.updatedAt == request.time;
+      allow delete: if isStaff();
     }
 
     // A deliberately limited directory for the front-desk iPad. It contains

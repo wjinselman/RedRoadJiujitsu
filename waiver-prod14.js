@@ -2,6 +2,7 @@ import {
   firebaseConfigured,
   auth,
   db,
+  signInAnonymously,
   doc,
   writeBatch,
   serverTimestamp,
@@ -20,10 +21,30 @@ const signatureName = document.querySelector('#signatureName');
 const signaturePreview = document.querySelector('#signaturePreview');
 const signatureDate = document.querySelector('#signatureDate');
 const success = document.querySelector('#waiver-success');
+const photoVideoRelease = document.querySelector('#photoVideoRelease');
+const photoVideoInitials = document.querySelector('#photoVideoInitials');
+const photoInitialsField = document.querySelector('#photo-initials-field');
+const trialFields = document.querySelector('#trial-class-fields');
+const trialProgram = document.querySelector('#trialProgram');
+const trialDate = document.querySelector('#trialDate');
+const submitButton = document.querySelector('#waiver-submit');
 const params = new URLSearchParams(location.search);
 const enrollmentMode = params.get('enrollment') === '1';
+const trialMode = params.get('trial') === '1';
 
 signatureDate.value = new Date().toISOString().slice(0, 10);
+if (trialMode) {
+  trialFields.hidden = false;
+  trialProgram.required = true;
+  trialDate.required = true;
+  trialDate.min = new Date().toISOString().slice(0, 10);
+  document.querySelector('#waiver-kicker').textContent = 'Your First Class Is Free';
+  document.querySelector('#waiver-title').innerHTML = 'Try One Class. <span class="red">No Account Needed.</span>';
+  document.querySelector('#waiver-intro').textContent = 'Choose a class, read the complete waiver and sign online. Red Road staff will receive your trial request.';
+  document.querySelector('#waiver-steps').innerHTML = '<span class="current"><b>1</b>Choose Class</span><span><b>2</b>Sign Waiver</span><span><b>3</b>Visit Red Road</span>';
+  document.querySelector('#waiver-storage-note').innerHTML = '<strong>No membership account:</strong> Your trial request and signed waiver will be securely saved for Red Road staff review. You will not create a password or member profile.';
+  submitButton.textContent = 'Submit Free Trial & Waiver';
+}
 [['participantName','name'],['dob','dob'],['email','email'],['phone','phone']].forEach(([id,key]) => {
   const element = document.getElementById(id);
   const value = params.get(key);
@@ -40,12 +61,25 @@ function ageFromDob(value) {
   return age;
 }
 
+function addDaysIso(value, days) {
+  const date = new Date(`${value}T12:00:00`);
+  date.setDate(date.getDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
 function syncMinor() {
   const age = ageFromDob(dob.value);
   const minor = age !== null && age < 18;
   minorFields.hidden = !minor;
   guardianName.required = minor;
   relationship.required = minor;
+}
+
+function syncPhotoRelease() {
+  const accepted = photoVideoRelease.checked;
+  photoInitialsField.hidden = !accepted;
+  photoVideoInitials.required = accepted;
+  if (!accepted) photoVideoInitials.value = '';
 }
 
 function downloadReceipt(record) {
@@ -68,10 +102,12 @@ function showError(message) {
 }
 
 dob.addEventListener('change', syncMinor);
+photoVideoRelease.addEventListener('change', syncPhotoRelease);
 signatureName.addEventListener('input', () => {
   signaturePreview.textContent = signatureName.value.trim() || 'Your signature';
 });
 syncMinor();
+syncPhotoRelease();
 
 form.addEventListener('submit', async event => {
   event.preventDefault();
@@ -103,6 +139,8 @@ form.addEventListener('submit', async event => {
     minor: age < 18,
     guardianName: String(fd.get('guardianName') || '').trim(),
     relationship: String(fd.get('relationship') || '').trim(),
+    photoVideoReleaseAccepted: fd.get('photoVideoRelease') === 'on',
+    photoVideoInitials: String(fd.get('photoVideoInitials') || '').trim().slice(0, 12),
     electronicSignature: signer,
     signatureDate: String(fd.get('signatureDate') || '')
   };
@@ -112,7 +150,33 @@ form.addEventListener('submit', async event => {
   submit.textContent = 'Saving Waiver…';
 
   try {
-    if (enrollmentMode) {
+    if (trialMode) {
+      if (!firebaseConfigured || !auth || !db) {
+        throw new Error('Free-trial requests are not connected yet. Firebase configuration is required.');
+      }
+      let user = auth.currentUser;
+      const startedAnonymousSession = !user || user.isAnonymous === true;
+      if (!user) user = (await signInAnonymously(auth)).user;
+      const trialRecord = {
+        ...record,
+        trialClass: true,
+        trialProgram: String(fd.get('trialProgram') || '').trim(),
+        trialDate: String(fd.get('trialDate') || ''),
+        trialExpiresOn: addDaysIso(String(fd.get('trialDate') || ''), 30),
+        status: 'new',
+        submitterUid: user.uid,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      };
+      const batch = writeBatch(db);
+      batch.set(doc(db, 'trialWaivers', receiptId), trialRecord);
+      await batch.commit();
+      if (startedAnonymousSession) await signOut(auth).catch(() => {});
+      downloadReceipt({ ...record, trialClass: true, trialProgram: trialRecord.trialProgram, trialDate: trialRecord.trialDate });
+      success.hidden = false;
+      delete success.dataset.tone;
+      success.innerHTML = `<strong>Your free trial request is in.</strong><br>Red Road staff received your signed waiver for ${trialRecord.trialProgram} on ${trialRecord.trialDate}. Your trial pass is valid through ${trialRecord.trialExpiresOn}. Your receipt is ${receiptId}. No membership account was created.`;
+    } else if (enrollmentMode) {
       const pending = JSON.parse(sessionStorage.getItem('redroad:pendingEnrollment') || 'null');
       const user = auth?.currentUser;
       if (!firebaseConfigured || !user || user.email?.toLowerCase() !== email || !pending) {
@@ -167,6 +231,6 @@ form.addEventListener('submit', async event => {
     showError(String(error?.message || 'The waiver could not be saved.'));
   } finally {
     submit.disabled = false;
-    submit.textContent = 'Sign & Create Receipt';
+      submit.textContent = trialMode ? 'Submit Free Trial & Waiver' : 'Sign & Create Receipt';
   }
 });

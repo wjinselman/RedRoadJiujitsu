@@ -13,5 +13,5 @@ Attendance: DEDICATED KIOSK ROLE + PIN CHECK-IN + STAFF REVIEW
 Kiosk access: SEPARATE FIREBASE APP SESSION; NO MEMBER PROFILE OR WAIVER ACCESS
 Member removal: PERMANENT FIRESTORE ROSTER DELETE (Auth identity may remain dormant)
 Testing build: CNAME intentionally removed; use GitHub Pages URL until redroadbjj.com is purchased
-Required before attendance testing: publish the included prod40 firestore.rules, approve/activate one kiosk email, and assign each active member a four-digit PIN.
+Required before attendance/free-trial testing: publish the included prod43 firestore.rules, enable Anonymous Authentication, approve/activate one kiosk email, and assign each active member a four-digit PIN.
 Required before custom-domain go-live: authorize redroadbjj.com in Firebase Auth, add the domain to API-key website restrictions, and complete one real end-to-end test member.

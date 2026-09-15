@@ -43,6 +43,7 @@ let ownerMembers = [];
 let ownerAccess = [];
 let kioskAccess = [];
 let ownerAttendance = [];
+let ownerTrials = [];
 let ownerIdentity = null;
 let currentMember = null;
 let memberRestoreAttempted = false;
@@ -232,6 +233,8 @@ function renderWaiverDetails(record, target) {
       <div><dt>Emergency Phone</dt><dd>${esc(record.emergencyPhone || '—')}</dd></div>
       <div><dt>Guardian</dt><dd>${esc(record.guardianName || 'Not applicable')}</dd></div>
       <div><dt>Relationship</dt><dd>${esc(record.relationship || 'Not applicable')}</dd></div>
+      <div><dt>Photo / Video Release</dt><dd>${record.photoVideoReleaseAccepted === true ? `Accepted · ${esc(record.photoVideoInitials || 'Initials recorded')}` : record.photoVideoReleaseAccepted === false ? 'Declined' : 'Not recorded on this waiver version'}</dd></div>
+      ${record.trialClass === true ? `<div><dt>Trial Class</dt><dd>${esc(record.trialProgram || '—')}</dd></div><div><dt>Preferred Date</dt><dd>${esc(record.trialDate || '—')}</dd></div><div><dt>Trial Pass Valid Through</dt><dd>${esc(record.trialExpiresOn || '—')}</dd></div>` : ''}
       <div><dt>Waiver Version</dt><dd>${esc(record.waiverVersion || '—')}</dd></div>
     </dl>`;
 }
@@ -468,6 +471,9 @@ function renderOwnerStats() {
   $('#stat-past-due').textContent = String(pastDue.length);
   $('#stat-waiver-percent').textContent = `${total ? Math.round((waivers.length / total) * 100) : 0}%`;
   $('#stat-waiver-count').textContent = `${waivers.length} signed`;
+  const newTrials = ownerTrials.filter(trial => trial.status === 'new' && (!trial.trialExpiresOn || trial.trialExpiresOn >= todayIso())).length;
+  $('#stat-trials').textContent = String(ownerTrials.length);
+  $('#stat-trials-note').textContent = newTrials === 1 ? '1 new request' : `${newTrials} new requests`;
 }
 
 function statusPills(member) {
@@ -703,6 +709,40 @@ async function loadAttendance() {
   renderAttendance();
 }
 
+function renderTrialRequests() {
+  const list = $('#trial-request-list');
+  if (!list) return;
+  if (!ownerTrials.length) {
+    list.innerHTML = '<div class="owner-empty">No free-trial requests yet.</div>';
+    renderOwnerStats();
+    return;
+  }
+  list.innerHTML = ownerTrials.map(trial => {
+    const submitted = trial.createdAt?.toDate?.();
+    const status = String(trial.status || 'new');
+    const expired = Boolean(trial.trialExpiresOn && trial.trialExpiresOn < todayIso());
+    const photoRelease = trial.photoVideoReleaseAccepted === true
+      ? `Photo Release: Yes (${esc(trial.photoVideoInitials || 'initialed')})`
+      : 'Photo Release: No';
+    return `<article class="member-row launch-member-row trial-request-row" data-trial-id="${esc(trial.id)}">
+      <div class="member-row-main"><strong>${esc(trial.participantName || 'Trial Visitor')}</strong><span>${esc(trial.email || '')} · ${esc(trial.phone || '')}</span></div>
+      <div class="member-row-meta"><span>${esc(trial.trialProgram || 'Trial Class')} · ${esc(trial.trialDate || 'Date not selected')}</span><span>Trial valid through ${esc(trial.trialExpiresOn || '—')}</span><span>${photoRelease}</span><span>${esc(submitted ? submitted.toLocaleString() : trial.signedAt || '')}</span><div class="member-pills"><span class="status-chip ${expired ? 'past-due' : status === 'new' ? 'pending' : 'active'}">${expired ? 'expired' : esc(status)}</span><span class="status-chip active">Waiver Signed</span></div></div>
+      <div class="member-row-actions">
+        <button class="btn btn-mini btn-dark" type="button" data-trial-action="view">Waiver</button>
+        <button class="btn btn-mini btn-dark" type="button" data-trial-action="advance">${status === 'new' ? 'Mark Contacted' : status === 'contacted' ? 'Mark Completed' : 'Reopen'}</button>
+        <button class="btn btn-mini btn-quiet" type="button" data-trial-action="remove">Remove</button>
+      </div>
+    </article>`;
+  }).join('');
+  renderOwnerStats();
+}
+
+async function loadTrialRequests() {
+  const snap = await getDocs(query(collection(db, 'trialWaivers'), orderBy('createdAt', 'desc'), limit(250)));
+  ownerTrials = snap.docs.map(item => ({ id: item.id, ...item.data() }));
+  renderTrialRequests();
+}
+
 function csvCell(value) {
   let text = String(value ?? '');
   if (/^[=+\-@]/.test(text)) text = `'${text}`;
@@ -743,6 +783,7 @@ async function authorizeStaff(user) {
   $('#owner-login-view').hidden = true;
   $('#owner-app').hidden = false;
   await loadOwnerMembers();
+  await loadTrialRequests().catch(() => { ownerTrials = []; renderTrialRequests(); });
   await loadAttendance().catch(() => { ownerAttendance = []; renderAttendance(); });
   if (developer) await Promise.allSettled([loadOwnerAccess(), loadKioskAccess()]);
   return access;
@@ -814,6 +855,7 @@ function setupOwnerPage() {
     ownerAccess = [];
     kioskAccess = [];
     ownerAttendance = [];
+    ownerTrials = [];
     ownerIdentity = null;
     $('#owner-app').hidden = true;
     $('#owner-login-view').hidden = false;
@@ -864,6 +906,7 @@ function setupOwnerPage() {
     clearFlash(ownerMessage);
     try {
       await loadOwnerMembers();
+      await loadTrialRequests();
       await loadAttendance();
       if (ownerIdentity?.role === 'developer') await Promise.all([loadOwnerAccess(), loadKioskAccess()]);
       flash(ownerMessage, ownerIdentity?.role === 'developer' ? 'Members and owner access refreshed once.' : 'Member list refreshed once.');
@@ -879,6 +922,55 @@ function setupOwnerPage() {
       flash(ownerMessage, 'Today’s attendance refreshed once.');
     } catch (error) {
       flash(ownerMessage, friendlyError(error), 'error');
+    }
+  });
+
+  $('#trial-refresh')?.addEventListener('click', async () => {
+    clearFlash(ownerMessage);
+    try {
+      await loadTrialRequests();
+      flash(ownerMessage, 'Free-trial requests refreshed once.');
+    } catch (error) {
+      flash(ownerMessage, friendlyError(error), 'error');
+    }
+  });
+
+  $('#trial-request-list')?.addEventListener('click', async event => {
+    const button = event.target.closest('button[data-trial-action]');
+    if (!button) return;
+    const row = button.closest('[data-trial-id]');
+    const trial = ownerTrials.find(item => item.id === row?.dataset.trialId);
+    if (!trial) return;
+    const action = button.dataset.trialAction;
+    if (action === 'view') {
+      $('#owner-waiver-title').textContent = `${trial.participantName || 'Trial Visitor'} · Free-Trial Waiver`;
+      renderWaiverDetails(trial, $('#owner-waiver-details'));
+      $('#owner-waiver-panel').hidden = false;
+      $('#owner-waiver-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      return;
+    }
+    if (action === 'remove') {
+      if (!window.confirm(`Remove ${trial.participantName || 'this visitor'}'s trial request? The signed trial record will be deleted.`)) return;
+      try {
+        await deleteDoc(doc(db, 'trialWaivers', trial.id));
+        ownerTrials = ownerTrials.filter(item => item.id !== trial.id);
+        renderTrialRequests();
+        flash(ownerMessage, 'Trial request removed.');
+      } catch (error) {
+        flash(ownerMessage, friendlyError(error), 'error');
+      }
+      return;
+    }
+    if (action === 'advance') {
+      const status = trial.status === 'new' ? 'contacted' : trial.status === 'contacted' ? 'completed' : 'new';
+      try {
+        await setDoc(doc(db, 'trialWaivers', trial.id), { status, updatedAt: serverTimestamp() }, { merge: true });
+        trial.status = status;
+        renderTrialRequests();
+        flash(ownerMessage, `${trial.participantName || 'Trial visitor'} marked ${status}.`);
+      } catch (error) {
+        flash(ownerMessage, friendlyError(error), 'error');
+      }
     }
   });
 

@@ -5,7 +5,7 @@
 - Firebase project: `red-road-jiujitsu`
 - Primary Owner: Jeff Davis — `redroadjiujitsu@protonmail.com`
 - Developer: William Inselman — `wjinselman@gmail.com`
-- Authentication: Email/Password
+- Authentication: Email/Password + Anonymous trial submissions
 - Firestore: Standard edition
 
 ## Billing guardrail
@@ -33,6 +33,8 @@ Developer records are console-managed only. Browser code cannot create/elevate a
 
 No Google account linking is required.
 
+Enable **Anonymous** under Firebase Authentication → Sign-in method. The free-trial waiver uses a short-lived anonymous session so a visitor can submit a signed waiver without creating a member password or receiving member access.
+
 ## Security rules
 Publish the included `firestore.rules` before production use.
 Current rules:
@@ -43,6 +45,8 @@ Current rules:
 - allow staff to permanently delete member roster documents;
 - prohibit browser/client creation, modification, listing, or deletion of Developer access.
 - limit kiosk accounts to the check-in directory and append-only attendance creation;
+- allow anonymous visitors one append-only free-trial waiver write with no read access;
+- give each free-trial pass a 30-day eligibility window while retaining the signed waiver as staff-only proof;
 - let staff review/delete attendance and members view only their own history.
 
 ## Database usage behavior
@@ -59,7 +63,7 @@ Current rules:
 - No Cloud Functions.
 
 ## Attendance setup and use
-1. Deploy the included prod40 Firestore rules.
+1. Deploy the included prod43 Firestore rules.
 2. Developer approves the dedicated iPad email under **iPad Kiosk Access**.
 3. Activate that account once on `kiosk.html` and leave the iPad connected.
 4. For every existing member, open **Edit**, enter a new four-digit Check-In PIN, and save. New members require a PIN when staff adds them.

@@ -1,0 +1,11 @@
+/* Only the bottom signup button follows Auth state; no database reads/writes. */
+import { auth, firebaseConfigured, onAuthStateChanged } from './firebase-client.js?v=52';
+
+export function bindMemberButton(button) {
+  if (!button || !firebaseConfigured || !auth) return;
+  return onAuthStateChanged(auth, user => {
+    const signedIn = Boolean(user && !user.isAnonymous && user.email);
+    button.textContent = signedIn ? 'Members' : 'Sign Up Now';
+    button.setAttribute('href', signedIn ? 'members.html' : 'enroll.html');
+  });
+}

@@ -1,7 +1,7 @@
 import { monthInfo, fetchMonth, renderMonth } from './attendance-month.js?v=1';
 import { listenAsync } from './ui-utils.js?v=49';
 import { currentClass, CLASS_HOURS, checkInNotice } from './class-schedule.js?v=2';
-import { firebaseConfigured, auth, db, signInWithEmailAndPassword, sendEmailVerification, onAuthStateChanged, doc, getDoc, setDoc, serverTimestamp } from './firebase-client.js?v=52';
+import { firebaseConfigured, auth, db, signInWithEmailAndPassword, sendEmailVerification, onAuthStateChanged, doc, getDoc, getDocFromServer, deleteDoc, setDoc, serverTimestamp } from './firebase-client.js?v=52';
 const $ = selector => document.querySelector(selector);
 const emailKey = value => String(value || '').trim().toLowerCase();
 let member = null, pending = false, completed = '', generation = 0, signingIn = false;
@@ -42,6 +42,9 @@ function showHours() {
 function flash(target, text, tone = 'ok') { target.textContent = text; target.dataset.tone = tone; target.hidden = false; }
 function refreshClass() {
   showHours();
+  const resetButton = $('#checkin-reset-test');
+  resetButton.hidden = !member?.developerTest;
+  resetButton.disabled = pending || !testResetTarget();
   if (!member || pending) return;
   const slot = currentClass(member);
   if (attendanceMonth && attendanceMonth !== monthInfo().key) {
@@ -61,7 +64,8 @@ function refreshClass() {
 async function openCheckIn(user) {
   const attempt = ++generation;
   member = null; completed = ''; attendanceRows = []; attendanceMonth = ''; ++attendanceGeneration;
-  $('#attendance-details').hidden = true; $('#attendance-status').textContent = ''; showHours();
+  $('#attendance-details').hidden = true; $('#attendance-status').textContent = '';
+  $('#checkin-reset-test').hidden = true; showHours();
   $('#checkin-login-view').hidden = false;
   $('#checkin-confirm-view').hidden = true;
   $('#checkin-verification').hidden = !user || user.emailVerified === true;
@@ -93,6 +97,64 @@ async function openCheckIn(user) {
   refreshClass();
   void loadAttendance();
 }
+function testResetTarget() {
+  if (!member?.developerTest || !['kids','adult'].includes(member.selectedProgram)) return null;
+  const date = monthInfo().today;
+  const weekday = new Date(date + 'T12:00:00Z').getUTCDay();
+  const className = (member.selectedProgram === 'kids' ? 'Kids' : 'Adult')
+    + ([2,5].includes(weekday) ? ' No-Gi' : ' Jiu Jitsu');
+  return {classDate:date, className, classKey:className.toLowerCase().replace(/[^a-z0-9]+/g,'-')};
+}
+async function resetTestCheckIn() {
+  const user = auth.currentUser, record = member, slot = testResetTarget();
+  if (pending || !user || !record?.developerTest || !slot || emailKey(user.email) !== record.email) return;
+  pending = true;
+  ++attendanceGeneration;
+  const button = $('#checkin-reset-test');
+  button.disabled = true; button.textContent = 'Resetting test check-in…';
+  $('#checkin-confirm-button').disabled = true;
+  $('#checkin-program').disabled = true;
+  try {
+    await withTimeout(user.getIdToken(true));
+    const developer = await withTimeout(getDocFromServer(doc(db,'developers',record.email)));
+    if (auth.currentUser?.uid !== user.uid || member !== record) return;
+    if (!developer.exists() || developer.data().enabled !== true) throw new Error('Developer access is required.');
+    const ref = doc(db,'attendance',slot.classDate+'_'+record.email+'_'+slot.classKey);
+    const snap = await withTimeout(getDocFromServer(ref));
+    if (auth.currentUser?.uid !== user.uid || member !== record) return;
+    if (monthInfo().today !== slot.classDate) throw new Error('The day changed. Select your class and try again.');
+    if (snap.exists()) {
+      const data = snap.data();
+      if (data.source !== 'developer-test' || data.memberEmail !== record.email
+          || data.checkedInBy !== record.email || data.memberName !== 'Developer Test'
+          || data.classDate !== slot.classDate || data.className !== slot.className) {
+        throw new Error('This is not your Developer Test record. It was not removed.');
+      }
+      await deleteDoc(ref);
+    }
+    if (auth.currentUser?.uid !== user.uid || member !== record) return;
+    ++attendanceGeneration;
+    attendanceRows = attendanceRows.filter(row => row.id !== ref.id);
+    completed = '';
+    const info = monthInfo();
+    $('#attendance-count').textContent = String(attendanceRows.length);
+    renderMonth($('#attendance-calendar'),info,attendanceRows);
+    flash($('#checkin-message'), snap.exists()
+      ? 'Your test check-in for ' + slot.className + ' was reset. You can check in again during its class window.'
+      : 'No test check-in was found for this class today. You can check in during its class window.');
+    void loadAttendance();
+  } catch (error) {
+    if (auth.currentUser?.uid !== user.uid || member !== record) return;
+    flash($('#checkin-message'), error?.code
+      ? 'Could not reset your test check-in (' + error.code + '). Refresh and try again.'
+      : error?.message || 'Could not reset your test check-in. Try again.', 'error');
+  } finally {
+    pending = false; button.textContent = 'Reset my test check-in';
+    $('#checkin-program').disabled = false;
+    refreshClass();
+  }
+}
+
 async function confirmCheckIn() {
   const user = auth.currentUser;
   if (!member || pending || emailKey(user?.email) !== member.email) return;
@@ -211,6 +273,7 @@ showHours();
 window.redRoadCheckinReady = true;
 if (!firebaseConfigured) flash($('#checkin-login-message'), 'Check-in is not connected yet.', 'error');
 else {
+  $('#checkin-reset-test').addEventListener('click', resetTestCheckIn);
   $('#attendance-retry').addEventListener('click', () => { void loadAttendance(); });
   $('#checkin-send-verification').addEventListener('click', () => verificationAction(true));
   $('#checkin-recheck-verification').addEventListener('click', () => verificationAction(false));

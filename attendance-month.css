@@ -1,0 +1,11 @@
+.attendance-panel{margin-top:28px;padding-top:24px;border-top:1px solid #34373d;text-align:left}
+.attendance-panel h2{font-size:1.25rem;margin:0 0 8px}
+.attendance-summary{display:flex;align-items:baseline;gap:10px;margin:16px 0}
+.attendance-summary strong{font-size:2rem;color:#fff}
+.attendance-calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin:16px 0}
+.attendance-weekday{text-align:center;font-size:.7rem;color:#b4b9c3}
+.attendance-day{display:grid;place-items:center;min-height:36px;border-radius:6px;background:#191b20;color:#cdd0d7;font-size:.85rem}
+.attendance-day.attended{background:#ae081b;color:white;font-weight:800;border-bottom:3px solid #ff8090}
+.attendance-day[aria-current=date]{outline:2px solid #f3f4f5;outline-offset:1px}
+.attendance-legend{font-size:.8rem;color:#cdd0d7}.attendance-legend span{display:inline-block;width:10px;height:10px;background:#ae081b;border-bottom:2px solid #ff8090;margin-right:6px}
+.checkin-home{margin-top:24px}.attendance-panel [hidden]{display:none!important}

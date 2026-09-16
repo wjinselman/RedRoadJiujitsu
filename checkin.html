@@ -2,6 +2,7 @@
 <meta charset="utf-8"><meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"><meta content="#08090b" name="theme-color"><meta content="noindex,nofollow" name="robots">
 <title>Class Check-In | Red Road BJJ</title>
 <link href="redroad-v25.css?v=prod-49" rel="stylesheet"><link href="prod14.css?v=prod-37" rel="stylesheet"><link href="premium.css?v=prod-49" rel="stylesheet"><link href="experience.css?v=63" rel="stylesheet"><link href="assets/favicon-64.png" rel="icon" sizes="64x64" type="image/png">
+<link rel="stylesheet" href="attendance-month.css?v=1">
 </head><body class="member-page checkin-page">
 <main class="checkin-shell">
 <img class="checkin-logo" src="assets/red-road-master-crest.webp" alt="Red Road BJJ" width="760" height="760">
@@ -27,7 +28,20 @@
 </section>
 </section>
 <section class="login-card checkin-confirm" id="checkin-confirm-view" hidden>
-<div class="kicker">Welcome</div><h1 id="checkin-member-name">Member</h1><p class="portal-muted" id="checkin-class-name">Today’s class</p><div id="checkin-program-choice" hidden><label for="checkin-program">Choose your class</label><select id="checkin-program"><option value="">Select a class</option><option value="kids">Kids class</option><option value="adult">Adult class</option></select></div><button class="btn btn-red btn-full" id="checkin-confirm-button" type="button">Check In</button><div class="flash-message" id="checkin-message" hidden></div>
+<div class="kicker">Welcome</div><h1 id="checkin-member-name">Member</h1><p class="portal-muted" id="checkin-class-name">Today’s class</p><div id="checkin-program-choice" hidden><label for="checkin-program">Choose your class</label><select id="checkin-program"><option value="">Select a class</option><option value="kids">Kids class</option><option value="adult">Adult class</option></select></div><button class="btn btn-red btn-full" id="checkin-confirm-button" type="button">Check In</button><div class="flash-message" id="checkin-message" role="status" aria-live="polite" hidden></div>
+<section class="attendance-panel" aria-labelledby="attendance-heading">
+<h2 id="attendance-heading">Your attendance this month</h2>
+<p id="attendance-status" role="status" aria-live="polite"></p>
+<div id="attendance-details" hidden>
+<p id="attendance-month-label"></p>
+<p class="attendance-summary"><strong id="attendance-count">0</strong><span>classes attended</span></p>
+<div class="attendance-calendar" id="attendance-calendar" role="group" aria-label="Monthly attendance calendar"></div>
+<p class="attendance-legend"><span aria-hidden="true"></span>Attended · Outline marks today</p>
+</div>
+<button id="attendance-retry" type="button" class="btn btn-dark" hidden>Reload attendance</button>
+</section>
+<a class="btn btn-dark btn-full checkin-home" href="/">Back to Home</a>
+
 </section>
 </main>
 <script>
@@ -44,4 +58,4 @@
   }, 12000);
 })();
 </script>
-<script src="checkin.js?v=72" type="module"></script></body></html>
+<script src="checkin.js?v=74" type="module"></script></body></html>

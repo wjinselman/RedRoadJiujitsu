@@ -1,6 +1,6 @@
 import { listenAsync } from './ui-utils.js?v=49';
 import { currentClass, CLASS_HOURS, checkInNotice } from './class-schedule.js?v=2';
-import { firebaseConfigured, auth, db, signInWithEmailAndPassword, onAuthStateChanged, doc, getDoc, setDoc, serverTimestamp } from './firebase-client.js?v=52';
+import { firebaseConfigured, auth, db, signInWithEmailAndPassword, sendEmailVerification, onAuthStateChanged, doc, getDoc, setDoc, serverTimestamp } from './firebase-client.js?v=52';
 const $ = selector => document.querySelector(selector);
 const emailKey = value => String(value || '').trim().toLowerCase();
 let member = null, pending = false, completed = '', generation = 0, signingIn = false;
@@ -27,8 +27,9 @@ async function openCheckIn(user) {
   member = null; completed = ''; showHours();
   $('#checkin-login-view').hidden = false;
   $('#checkin-confirm-view').hidden = true;
+  $('#checkin-verification').hidden = !user || user.emailVerified === true;
   if (!user) return;
-  if (user.emailVerified !== true) return flash($('#checkin-login-message'), 'You are signed in, but your email still needs verification. Open the verification email, then refresh this page. Class hours are shown above.', 'error');
+  if (user.emailVerified !== true) return flash($('#checkin-login-message'), 'You are signed in. Verify your email to continue: send the email below, open its verification link, then select “I’ve verified my email.”', 'error');
   const email = emailKey(user.email);
   const developer = await withTimeout(getDoc(doc(db, 'developers', email)));
   let record;
@@ -76,10 +77,67 @@ async function confirmCheckIn() {
       : 'Check-in is temporarily unavailable. Please try again.', 'error');
   } finally { pending = false; refreshClass(); }
 }
+
+let verificationBusy = false;
+const verificationSentAt = new Map();
+async function verificationAction(send) {
+  if (verificationBusy) return;
+  const user = auth.currentUser;
+  const message = $('#checkin-login-message');
+  if (!user) return flash(message, 'Please sign in again before verifying your email.', 'error');
+  verificationBusy = true;
+  const buttons = [$('#checkin-send-verification'), $('#checkin-recheck-verification')];
+  buttons.forEach(button => { button.disabled = true; });
+  try {
+    if (send) {
+      if (user.emailVerified) {
+        await withTimeout(user.getIdToken(true));
+        if (auth.currentUser?.uid === user.uid) await openCheckIn(user);
+        return;
+      }
+      if (Date.now() - (verificationSentAt.get(user.uid) || 0) < 60000) {
+        flash(message, 'A verification email was just sent. Wait a minute before requesting another, and check your Spam folder.');
+        return;
+      }
+      flash(message, 'Sending verification email…');
+      await withTimeout(sendEmailVerification(user, { url:'https://redroadbjj.com/checkin.html' }));
+      if (auth.currentUser?.uid !== user.uid) return;
+      verificationSentAt.set(user.uid, Date.now());
+      flash(message, 'Verification email sent to ' + user.email + '. Check your inbox or Spam folder. Open the link, then come back and select “I’ve verified my email.”');
+    } else {
+      flash(message, 'Checking your email verification…');
+      await withTimeout(user.reload());
+      if (auth.currentUser?.uid !== user.uid) return;
+      if (!user.emailVerified) {
+        flash(message, 'Your email is not verified yet. Open the link in the latest verification email, then try this button again.', 'error');
+        return;
+      }
+      // Refresh the verified claim used by Firestore, not just the screen state.
+      await withTimeout(user.getIdToken(true));
+      if (auth.currentUser?.uid !== user.uid) return;
+      await openCheckIn(user);
+    }
+  } catch (error) {
+    if (auth.currentUser?.uid !== user.uid) return;
+    const code = String(error?.code || '');
+    flash(message, code.includes('too-many-requests')
+      ? 'Too many verification requests. Wait a few minutes, then try again.'
+      : code.includes('unauthorized-continue-uri') || code.includes('invalid-continue-uri')
+      ? 'The verification return address needs configuration. Ask the Developer to allow redroadbjj.com in Firebase Authentication.'
+      : send ? 'Could not send the verification email. Check your connection and try again.'
+      : 'Could not finish verification or load your check-in access. Try again or ask the Developer for help.', 'error');
+  } finally {
+    verificationBusy = false;
+    buttons.forEach(button => { button.disabled = false; });
+  }
+}
+
 showHours();
 window.redRoadCheckinReady = true;
 if (!firebaseConfigured) flash($('#checkin-login-message'), 'Check-in is not connected yet.', 'error');
 else {
+  $('#checkin-send-verification').addEventListener('click', () => verificationAction(true));
+  $('#checkin-recheck-verification').addEventListener('click', () => verificationAction(false));
   listenAsync($('#checkin-login-form'), 'submit', async event => {
     event.preventDefault();
     signingIn = true;

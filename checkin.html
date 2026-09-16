@@ -9,7 +9,13 @@
 <section class="login-card" id="checkin-login-view">
 <div class="kicker">Red Road BJJ</div><h1>Class Check-In</h1><p class="portal-muted">Sign in with your member account.</p>
 <form class="portal-form" id="checkin-login-form" method="post" data-service-form=""><div><label for="checkin-email">Email</label><input id="checkin-email" name="email" type="email" inputmode="email" autocomplete="email" required></div><div><label for="checkin-password">Password</label><input id="checkin-password" name="password" type="password" autocomplete="current-password" minlength="6" required></div><button class="btn btn-red btn-full" type="submit">Sign In</button></form>
-<div class="flash-message" id="checkin-login-message" role="status" hidden></div>
+<div class="flash-message" id="checkin-login-message" role="status" aria-live="polite" hidden></div>
+<div id="checkin-verification" hidden style="margin-top:16px">
+<div style="display:flex;flex-wrap:wrap;gap:12px">
+<button class="btn btn-red" id="checkin-send-verification" type="button">Send verification email</button>
+<button class="btn btn-dark" id="checkin-recheck-verification" type="button">I’ve verified my email</button>
+</div>
+</div>
 <section id="checkin-guest-options" aria-labelledby="checkin-guest-title" style="margin-top:24px;padding-top:20px;border-top:1px solid #34373d">
 <h2 id="checkin-guest-title">New to Red Road?</h2>
 <p class="portal-muted">Not a member yet? Sign up to join, or sign a waiver for your visit—no member login needed for the waiver.</p>
@@ -38,4 +44,4 @@
   }, 12000);
 })();
 </script>
-<script src="checkin.js?v=71" type="module"></script></body></html>
+<script src="checkin.js?v=72" type="module"></script></body></html>

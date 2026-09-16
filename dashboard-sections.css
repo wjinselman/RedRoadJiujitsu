@@ -1,0 +1,9 @@
+.staff-page .dashboard-collapsible { padding:0!important; overflow:hidden; }
+.staff-page .dashboard-section-heading { margin:0; font:inherit; }
+.staff-page .dashboard-section-toggle { display:flex; align-items:center; justify-content:space-between; gap:16px; width:100%; min-height:64px; padding:20px 24px; border:0; border-radius:0; background:transparent; color:#f4f4f5; cursor:pointer; text-align:left; font:700 20px/1.3 Arial,sans-serif; text-transform:none; letter-spacing:normal; }
+.staff-page .dashboard-section-toggle:hover { background:rgba(255,255,255,.04); }
+.staff-page .dashboard-section-toggle:focus-visible { outline:3px solid #ff919b; outline-offset:-4px; }
+.staff-page .dashboard-section-indicator { display:grid; place-items:center; flex:0 0 30px; height:30px; border:1px solid #686870; border-radius:50%; font:22px/1 Arial,sans-serif; }
+.staff-page .dashboard-section-content { padding:20px 24px 24px; border-top:1px solid rgba(255,255,255,.12); }
+.staff-page .dashboard-section-content[hidden] { display:none!important; }
+@media(max-width:600px) { .staff-page .dashboard-section-toggle { padding:16px; font-size:18px; } .staff-page .dashboard-section-content { padding:16px; } }

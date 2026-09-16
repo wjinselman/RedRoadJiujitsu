@@ -1,0 +1,23 @@
+      allow create: if signedIn()
+        && validAttendance(request.resource.data)
+        && attendanceWindow(request.resource.data, attendanceId)
+        && (
+          (isDeveloper()
+            && request.auth.token.email_verified == true
+            && request.resource.data.source == 'developer-test'
+            && request.resource.data.memberEmail == authEmail()
+            && request.resource.data.memberName == 'Developer Test')
+          || (request.auth.token.email_verified == true
+            && request.resource.data.source == 'member'
+            && request.resource.data.memberEmail == authEmail()
+            && exists(memberPath())
+            && get(memberPath()).data.active == true
+            && get(memberPath()).data.enabled == true
+            && get(memberPath()).data.archived != true
+            && planInClass(get(memberPath()).data.plan))
+          || (isKiosk()
+            && request.resource.data.source == 'kiosk'
+            && exists(/databases/$(database)/documents/checkInDirectory/$(request.resource.data.memberEmail))
+            && get(/databases/$(database)/documents/checkInDirectory/$(request.resource.data.memberEmail)).data.active == true
+            && planInClass(get(/databases/$(database)/documents/checkInDirectory/$(request.resource.data.memberEmail)).data.plan))
+        );

@@ -1,0 +1,28 @@
+
+    // Attendance uses server time in America/Chicago (current US DST rules).
+    function gymNow() {
+      let year = request.time.year();
+      let march = timestamp.date(year, 3, 1);
+      let november = timestamp.date(year, 11, 1);
+      let dstStart = timestamp.date(year, 3, 8 + (7 - march.dayOfWeek()) % 7) + duration.value(8, 'h');
+      let dstEnd = timestamp.date(year, 11, 1 + (7 - november.dayOfWeek()) % 7) + duration.value(7, 'h');
+      return request.time - duration.value(request.time >= dstStart && request.time < dstEnd ? 5 : 6, 'h');
+    }
+    function padded(n) { return (n < 10 ? '0' : '') + string(n); }
+    function attendanceWindow(data, attendanceId) {
+      let now = gymNow();
+      let kids = now.hours() == 18;
+      let noGi = now.dayOfWeek() == 2 || now.dayOfWeek() == 5;
+      let name = (kids ? 'Kids' : 'Adult') + (noGi ? ' No-Gi' : ' Jiu Jitsu');
+      let slug = (kids ? 'kids' : 'adult') + (noGi ? '-no-gi' : '-jiu-jitsu');
+      let date = string(now.year()) + '-' + padded(now.month()) + '-' + padded(now.day());
+      return now.dayOfWeek() >= 1 && now.dayOfWeek() <= 5
+        && (now.hours() == 18 || now.hours() == 19)
+        && data.className == name && data.classDate == date
+        && attendanceId == date + '_' + data.memberEmail + '_' + slug;
+    }
+    function planInClass(plan) {
+      let value = plan.lower();
+      return value.matches('.*family.*')
+        || (value.matches('.*kid.*') ? gymNow().hours() == 18 : gymNow().hours() == 19);
+    }

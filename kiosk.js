@@ -1,3 +1,4 @@
+import { currentClass, CLASS_HOURS } from './class-schedule.js?v=1';
 import { listenAsync } from './ui-utils.js?v=49';
 import { FEATURES } from './launch-config.js';
 import {
@@ -59,8 +60,8 @@ function localDateKey(date = new Date()) {
 
 function updateClock() {
   const now = new Date();
-  $('#kiosk-time').textContent = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-  $('#kiosk-date').textContent = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+  $('#kiosk-time').textContent = now.toLocaleTimeString([], { timeZone: 'America/Chicago', hour: 'numeric', minute: '2-digit' });
+  $('#kiosk-date').textContent = now.toLocaleDateString([], { timeZone: 'America/Chicago', weekday: 'long', month: 'long', day: 'numeric' });
 }
 
 async function sha256(value) {
@@ -124,7 +125,7 @@ function selectMember(member) {
   $('#kiosk-search-step').hidden = true;
   $('#kiosk-pin-step').hidden = false;
   $('#kiosk-selected-name').textContent = member.displayName;
-  $('#kiosk-class-label').textContent = classFor(member);
+  $('#kiosk-class-label').textContent = currentClass(member)?.className || ('Check-in closed. ' + CLASS_HOURS);
   $('#kiosk-pin').value = '';
   clearFlash($('#kiosk-message'));
   $('#kiosk-pin').focus();
@@ -181,13 +182,15 @@ async function checkIn(pin) {
       $('#kiosk-pin').focus();
       return;
     }
-    const className = classFor(selectedMember);
-    const ref = doc(db, 'attendance', attendanceId(selectedMember, className));
+    const slot = currentClass(selectedMember);
+    if (!slot) { flash($('#kiosk-message'), 'Check-in is closed. ' + CLASS_HOURS, 'error'); return; }
+    const className = slot.className;
+    const ref = doc(db, 'attendance', slot.classDate + '_' + normalizedEmail(selectedMember.memberEmail) + '_' + slot.classKey);
     const payload = {
       memberEmail: normalizedEmail(selectedMember.memberEmail),
       memberName: String(selectedMember.displayName || '').slice(0, 120),
       className,
-      classDate: localDateKey(),
+      classDate: slot.classDate,
       checkedInAt: serverTimestamp(),
       checkedInBy: kioskIdentity.email,
       source: 'kiosk'
@@ -312,3 +315,4 @@ async function setup() {
 
 setup();
 if (firebaseConfigured) document.querySelectorAll('form[data-service-form]').forEach(form => { form.dataset.serviceReady = 'true'; });
+

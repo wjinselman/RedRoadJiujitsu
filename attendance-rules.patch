@@ -1,0 +1,46 @@
+--- a/firestore.rules
++++ b/firestore.rules
+@@ -122,1 +122,1 @@
+-        && (data.source == 'kiosk' || data.source == 'member');
++        && (data.source == 'kiosk' || data.source == 'member' || data.source == 'developer-test');
+@@ -470,17 +470,23 @@
+-      allow create: if isKiosk()
+-                    && validAttendance(request.resource.data)
+-                    && request.resource.data.source == 'kiosk'
+-                    && exists(/databases/$(database)/documents/checkInDirectory/$(request.resource.data.memberEmail))
+-                    && get(/databases/$(database)/documents/checkInDirectory/$(request.resource.data.memberEmail)).data.active == true
+-                    && !exists(/databases/$(database)/documents/attendance/$(attendanceId))
+-                  || (signedIn()
+-                    && request.auth.token.email_verified == true
+-                    && request.resource.data.source == 'member'
+-                    && request.resource.data.memberEmail == authEmail()
+-                    && request.resource.data.checkedInBy == authEmail()
+-                    && validAttendance(request.resource.data)
+-                    && exists(/databases/$(database)/documents/members/$(authEmail()))
+-                    && get(/databases/$(database)/documents/members/$(authEmail())).data.active == true
+-                    && get(/databases/$(database)/documents/members/$(authEmail())).data.enabled == true
+-                    && get(/databases/$(database)/documents/members/$(authEmail())).data.archived != true
+-                    && !exists(/databases/$(database)/documents/attendance/$(attendanceId));
++      allow create: if signedIn()
++        && validAttendance(request.resource.data)
++        && attendanceWindow(request.resource.data, attendanceId)
++        && (
++          (isDeveloper()
++            && request.auth.token.email_verified == true
++            && request.resource.data.source == 'developer-test'
++            && request.resource.data.memberEmail == authEmail()
++            && request.resource.data.memberName == 'Developer Test')
++          || (request.auth.token.email_verified == true
++            && request.resource.data.source == 'member'
++            && request.resource.data.memberEmail == authEmail()
++            && exists(memberPath())
++            && get(memberPath()).data.active == true
++            && get(memberPath()).data.enabled == true
++            && get(memberPath()).data.archived != true
++            && planInClass(get(memberPath()).data.plan))
++          || (isKiosk()
++            && request.resource.data.source == 'kiosk'
++            && exists(/databases/$(database)/documents/checkInDirectory/$(request.resource.data.memberEmail))
++            && get(/databases/$(database)/documents/checkInDirectory/$(request.resource.data.memberEmail)).data.active == true
++            && planInClass(get(/databases/$(database)/documents/checkInDirectory/$(request.resource.data.memberEmail)).data.plan))
++        );

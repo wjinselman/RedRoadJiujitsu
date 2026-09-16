@@ -1,44 +1,79 @@
-import { localDate, listenAsync } from './ui-utils.js?v=49';
+import { listenAsync } from './ui-utils.js?v=49';
+import { currentClass, CLASS_HOURS } from './class-schedule.js?v=1';
 import { firebaseConfigured, auth, db, signInWithEmailAndPassword, onAuthStateChanged, doc, getDoc, setDoc, serverTimestamp } from './firebase-client.js?v=52';
-
 const $ = selector => document.querySelector(selector);
 const emailKey = value => String(value || '').trim().toLowerCase();
-let member = null;
-let pending = false;
-
+let member = null, pending = false, completed = '', generation = 0;
 function flash(target, text, tone = 'ok') { target.textContent = text; target.dataset.tone = tone; target.hidden = false; }
-function classFor(record, now = new Date()) { const plan = String(record?.plan || '').toLowerCase(); const kids = plan.includes('kid') || (plan.includes('family') && now.getHours() < 19); const noGi = now.getDay() === 2 || now.getDay() === 5; return kids ? (noGi ? 'Kids No-Gi' : 'Kids Jiu Jitsu') : (noGi ? 'Adult No-Gi' : 'Adult Jiu Jitsu'); }
-function attendanceId(record, className) { return `${localDate()}_${emailKey(record.email)}_${className.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`; }
-
+function refreshClass() {
+  if (!member || pending) return;
+  const slot = currentClass(member);
+  const key = slot ? slot.classDate + '_' + slot.classKey : '';
+  const button = $('#checkin-confirm-button');
+  button.disabled = !slot || completed === key;
+  button.textContent = !slot ? 'Check-In Closed' : completed === key ? 'Checked In' : 'Check In';
+  $('#checkin-class-name').textContent = (slot ? slot.className : 'Check-in is closed for your class.') + ' · ' + CLASS_HOURS;
+}
 async function openCheckIn(user) {
+  const attempt = ++generation;
+  member = null; completed = '';
+  $('#checkin-login-view').hidden = false;
+  $('#checkin-confirm-view').hidden = true;
+  if (!user) return;
   if (user.emailVerified !== true) return flash($('#checkin-login-message'), 'Verify your email before checking in.', 'error');
-  const snap = await getDoc(doc(db, 'members', emailKey(user.email)));
-  if (!snap.exists()) return flash($('#checkin-login-message'), 'No member record was found for this email. Use Sign Up or Sign a Waiver below, or ask a coach if you already registered.', 'error');
-  member = { id: snap.id, ...snap.data() };
-  if (member.enabled !== true || member.active !== true || member.archived === true) return flash($('#checkin-login-message'), 'Your membership must be active. Ask a coach for help.', 'error');
+  const email = emailKey(user.email);
+  const developer = await getDoc(doc(db, 'developers', email));
+  let record;
+  if (developer.exists() && developer.data().enabled === true) {
+    record = { email, name:'Developer Test', developerTest:true };
+  } else {
+    const snap = await getDoc(doc(db, 'members', email));
+    if (attempt !== generation) return;
+    if (!snap.exists()) return flash($('#checkin-login-message'), 'No member record was found. Use Sign Up below or ask a coach.', 'error');
+    record = { ...snap.data(), email };
+    if (record.enabled !== true || record.active !== true || record.archived === true) return flash($('#checkin-login-message'), 'Your membership must be active. Ask a coach for help.', 'error');
+  }
+  if (attempt !== generation || auth.currentUser?.uid !== user.uid) return;
+  member = record;
   $('#checkin-member-name').textContent = member.name || 'Member';
-  $('#checkin-class-name').textContent = classFor(member);
+  $('#checkin-message').hidden = true;
+  if (member.developerTest) flash($('#checkin-message'), 'Developer test: no member profile needed. This check-in is labeled Developer Test in attendance.');
   $('#checkin-login-view').hidden = true;
   $('#checkin-confirm-view').hidden = false;
+  refreshClass();
 }
-
 async function confirmCheckIn() {
-  if (!member || pending) return;
-  pending = true; const button = $('#checkin-confirm-button'); button.disabled = true; button.textContent = 'Checking In…';
-  const className = classFor(member); const email = emailKey(auth.currentUser?.email);
+  if (!member || pending || emailKey(auth.currentUser?.email) !== member.email) return;
+  const slot = currentClass(member);
+  if (!slot) { refreshClass(); return flash($('#checkin-message'), 'Check-in is only available during your class. ' + CLASS_HOURS, 'error'); }
+  pending = true;
+  const button = $('#checkin-confirm-button');
+  button.disabled = true; button.textContent = 'Checking In…';
+  const record = member;
   try {
-    await setDoc(doc(db, 'attendance', attendanceId(member, className)), { memberEmail: email, memberName: String(member.name || 'Member').slice(0,120), className, classDate: localDate(), checkedInAt: serverTimestamp(), checkedInBy: email, source: 'member' });
-    button.textContent = 'Checked In'; flash($('#checkin-message'), `You’re checked in for ${className}.`);
+    await setDoc(doc(db, 'attendance', slot.classDate + '_' + record.email + '_' + slot.classKey), {
+      memberEmail:record.email, memberName:String(record.name || 'Member').slice(0,120),
+      className:slot.className, classDate:slot.classDate, checkedInAt:serverTimestamp(),
+      checkedInBy:record.email, source:record.developerTest ? 'developer-test' : 'member'
+    });
+    completed = slot.classDate + '_' + slot.classKey;
+    flash($('#checkin-message'), 'You’re checked in for ' + slot.className + (record.developerTest ? ' (Developer Test).' : '.'));
   } catch (error) {
-    button.disabled = false; button.textContent = 'Check In';
-    flash($('#checkin-message'), String(error?.code || '').includes('permission-denied') ? 'You may already be checked in today. Ask a coach if you need help.' : 'Check-in is temporarily unavailable. Please try again.', 'error');
-  } finally { pending = false; }
+    flash($('#checkin-message'), String(error?.code || '').includes('permission-denied')
+      ? 'Check-in was not accepted. Class may have ended, you may already be checked in, or your access may have changed. Ask a coach to check attendance.'
+      : 'Check-in is temporarily unavailable. Please try again.', 'error');
+  } finally { pending = false; refreshClass(); }
 }
-
 if (!firebaseConfigured) flash($('#checkin-login-message'), 'Check-in is not connected yet.', 'error');
 else {
-  listenAsync($('#checkin-login-form'), 'submit', async event => { event.preventDefault(); $('#checkin-login-message').hidden = true; try { const credential = await signInWithEmailAndPassword(auth, emailKey($('#checkin-email').value), $('#checkin-password').value); await openCheckIn(credential.user); } catch (_) { flash($('#checkin-login-message'), 'Email or password is incorrect.', 'error'); } });
-  listenAsync($('#checkin-confirm-button'), 'click', confirmCheckIn);
-  let restored = false; onAuthStateChanged(auth, async user => { if (restored) return; restored = true; if (user) await openCheckIn(user).catch(() => flash($('#checkin-login-message'), 'Check-in is temporarily unavailable.', 'error')); });
+  listenAsync($('#checkin-login-form'), 'submit', async event => {
+    event.preventDefault(); $('#checkin-login-message').hidden = true;
+    try { await signInWithEmailAndPassword(auth, emailKey($('#checkin-email').value), $('#checkin-password').value); }
+    catch (_) { flash($('#checkin-login-message'), 'Unable to sign in. Check your email, password, and connection.', 'error'); }
+  });
+  $('#checkin-confirm-button').addEventListener('click', confirmCheckIn);
+  onAuthStateChanged(auth, user => { openCheckIn(user).catch(() => flash($('#checkin-login-message'), 'Check-in access could not be loaded. Refresh or ask a coach.', 'error')); });
+  setInterval(refreshClass, 15000);
+  document.addEventListener('visibilitychange', refreshClass);
   document.querySelectorAll('form[data-service-form]').forEach(form => { form.dataset.serviceReady = 'true'; });
 }

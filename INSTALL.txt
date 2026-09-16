@@ -1,42 +1,20 @@
-CHECK-IN UPDATE — NOT DEPLOYED
+EARLY CLASS CHECK-IN UPDATE — NOT LIVE UNTIL PUBLISHED
 
-Your existing Developer email/password can check in without a member record.
-Developer entries are named "Developer Test" and appear in staff attendance.
-No rank, payment, waiver, or roster data is created.
-
-Hours: Monday-Friday, Kids 6:00-6:59 PM, Adult 7:00-7:59 PM, America/Chicago.
-Family plans and Developer tests can use either class. No-Gi Tuesday/Friday.
-At exactly 7 PM kids check-in closes; at 8 PM adult check-in closes.
-The browser displays availability; Firestore server time enforces it.
-
-1. Firebase Console > Firestore Database > Rules:
-   Add the functions from attendance-functions.txt inside
-   match /databases/{database}/documents.
-   Apply the TWO narrow changes in attendance-rules.patch:
-   - Allow developer-test as a source in validAttendance.
-   - Replace ONLY the attendance allow-create condition.
-   Preserve ALL other existing rules, including read/update/delete permissions.
-   Publish the rules after reviewing the diff.
-   Uploading files to GitHub does NOT publish Firebase rules.
-
-2. Upload the website files from website/ to your GitHub repository root.
-   Existing admin collapsible sections and analytics files are unchanged.
-
-3. During class hours, open https://redroadbjj.com/checkin.html and use your
-   verified Developer login. No activation or new member signup is required.
-   Use Attendance > Undo to remove the clearly labeled test afterward.
-
-The rules retain your existing console-managed Developer access.
-They do not make ordinary owners or members Developers.
-Easier manual alternative to reading the patch:
-A. Paste attendance-functions.txt inside the database documents block, above validAttendance.
-B. Inside validAttendance, replace the final source check with:
+1. Upload the five files inside website/ to the GitHub repository root.
+2. Firebase Console > Firestore Database > Rules:
+   Replace the previous gymNow, padded, attendanceWindow and planInClass
+   functions with attendance-functions.txt. If missing, add them inside the
+   database documents block. Do not leave duplicate function definitions.
+3. Inside match /attendance/{attendanceId}, replace ONLY its allow create
+   condition with attendance-create-condition.txt. Keep all other permissions.
+4. If not already done, validAttendance must allow the developer-test source:
    && (data.source == 'kiosk' || data.source == 'member' || data.source == 'developer-test');
-C. Inside match /attendance/{attendanceId}, replace only the allow create condition
-   (ending immediately before allow update) with attendance-create-condition.txt.
-D. Keep all other rules unchanged, then Publish.
+5. Publish Firebase Rules. Uploading to GitHub does not publish rules.
 
-Validation: isolated Firestore emulator and client schedule tests passed, including
-winter/summer Central Time, DST changes, class boundaries, duplicate rejection,
-forged dates/IDs, inactive members, and unauthorized Developer impersonation.
-Live sign-in and production publishing have not been performed.
+Windows are Monday-Friday, Central Time: Kids 5:45 PM to before 7 PM;
+Adults 6:45 PM to before 8 PM. Adults cannot select or submit Kids check-ins.
+Family accounts and Developer tests must explicitly choose a class.
+Family selection records attendance for the account; it does not create
+separate named attendance entries for each household member.
+Email verification remains a separate access requirement with a clear message.
+No new membership, waiver, payment, or role permissions are introduced.

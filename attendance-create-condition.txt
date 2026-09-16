@@ -14,10 +14,10 @@
             && get(memberPath()).data.active == true
             && get(memberPath()).data.enabled == true
             && get(memberPath()).data.archived != true
-            && planInClass(get(memberPath()).data.plan))
+            && planInClass(get(memberPath()).data.plan, request.resource.data.className))
           || (isKiosk()
             && request.resource.data.source == 'kiosk'
             && exists(/databases/$(database)/documents/checkInDirectory/$(request.resource.data.memberEmail))
             && get(/databases/$(database)/documents/checkInDirectory/$(request.resource.data.memberEmail)).data.active == true
-            && planInClass(get(/databases/$(database)/documents/checkInDirectory/$(request.resource.data.memberEmail)).data.plan))
+            && planInClass(get(/databases/$(database)/documents/checkInDirectory/$(request.resource.data.memberEmail)).data.plan, request.resource.data.className))
         );

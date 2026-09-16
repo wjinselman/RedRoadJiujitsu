@@ -1,4 +1,4 @@
-import { currentClass, CLASS_HOURS } from './class-schedule.js?v=1';
+import { currentClass, CLASS_HOURS, checkInNotice } from './class-schedule.js?v=2';
 import { listenAsync } from './ui-utils.js?v=49';
 import { FEATURES } from './launch-config.js';
 import {
@@ -125,7 +125,16 @@ function selectMember(member) {
   $('#kiosk-search-step').hidden = true;
   $('#kiosk-pin-step').hidden = false;
   $('#kiosk-selected-name').textContent = member.displayName;
-  $('#kiosk-class-label').textContent = currentClass(member)?.className || ('Check-in closed. ' + CLASS_HOURS);
+  let chooser = document.getElementById('kiosk-class-choice');
+  if (!chooser) {
+    chooser = document.createElement('select'); chooser.id = 'kiosk-class-choice'; chooser.setAttribute('aria-label','Choose Kids or Adult class');
+    chooser.innerHTML = '<option value="">Select a class</option><option value="kids">Kids class</option><option value="adult">Adult class</option>';
+    $('#kiosk-class-label').after(chooser);
+    chooser.addEventListener('change', () => { if(selectedMember) { selectedMember.selectedProgram=chooser.value; $('#kiosk-class-label').textContent=checkInNotice(selectedMember); } });
+  }
+  chooser.value = ''; member.selectedProgram = '';
+  chooser.hidden = !String(member.plan||'').toLowerCase().includes('family');
+  $('#kiosk-class-label').textContent = checkInNotice(member);
   $('#kiosk-pin').value = '';
   clearFlash($('#kiosk-message'));
   $('#kiosk-pin').focus();
@@ -183,7 +192,7 @@ async function checkIn(pin) {
       return;
     }
     const slot = currentClass(selectedMember);
-    if (!slot) { flash($('#kiosk-message'), 'Check-in is closed. ' + CLASS_HOURS, 'error'); return; }
+    if (!slot) { flash($('#kiosk-message'), checkInNotice(selectedMember), 'error'); return; }
     const className = slot.className;
     const ref = doc(db, 'attendance', slot.classDate + '_' + normalizedEmail(selectedMember.memberEmail) + '_' + slot.classKey);
     const payload = {

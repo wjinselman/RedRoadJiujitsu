@@ -11,18 +11,21 @@
     function padded(n) { return (n < 10 ? '0' : '') + string(n); }
     function attendanceWindow(data, attendanceId) {
       let now = gymNow();
-      let kids = now.hours() == 18;
+      let kids = data.className == 'Kids Jiu Jitsu' || data.className == 'Kids No-Gi';
       let noGi = now.dayOfWeek() == 2 || now.dayOfWeek() == 5;
       let name = (kids ? 'Kids' : 'Adult') + (noGi ? ' No-Gi' : ' Jiu Jitsu');
       let slug = (kids ? 'kids' : 'adult') + (noGi ? '-no-gi' : '-jiu-jitsu');
       let date = string(now.year()) + '-' + padded(now.month()) + '-' + padded(now.day());
+      let minutes = now.hours() * 60 + now.minutes();
       return now.dayOfWeek() >= 1 && now.dayOfWeek() <= 5
-        && (now.hours() == 18 || now.hours() == 19)
+        && minutes >= (kids ? 1065 : 1125) && minutes < (kids ? 1140 : 1200)
         && data.className == name && data.classDate == date
         && attendanceId == date + '_' + data.memberEmail + '_' + slug;
     }
-    function planInClass(plan) {
+    function planInClass(plan, className) {
       let value = plan.lower();
+      let kids = className == 'Kids Jiu Jitsu' || className == 'Kids No-Gi';
       return value.matches('.*family.*')
-        || (value.matches('.*kid.*') ? gymNow().hours() == 18 : gymNow().hours() == 19);
+        || (value.matches('.*kid.*') ? kids :
+          (value.matches('.*adult.*') || value.matches('.*coach.*') || value.matches('.*military.*') || value.matches('.*service.*') || value.matches('.*first responder.*')) && !kids);
     }

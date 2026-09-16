@@ -1,5 +1,5 @@
 import { listenAsync } from './ui-utils.js?v=49';
-import { currentClass, CLASS_HOURS } from './class-schedule.js?v=1';
+import { currentClass, CLASS_HOURS, checkInNotice } from './class-schedule.js?v=2';
 import { firebaseConfigured, auth, db, signInWithEmailAndPassword, onAuthStateChanged, doc, getDoc, setDoc, serverTimestamp } from './firebase-client.js?v=52';
 const $ = selector => document.querySelector(selector);
 const emailKey = value => String(value || '').trim().toLowerCase();
@@ -9,8 +9,7 @@ function withTimeout(promise) {
   return Promise.race([promise, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Connection timed out. Check your connection and try again.')), 15000); })]).finally(() => clearTimeout(timer));
 }
 function showHours() {
-  const slot = currentClass(member || { developerTest:true });
-  flash($('#checkin-hours'), (slot ? 'Class check-in is open. ' : 'Check-in is currently closed. ') + CLASS_HOURS + ' You can still sign in at any time.', slot ? 'ok' : 'error');
+  flash($('#checkin-hours'), checkInNotice(member), member && !currentClass(member) ? 'error' : 'ok');
 }
 function flash(target, text, tone = 'ok') { target.textContent = text; target.dataset.tone = tone; target.hidden = false; }
 function refreshClass() {
@@ -20,16 +19,16 @@ function refreshClass() {
   const key = slot ? slot.classDate + '_' + slot.classKey : '';
   const button = $('#checkin-confirm-button');
   button.disabled = !slot || completed === key;
-  button.textContent = !slot ? 'Check-In Closed' : completed === key ? 'Checked In' : 'Check In';
-  $('#checkin-class-name').textContent = (slot ? slot.className : 'Check-in is closed for your class.') + ' · ' + CLASS_HOURS;
+  button.textContent = !slot ? 'Check-In Closed' : completed === key ? 'Checked In' : 'Check In — ' + slot.className;
+  $('#checkin-class-name').textContent = checkInNotice(member);
 }
 async function openCheckIn(user) {
   const attempt = ++generation;
-  member = null; completed = '';
+  member = null; completed = ''; showHours();
   $('#checkin-login-view').hidden = false;
   $('#checkin-confirm-view').hidden = true;
   if (!user) return;
-  if (user.emailVerified !== true) return flash($('#checkin-login-message'), 'Verify your email before checking in.', 'error');
+  if (user.emailVerified !== true) return flash($('#checkin-login-message'), 'You are signed in, but your email still needs verification. Open the verification email, then refresh this page. Class hours are shown above.', 'error');
   const email = emailKey(user.email);
   const developer = await withTimeout(getDoc(doc(db, 'developers', email)));
   let record;
@@ -44,6 +43,10 @@ async function openCheckIn(user) {
   }
   if (attempt !== generation || auth.currentUser?.uid !== user.uid) return;
   member = record;
+  const chooser = $('#checkin-program-choice');
+  chooser.hidden = !(record.developerTest || String(record.plan || '').toLowerCase().includes('family'));
+  $('#checkin-program').value = '';
+  member.selectedProgram = '';
   $('#checkin-member-name').textContent = member.name || 'Member';
   $('#checkin-message').hidden = true;
   if (member.developerTest) flash($('#checkin-message'), 'Developer test: no member profile needed. This check-in is labeled Developer Test in attendance.');
@@ -97,6 +100,7 @@ else {
       flash($('#checkin-login-message'), message, 'error');
     } finally { signingIn = false; button.textContent = 'Sign In'; }
   });
+  $('#checkin-program').addEventListener('change', () => { if (member) { member.selectedProgram = $('#checkin-program').value; refreshClass(); } });
   $('#checkin-confirm-button').addEventListener('click', confirmCheckIn);
   onAuthStateChanged(auth, user => { if (signingIn) return; openCheckIn(user).catch(() => flash($('#checkin-login-message'), 'Check-in access could not be loaded. Refresh or ask a coach.', 'error')); });
   setInterval(refreshClass, 15000);

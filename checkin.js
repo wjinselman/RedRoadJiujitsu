@@ -13,7 +13,7 @@ function attendanceId(record, className) { return `${localDate()}_${emailKey(rec
 async function openCheckIn(user) {
   if (user.emailVerified !== true) return flash($('#checkin-login-message'), 'Verify your email before checking in.', 'error');
   const snap = await getDoc(doc(db, 'members', emailKey(user.email)));
-  if (!snap.exists()) return flash($('#checkin-login-message'), 'No active member account was found for this email.', 'error');
+  if (!snap.exists()) return flash($('#checkin-login-message'), 'No member record was found for this email. Use Sign Up or Sign a Waiver below, or ask a coach if you already registered.', 'error');
   member = { id: snap.id, ...snap.data() };
   if (member.enabled !== true || member.active !== true || member.archived === true) return flash($('#checkin-login-message'), 'Your membership must be active. Ask a coach for help.', 'error');
   $('#checkin-member-name').textContent = member.name || 'Member';

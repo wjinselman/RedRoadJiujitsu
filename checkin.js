@@ -7,7 +7,7 @@ let member = null;
 let pending = false;
 
 function flash(target, text, tone = 'ok') { target.textContent = text; target.dataset.tone = tone; target.hidden = false; }
-function classFor(record, now = new Date()) { const plan = String(record?.plan || '').toLowerCase(); const kids = plan.includes('kid') || (plan.includes('family') && now.getHours() < 19); const noGi = now.getDay() === 2 || now.getDay() === 4; return kids ? (noGi ? 'Kids No-Gi' : 'Kids Jiu Jitsu') : (noGi ? 'Adult No-Gi' : 'Adult Jiu Jitsu'); }
+function classFor(record, now = new Date()) { const plan = String(record?.plan || '').toLowerCase(); const kids = plan.includes('kid') || (plan.includes('family') && now.getHours() < 19); const noGi = now.getDay() === 2 || now.getDay() === 5; return kids ? (noGi ? 'Kids No-Gi' : 'Kids Jiu Jitsu') : (noGi ? 'Adult No-Gi' : 'Adult Jiu Jitsu'); }
 function attendanceId(record, className) { return `${localDate()}_${emailKey(record.email)}_${className.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`; }
 
 async function openCheckIn(user) {

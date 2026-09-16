@@ -200,7 +200,7 @@ function renderMemberDashboard(member, userEmail) {
 
   const membershipActive = member.active === true && member.archived !== true;
   const portalEnabled = member.enabled === true && member.archived !== true;
-  const paymentExempt = member.paymentExempt === true;
+  const paymentExempt = isPaymentExempt(member);
   const paid = member.paid === true || paymentExempt;
   const waiverSigned = member.waiverSigned === true;
 
@@ -208,7 +208,7 @@ function renderMemberDashboard(member, userEmail) {
   const paidLabel = $('#member-paid-label');
   const waiverLabel = $('#member-waiver-label');
   activeLabel.textContent = membershipActive ? 'Active' : 'Inactive';
-  paidLabel.textContent = paymentExempt ? 'Payment Exempt' : (paid ? 'Paid / Current' : 'Past Due');
+  paidLabel.textContent = member.coachAccess === true ? 'Paid / Current · Coach (dues exempt)' : (paymentExempt ? 'Payment Exempt' : (paid ? 'Paid / Current' : 'Past Due'));
   activeLabel.dataset.state = membershipActive ? 'good' : 'bad';
   paidLabel.dataset.state = paid ? 'good' : 'bad';
   waiverLabel.textContent = waiverSigned ? 'Signed' : 'Missing';
@@ -466,6 +466,14 @@ function setupMemberPage() {
   });
 }
 
+function isPaymentExempt(member) {
+  return member.coachAccess === true || member.paymentExempt === true;
+}
+
+function isPaymentCurrent(member) {
+  return member.paid === true || isPaymentExempt(member);
+}
+
 function memberPayloadFromForm(form, previous = null) {
   const fd = new FormData(form);
   const email = normalizedEmail(fd.get('email') || previous?.email);
@@ -476,7 +484,7 @@ function memberPayloadFromForm(form, previous = null) {
     rank: String(fd.get('rank') || 'White Belt'),
     stripes: stripeCount(fd.get('stripes')),
     plan: String(fd.get('plan') || 'Adult'),
-    paid: coachAccess ? false : fd.get('paid') === 'on',
+    paid: coachAccess || fd.get('paid') === 'on',
     paymentExempt: coachAccess || fd.get('paymentExempt') === 'on',
     coachAccess,
     active: fd.get('active') === 'on',
@@ -511,7 +519,7 @@ function visibleRoster() {
       if (plan !== 'all' && plan !== 'service' && member.plan !== plan) return false;
       if (status === 'pending' && !(member.waiverSigned === true && member.active !== true && member.archived !== true)) return false;
       if (status === 'active' && !(member.active === true && member.archived !== true)) return false;
-      if (status === 'past-due' && !(member.active === true && member.paid !== true && member.paymentExempt !== true && member.archived !== true)) return false;
+      if (status === 'past-due' && !(member.active === true && !isPaymentCurrent(member) && member.archived !== true)) return false;
       if (status === 'missing-waiver' && !(member.waiverSigned !== true && member.archived !== true)) return false;
       if (status === 'inactive' && !(member.active !== true && member.archived !== true)) return false;
       if (status === 'archived' && member.archived !== true) return false;
@@ -529,7 +537,7 @@ function renderOwnerStats() {
   const roster = ownerMembers.filter(m => m.archived !== true);
   const total = roster.length;
   const active = roster.filter(m => m.active === true);
-  const billable = active.filter(m => m.paymentExempt !== true);
+  const billable = active.filter(m => !isPaymentExempt(m));
   const paid = billable.filter(m => m.paid === true);
   const pastDue = billable.filter(m => m.paid !== true);
   const waivers = roster.filter(m => m.waiverSigned === true);
@@ -560,7 +568,9 @@ function statusPills(member) {
   const pills = [];
   if (member.waiverSigned === true && member.active !== true && member.archived !== true) pills.push('<span class="status-chip pending">Pending Approval</span>');
   pills.push(`<span class="status-chip ${member.active ? 'active' : 'paused'}">${member.active ? 'Active' : 'Inactive'}</span>`);
-  pills.push(member.paymentExempt === true
+  pills.push(member.coachAccess === true
+    ? '<span class="status-chip active">Paid / Current · Dues Exempt</span>'
+    : member.paymentExempt === true
     ? '<span class="status-chip">Payment Exempt</span>'
     : `<span class="status-chip ${member.paid ? 'active' : 'past-due'}">${member.paid ? 'Paid' : 'Past Due'}</span>`);
   if (member.coachAccess === true) pills.push('<span class="status-chip active">Coach</span>');
@@ -634,8 +644,8 @@ async function saveMember(member, previous = null) {
     rank: String(member.rank || 'White Belt'),
     stripes: stripeCount(member.stripes),
     plan: String(member.plan || 'Adult'),
-    paid: member.paid === true,
-    paymentExempt: member.paymentExempt === true,
+    paid: member.coachAccess === true || member.paid === true,
+    paymentExempt: isPaymentExempt(member),
     coachAccess: member.coachAccess === true,
     active: member.active === true,
     enabled: member.enabled === true,
@@ -703,8 +713,8 @@ function openEditMember(member) {
   $('#edit-member-emergency-phone').value = member.emergencyPhone || '';
   $('#edit-member-guardian-name').value = member.guardianName || '';
   $('#edit-member-household-email').value = member.householdEmail || '';
-  $('#edit-member-paid').checked = member.paid === true;
-  $('#edit-member-payment-exempt').checked = member.paymentExempt === true;
+  $('#edit-member-paid').checked = member.coachAccess === true || member.paid === true;
+  $('#edit-member-payment-exempt').checked = isPaymentExempt(member);
   $('#edit-member-coach-access').checked = member.coachAccess === true;
   $('#edit-member-active').checked = member.active === true;
   $('#edit-member-enabled').checked = member.enabled === true;
@@ -892,7 +902,7 @@ function exportRosterCsv() {
   const columns = ['Name','Email','Phone','Plan','Rank','Stripes','Active','Paid','Payment Exempt','Coach Access','Waiver','Guardian','Household Email','Emergency Contact','Emergency Phone','Joined'];
   const rows = visibleRoster().map(member => [
     member.name, member.email, member.phone, member.plan, member.rank, member.stripes,
-    member.active ? 'Yes' : 'No', member.paid ? 'Yes' : 'No', member.paymentExempt ? 'Yes' : 'No', member.coachAccess ? 'Yes' : 'No', member.waiverSigned ? 'Yes' : 'No',
+    member.active ? 'Yes' : 'No', isPaymentCurrent(member) ? 'Yes' : 'No', isPaymentExempt(member) ? 'Yes' : 'No', member.coachAccess ? 'Yes' : 'No', member.waiverSigned ? 'Yes' : 'No',
     member.guardianName, member.householdEmail, member.emergencyName, member.emergencyPhone,
     member.joinedAt
   ]);
@@ -1355,6 +1365,12 @@ function setupOwnerPage() {
   });
 
   document.querySelectorAll('input[name="coachAccess"]').forEach(input => {
+    const coachForm = input.closest('form');
+    coachForm?.querySelectorAll('input[name="paid"], input[name="paymentExempt"]').forEach(field => {
+      field.addEventListener('change', () => {
+        if (input.checked) field.checked = true;
+      });
+    });
     input.addEventListener('change', () => {
       if (!input.checked) return;
       const form = input.closest('form');
@@ -1363,7 +1379,7 @@ function setupOwnerPage() {
       const active = form?.querySelector('input[name="active"]');
       const enabled = form?.querySelector('input[name="enabled"]');
       if (exempt) exempt.checked = true;
-      if (paid) paid.checked = false;
+      if (paid) paid.checked = true;
       if (active) active.checked = true;
       if (enabled) enabled.checked = true;
     });

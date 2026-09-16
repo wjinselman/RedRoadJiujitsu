@@ -33,6 +33,47 @@ async function load(env,file,extra='',options={}){
  const module=await get(file);await module.evaluate();return {api:module.namespace,calls,mocks};
 }
 function click(env,selector){env.d.querySelector(selector).click();}
+test('No-Gi is Tuesday and Friday across public pages and both check-in paths',async()=>{
+ for(const file of fs.readdirSync(root).filter(n=>n.endsWith('.html'))){assert.doesNotMatch(read(file),/Tuesday(?: and | &amp; )Thursday/,file);}
+ for(const [page,file] of [['checkin.html','checkin.js'],['kiosk.html','kiosk.js']]){
+  const e=makeDom(page);const {api}=await load(e,file,'export {classFor};');
+  for(const [day,noGi] of [[15,true],[17,false],[18,true]]){
+   for(const plan of ['Kids','Adult']){
+    assert.equal(api.classFor({plan},new Date(2026,8,day,18)),`${plan} ${noGi?'No-Gi':'Jiu Jitsu'}`);
+   }
+  }
+  e.close();
+ }
+});
+test('Coach designation saves paid and exempt, including legacy coach records',async()=>{
+ const e=makeDom('owner.html');
+ const {api,calls}=await load(e,'portal.js','export {memberPayloadFromForm, saveMember, statusPills, visibleRoster}; export function rosterForTest(rows){ownerMembers=rows;}');
+ const form=e.d.querySelector('#add-member-form');
+ form.querySelector('[name=email]').value='coach@example.invalid';
+ form.querySelector('[name=name]').value='Coach Test';
+ form.querySelector('[name=coachAccess]').checked=true;
+ form.querySelector('[name=paid]').checked=false;
+ const payload=api.memberPayloadFromForm(form);
+ assert.equal(payload.paid,true);assert.equal(payload.paymentExempt,true);
+ const legacy={...payload,paid:false,paymentExempt:false,active:true};
+ assert.match(api.statusPills(legacy),/Paid \/ Current/);assert.doesNotMatch(api.statusPills(legacy),/Past Due/);
+ api.rosterForTest([legacy,{...legacy,email:'unpaid@example.invalid',coachAccess:false}]);
+ e.d.querySelector('#owner-status-filter').value='past-due';
+ assert.equal(api.visibleRoster().length,1);assert.equal(api.visibleRoster()[0].email,'unpaid@example.invalid');
+ await api.saveMember(legacy);
+ const saved=calls.writes.find(x=>x.ref?.group==='members').payload;
+ assert.equal(saved.paid,true);assert.equal(saved.paymentExempt,true);
+ form.querySelector('[name=coachAccess]').checked=false;
+ assert.equal(api.memberPayloadFromForm(form).paid,false);
+ e.close();
+});
+
+test('Legacy coaches see current dues-exempt status in their member dashboard',async()=>{
+ const e=makeDom('members.html');const {api}=await load(e,'portal.js','export {renderMemberDashboard};');
+ api.renderMemberDashboard({name:'Coach',coachAccess:true,paid:false,paymentExempt:false,active:true,enabled:true},'coach@example.invalid');
+ assert.match(e.d.querySelector('#member-paid-label').textContent,/Paid \/ Current.*Coach/);
+ assert.equal(e.d.querySelector('#member-paid-label').dataset.state,'good');e.close();
+});
 function submit(env,selector){env.d.querySelector(selector).dispatchEvent(new env.w.Event('submit',{bubbles:true,cancelable:true}));}
 function fillWaiver(env){const values={participantName:'Alex Tester',dob:'1990-02-01',email:'alex@example.invalid',phone:'5550101',address:'Test address',emergencyName:'Sam Tester',emergencyPhone:'5550102',signatureName:'Alex Tester',signatureDate:'2026-09-15',trialDate:'2026-09-18'};for(const[id,value]of Object.entries(values)){const el=env.d.getElementById(id);if(el)el.value=value;}for(const id of ['readAgreement','voluntary','electronicConsent'])env.d.getElementById(id).checked=true;}
 

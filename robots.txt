@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /owner.html
 Disallow: /admin-demo.html
-Sitemap: https://wjinselman.github.io/RedRoadJiujitsu/sitemap.xml
+Sitemap: https://redroadbjj.com/sitemap.xml

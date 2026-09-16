@@ -78,7 +78,7 @@ kiosk account unless that feature is deliberately restored.
 2. Download the QR image from the staff Attendance card and print it for the entrance.
 3. Confirm an active member can scan, sign in and press **Check In**.
 4. Confirm a second press is rejected as a duplicate.
-5. Tuesday/Thursday records are labeled No-Gi automatically; Kids plans record Kids class and other plans record Adult class.
+5. Tuesday/Friday records are labeled No-Gi automatically; Kids plans record Kids class and other plans record Adult class.
 6. Confirm staff can review today’s attendance and undo a mistake.
 
 ## Member behavior

@@ -72,7 +72,7 @@ async function sha256(value) {
 function classFor(member, now = new Date()) {
   const plan = String(member.plan || '').toLowerCase();
   const kids = plan.includes('kid') || (plan.includes('family') && now.getHours() < 19);
-  const noGi = now.getDay() === 2 || now.getDay() === 4;
+  const noGi = now.getDay() === 2 || now.getDay() === 5;
   if (kids) return noGi ? 'Kids No-Gi' : 'Kids Jiu Jitsu';
   return noGi ? 'Adult No-Gi' : 'Adult Jiu Jitsu';
 }

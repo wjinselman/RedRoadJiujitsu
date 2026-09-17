@@ -1,3 +1,4 @@
+import {setupEmailInvitation} from './email-setup.js?v=1';
 import {activePaymentAlerts} from './admin-alerts.js?v=1';
 
 import {profiles,billingReady,loadBillingProfiles,loadMyBilling,memberBilling,saveWithBilling,ensureNoCoveredMembers} from './billing-store.js?v=1';
@@ -694,43 +695,7 @@ function setupMemberPage() {
 
 
 
-  listenAsync($('#member-activate'), 'click', async () => {
-
-    clearFlash(message);
-
-    const memberEmail = normalizedEmail(email.value);
-
-    const memberPassword = password.value;
-
-    if (!memberEmail || memberPassword.length < 6) {
-
-      flash(message, 'Enter your member email and a password of at least 6 characters first.', 'error');
-
-      return;
-
-    }
-
-    try {
-
-      const credential = await createUserWithEmailAndPassword(auth, memberEmail, memberPassword);
-
-      await sendEmailVerification(credential.user);
-
-      await signOut(auth);
-
-      password.value = '';
-
-      flash(message, 'Activation started. Check your email, open the verification link, then return here and sign in. Portal access will only open for a verified email that Red Road has enabled.');
-
-    } catch (error) {
-
-      flash(message, friendlyError(error), 'error');
-
-    }
-
-  });
-
-
+  setupEmailInvitation();
 
   listenAsync($('#member-reset'), 'click', async () => {
 

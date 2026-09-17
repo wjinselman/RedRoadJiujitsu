@@ -22,7 +22,7 @@
 
 <link rel="stylesheet" href="premium.css?v=prod-49">
 
-<script src="mobile-nav.js?v=59" defer=""></script><meta name="referrer" content="no-referrer"><link rel="stylesheet" href="experience.css?v=57"><script src="experience.js?v=57" defer=""></script></head>
+<script src="mobile-nav.js?v=59" defer=""></script><meta name="referrer" content="no-referrer"><link rel="stylesheet" href="experience.css?v=57"><script src="experience.js?v=57" defer=""></script><style>#member-setup-dialog::backdrop{background:rgba(0,0,0,.75)}#member-setup-dialog p{line-height:1.5;overflow-wrap:anywhere}</style></head>
 
 <body class="member-page"><noscript>&lt;p style="padding:16px;background:#241116;color:white"&gt;JavaScript is required for secure sign-in, check-in and waiver submission. Please enable it before completing a form.&lt;/p&gt;</noscript>
 
@@ -100,9 +100,9 @@
 
 <div>
 
-<div class="kicker">Member Sign In</div>
+<div class="kicker" id="member-auth-kicker">Member Sign In</div>
 
-<h2>Welcome Back.</h2>
+<h2 id="member-auth-title">Welcome Back.</h2>
 
 </div>
 
@@ -132,15 +132,25 @@
 
 </form>
 
-<div class="auth-secondary-actions">
+<div class="auth-secondary-actions" id="member-signin-actions">
 
-<button class="text-action" id="member-activate" type="button">First time? Activate account</button>
+<button class="text-action" style="font-size:16px;font-weight:700;padding:12px 14px;border:1px solid #72313c;border-radius:8px;background:#211317;text-decoration:none" id="member-activate" type="button">First Time? Activate Account</button>
 
 <button class="text-action" id="member-reset" type="button">Forgot password?</button>
 
 </div>
 
-<p class="portal-hint">Use the email Red Road has on file. First-time activation requires access to that email so it can be verified before the portal opens.</p>
+<dialog id="member-setup-dialog" aria-labelledby="member-setup-title" style="background:#111318;color:#fff;border:1px solid #633039;border-radius:14px;padding:24px;width:min(440px,calc(100% - 48px));box-sizing:border-box">
+<h2 id="member-setup-title">Activate Your Account</h2>
+<p>Enter the email you want to use. We’ll send a link where you can choose your password.</p>
+<form id="member-setup-form" class="portal-form">
+<label for="member-setup-email">Your email address</label>
+<input id="member-setup-email" type="email" name="setup-email" autocomplete="email" required placeholder="you@example.com">
+<button id="member-setup-send" class="btn btn-red btn-full" type="submit">Send Setup Link</button>
+<button id="member-setup-close" class="btn btn-dark" type="button">Close</button>
+</form><p id="member-setup-message" role="status" aria-live="polite"></p>
+</dialog>
+<p class="portal-hint" id="member-signin-hint">Use the email Red Road has on file. Already created a login? Sign in with your existing password. First time? Choose “Activate Account” above.</p>
 
 <p class="portal-hint">New to Red Road? <a class="waiver-inline-link" href="waiver.html?trial=1">Try one class free without an account</a>, <a class="waiver-inline-link" href="enroll.html">start enrollment</a>, or <a class="waiver-inline-link" href="waiver.html">view/sign the waiver</a>.</p>
 
@@ -312,7 +322,7 @@
 
 </main>
 
-<script src="portal.js?v=70" type="module">
+<script src="portal.js?v=72" type="module">
 
 </script>
 

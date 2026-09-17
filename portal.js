@@ -1,3 +1,6 @@
+import {activePaymentAlerts} from './admin-alerts.js?v=1';
+import {profiles,billingReady,loadBillingProfiles,loadMyBilling,memberBilling,saveWithBilling,ensureNoCoveredMembers} from './billing-store.js?v=1';
+import {fillBillingForm,billingIntent,billingText,setupBillingReport,invalidateReport} from './billing-ui.js?v=1';
 import { listenAsync, localDate } from './ui-utils.js?v=49';
 import { attachWaiverPrint } from './waiver-pdf.js?v=49';
 import { FEATURES } from './launch-config.js';
@@ -201,14 +204,14 @@ function renderMemberDashboard(member, userEmail) {
   const membershipActive = member.active === true && member.archived !== true;
   const portalEnabled = member.enabled === true && member.archived !== true;
   const paymentExempt = isPaymentExempt(member);
-  const paid = member.paid === true || paymentExempt;
+  const paid = memberBilling(member).current;
   const waiverSigned = member.waiverSigned === true;
 
   const activeLabel = $('#member-active-label');
   const paidLabel = $('#member-paid-label');
   const waiverLabel = $('#member-waiver-label');
   activeLabel.textContent = membershipActive ? 'Active' : 'Inactive';
-  paidLabel.textContent = member.coachAccess === true ? 'Paid / Current · Coach (dues exempt)' : (paymentExempt ? 'Payment Exempt' : (paid ? 'Paid / Current' : 'Past Due'));
+  paidLabel.textContent = member._billingUnavailable ? 'Payment status unavailable — refresh to retry' : billingText(member);
   activeLabel.dataset.state = membershipActive ? 'good' : 'bad';
   paidLabel.dataset.state = paid ? 'good' : 'bad';
   waiverLabel.textContent = waiverSigned ? 'Signed' : 'Missing';
@@ -256,6 +259,7 @@ async function openMemberForUser(user) {
       flash(message, 'This verified email does not currently have active portal access. Contact Red Road if you believe this is an error.', 'error');
       return;
     }
+    try { await loadMyBilling(member.email); } catch (_) { member._billingUnavailable = true; }
     renderMemberDashboard(member, user.email);
   } catch (error) {
     flash(message, friendlyError(error), 'error');
@@ -377,6 +381,7 @@ function setupMemberPage() {
   });
 
   listenAsync($('#member-logout'), 'click', async () => {
+    invalidateReport();
     await signOut(auth).catch(() => {});
     dashboard.hidden = true;
     loginView.hidden = false;
@@ -471,7 +476,7 @@ function isPaymentExempt(member) {
 }
 
 function isPaymentCurrent(member) {
-  return member.paid === true || isPaymentExempt(member);
+  return memberBilling(member).current;
 }
 
 function memberPayloadFromForm(form, previous = null) {
@@ -538,8 +543,8 @@ function renderOwnerStats() {
   const total = roster.length;
   const active = roster.filter(m => m.active === true);
   const billable = active.filter(m => !isPaymentExempt(m));
-  const paid = billable.filter(m => m.paid === true);
-  const pastDue = billable.filter(m => m.paid !== true);
+  const paid = billable.filter(m => isPaymentCurrent(m));
+  const pastDue = billable.filter(m => !isPaymentCurrent(m));
   const waivers = roster.filter(m => m.waiverSigned === true);
   const pending = roster.filter(m => m.waiverSigned === true && m.active !== true);
   const activePercent = total ? Math.round((active.length / total) * 100) : 0;
@@ -554,6 +559,7 @@ function renderOwnerStats() {
   $('#stat-paid-count').textContent = `${paid.length} current`;
   $('#stat-past-due').textContent = String(pastDue.length);
   $('#stat-waiver-percent').textContent = `${total ? Math.round((waivers.length / total) * 100) : 0}%`;
+  if (!billingReady) { $('#stat-paid-percent').textContent = '—'; $('#stat-paid-count').textContent = 'Billing unavailable'; $('#stat-past-due').textContent = '—'; }
   if (!ownerRosterLoaded) {
     ['stat-members','stat-pending','stat-active-percent','stat-paid-percent','stat-past-due','stat-waiver-percent'].forEach(id => { $('#'+id).textContent = '—'; });
     ['stat-pending-note','stat-active-count','stat-paid-count'].forEach(id => { $('#'+id).textContent = 'Roster not loaded'; });
@@ -568,11 +574,7 @@ function statusPills(member) {
   const pills = [];
   if (member.waiverSigned === true && member.active !== true && member.archived !== true) pills.push('<span class="status-chip pending">Pending Approval</span>');
   pills.push(`<span class="status-chip ${member.active ? 'active' : 'paused'}">${member.active ? 'Active' : 'Inactive'}</span>`);
-  pills.push(member.coachAccess === true
-    ? '<span class="status-chip active">Paid / Current · Dues Exempt</span>'
-    : member.paymentExempt === true
-    ? '<span class="status-chip">Payment Exempt</span>'
-    : `<span class="status-chip ${member.paid ? 'active' : 'past-due'}">${member.paid ? 'Paid' : 'Past Due'}</span>`);
+  pills.push(`<span class="status-chip ${isPaymentCurrent(member) ? 'active' : 'past-due'}">${esc(billingReady ? billingText(member) : 'Billing unavailable')}</span>`);
   if (member.coachAccess === true) pills.push('<span class="status-chip active">Coach</span>');
   pills.push(`<span class="status-chip ${member.enabled ? 'active' : 'paused'}">${member.enabled ? 'Portal On' : 'Portal Off'}</span>`);
   pills.push(`<span class="status-chip ${member.waiverSigned ? 'active' : 'past-due'}">${member.waiverSigned ? 'Waiver Signed' : 'Waiver Missing'}</span>`);
@@ -605,7 +607,34 @@ function renderOwnerList() {
     </article>`).join('');
 }
 
+function renderPaymentAlerts() {
+  const panel = $('#staff-payment-alerts');
+  if (!panel) return;
+  const allowed = ['owner','developer'].includes(ownerIdentity?.role);
+  panel.hidden = !allowed;
+  $('#staff-alerts-link').hidden = !allowed;
+  const list = $('#payment-alert-list'), summary = $('#payment-alert-summary');
+  list.replaceChildren();
+  $('#payment-alert-more').hidden = !allowed || !waiverPages.members.more;
+  if (!allowed) { summary.textContent = ''; return; }
+  if (!ownerRosterLoaded || !billingReady) {
+    summary.textContent = 'Payment alerts are unavailable until the roster and billing load. Use Refresh to retry.';
+    return;
+  }
+  const alerts = activePaymentAlerts(ownerMembers, profiles);
+  summary.textContent = alerts.length
+    ? `${alerts.length} active account${alerts.length === 1 ? '' : 's'} need payment attention in the loaded roster.`
+    : 'No active unpaid accounts in the loaded roster.';
+  if (waiverPages.members.more) summary.textContent += ' More members are available; load more below to include them.';
+  list.innerHTML = alerts.map(item => `<article class="member-row payment-alert-row">
+    <div class="member-row-main"><strong>${esc(item.name)}</strong><span>${esc(item.email)}</span></div>
+    <div class="member-row-meta"><span>${esc(item.category)}</span><span>${esc(item.description)}</span>${item.paidThrough ? `<span>Paid through ${esc(item.paidThrough)}</span>` : ''}${item.covered ? `<span>Family payer: ${esc(item.editEmail)}</span>` : ''}</div>
+    <div class="member-row-actions"><button class="btn btn-dark btn-mini" type="button" data-alert-email="${esc(item.editEmail)}">${item.covered ? 'Edit Family Payer' : 'Edit Member'}</button></div>
+  </article>`).join('');
+}
+
 function renderOwner() {
+  renderPaymentAlerts();
   renderOwnerStats();
   renderOwnerList();
   renderWaiverLibrary();
@@ -624,14 +653,16 @@ async function loadOwnerMembers(append = false) {
     directoryComplete = directorySnap.docs.length < MAX_OWNER_MEMBERS;
   } catch (_) {}
   const records = snap.docs.map(d => { const data = d.data(); return { ...data, id: d.id, stripes: stripeCount(data.stripes), kioskReady: kioskReady.has(normalizedEmail(d.id)) ? true : directoryComplete ? false : null }; });
-  ownerMembers = append ? [...ownerMembers, ...records] : records;
+  ownerMembers = append ? [...new Map([...ownerMembers, ...records].map(m => [m.email, m])).values()] : records;
+  try { await loadBillingProfiles(); } catch (_) {}
   ownerRosterLoaded = true;
   page.cursor = snap.docs.at(-1) || page.cursor;
   page.more = snap.docs.length === MAX_OWNER_MEMBERS;
   renderOwner();
+  fillBillingForm($('#add-member-form'),{paid:false,plan:$('#owner-plan').value},ownerMembers);
 }
 
-async function saveMember(member, previous = null) {
+async function saveMember(member, previous = null, intent = null) {
   const email = normalizedEmail(member.email);
   if (!email) throw new Error('Member email is required.');
 
@@ -665,7 +696,8 @@ async function saveMember(member, previous = null) {
   };
 
   if (!kioskModeEnabled) {
-    await setDoc(doc(db, 'members', email), payload, { merge: false });
+    if (intent) await saveWithBilling(payload, previous, intent);
+    else await setDoc(doc(db, 'members', email), payload, { merge: false });
     member.kioskReady = null;
     member.kioskPin = '';
     return;
@@ -678,21 +710,16 @@ async function saveMember(member, previous = null) {
   const existingData = existingDirectory.exists() ? existingDirectory.data() : null;
   const pinHash = pin ? await sha256(`${email}|${pin}`) : String(existingData?.pinHash || '');
   const shouldList = payload.active === true && payload.archived !== true && Boolean(pinHash);
-  const batch = writeBatch(db);
-  batch.set(doc(db, 'members', email), payload, { merge: false });
-  if (shouldList) {
-    batch.set(directoryRef, {
-      memberEmail: email,
-      displayName: payload.name,
-      plan: payload.plan,
-      pinHash,
-      active: true,
-      updatedAt: serverTimestamp()
-    }, { merge: false });
-  } else if (existingDirectory.exists()) {
-    batch.delete(directoryRef);
+  const directoryData = shouldList ? {memberEmail:email,displayName:payload.name,plan:payload.plan,pinHash,active:true,updatedAt:serverTimestamp()} : null;
+  if (intent) {
+    await saveWithBilling(payload, previous, intent, shouldList || existingDirectory.exists() ? {ref:directoryRef,data:directoryData} : null);
+  } else {
+    const batch = writeBatch(db);
+    batch.set(doc(db,'members',email),payload,{merge:false});
+    if(shouldList)batch.set(directoryRef,directoryData,{merge:false});
+    else if(existingDirectory.exists())batch.delete(directoryRef);
+    await batch.commit();
   }
-  await batch.commit();
   member.kioskReady = shouldList;
   member.kioskPin = '';
 }
@@ -719,6 +746,7 @@ function openEditMember(member) {
   $('#edit-member-active').checked = member.active === true;
   $('#edit-member-enabled').checked = member.enabled === true;
   $('#edit-member-kiosk-pin').value = '';
+  fillBillingForm($('#edit-member-form'),member,ownerMembers);
   panel.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
   $('#edit-member-name').focus({ preventScroll: true });
 }
@@ -980,6 +1008,7 @@ async function authorizeStaffOnce(user) {
   await loadStandaloneWaivers().catch(()=>flash($('#waiver-library-message'),'Waiver-only submissions could not be loaded. Check the new waiver-storage rules. Existing member and trial waivers remain available.','error'));
   await loadAttendanceOptions().catch(() => { kioskModeEnabled = FEATURES.kioskAttendance === true; renderKioskMode(); });
   if (developer) await Promise.allSettled([loadOwnerAccess(), ...(kioskModeEnabled ? [loadKioskAccess()] : [])]);
+  setupBillingReport(!coach);
   if (!rosterError) clearFlash(loadStatus);
   return access;
 }
@@ -993,6 +1022,26 @@ function setupOwnerPage() {
   const password = $('#owner-login-password');
   const loginMessage = $('#owner-login-message');
   const ownerMessage = $('#owner-message');
+  listenAsync($('#payment-alert-list'),'click',async event=>{
+    const button = event.target.closest('button[data-alert-email]');
+    if (!button || !['owner','developer'].includes(ownerIdentity?.role)) return;
+    try {
+      const email = normalizedEmail(button.dataset.alertEmail);
+      let member = ownerMembers.find(m=>normalizedEmail(m.email)===email);
+      if (!member) {
+        const snap = await getDocFromServer(doc(db,'members',email));
+        if (!snap.exists()) throw new Error('The family payer account was not found. Edit the covered member to assign a current family payer.');
+        member = {...snap.data(),id:snap.id}; ownerMembers.push(member);
+      }
+      openEditMember(member);
+    } catch (error) { flash(ownerMessage,friendlyError(error),'error'); }
+  });
+  listenAsync($('#payment-alert-more'),'click',async()=>{
+    if (!['owner','developer'].includes(ownerIdentity?.role)) return;
+    try { await loadOwnerMembers(true); }
+    catch(error){ flash(ownerMessage,friendlyError(error),'error'); }
+  });
+
 
   listenAsync($('#attendance-options-form'), 'submit', async event => {
     event.preventDefault();
@@ -1067,6 +1116,7 @@ function setupOwnerPage() {
   });
 
   listenAsync($('#owner-logout'), 'click', async () => {
+    invalidateReport();
     await signOut(auth).catch(() => {});
     ownerMembers = [];
     ownerAccess = [];
@@ -1079,6 +1129,7 @@ function setupOwnerPage() {
     $('#owner-waiver-panel').hidden = true;
     $('#signed-waiver-list').replaceChildren();
     ownerIdentity = null;
+    renderPaymentAlerts();
     $('#owner-app').hidden = true;
     $('#owner-login-view').hidden = false;
     password.value = '';
@@ -1400,13 +1451,15 @@ function setupOwnerPage() {
       return;
     }
     try {
-      await saveMember(member);
+      await saveMember(member,null,billingIntent(form));
+      invalidateReport();
       ownerMembers.push({ ...member, createdAt: new Date(), updatedAt: new Date() });
       form.reset();
       $('#owner-joined').value = todayIso();
       $('#add-member-panel').hidden = true;
       $('#toggle-add-member').setAttribute('aria-expanded', 'false');
       renderOwner();
+      await loadOwnerMembers();
       flash(ownerMessage, 'Member added. They can now activate their account with this email.');
     } catch (error) {
       flash(ownerMessage, friendlyError(error), 'error');
@@ -1500,8 +1553,10 @@ function setupOwnerPage() {
     updated.email = previous.email; // email/document ID is intentionally immutable in edit UI
     updated.archived = previous.archived === true;
     try {
-      await saveMember(updated, previous);
+      await saveMember(updated, previous, billingIntent(event.currentTarget));
+      invalidateReport();
       Object.assign(previous, updated);
+      await loadOwnerMembers();
       $('#edit-member-panel').hidden = true;
       renderOwner();
       flash(ownerMessage, `${updated.name} updated.`);
@@ -1531,6 +1586,7 @@ function setupOwnerPage() {
 async function permanentlyRemoveMember(member) {
   if (!['owner', 'developer'].includes(ownerIdentity?.role)) throw new Error('Owner access required.');
   const email = normalizedEmail(member.email);
+  await ensureNoCoveredMembers(email);
   const id = member.id || email;
   if (!email || !id) throw new Error('This record is missing its identity. Refresh the roster before deleting.');
   const refs = [doc(db, 'members', id), doc(db, 'checkInDirectory', email), doc(db, 'waivers', email)];
@@ -1543,6 +1599,11 @@ async function permanentlyRemoveMember(member) {
   if (results.some(snapshot => snapshot.exists())) throw new Error('A record is still present on the server. Refresh the roster; deletion could not be confirmed.');
 }
 
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden)return;
+  if(currentMember && !$('#member-dashboard')?.hidden)renderMemberDashboard(currentMember,currentMember.email);
+  if(ownerIdentity && !$('#owner-app')?.hidden)renderOwner();
+});
 setupMemberPage();
 setupOwnerPage();
 if (firebaseConfigured) document.querySelectorAll('form[data-service-form]').forEach(form => { form.dataset.serviceReady = 'true'; });

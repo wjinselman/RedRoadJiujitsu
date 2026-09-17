@@ -1,11 +1,13 @@
 /* Presentation only: preserve every existing form, control, and role boundary. */
 (() => {
   const sections = [
+    ['staff-payment-alerts', 'Payment Alerts', true],
     ['staff-members', 'Members', true],
     ['staff-trials', 'Trial Requests', false],
     ['staff-attendance', 'Attendance', false],
     ['staff-waivers', 'Signed Waivers', false],
     ['staff-settings', 'Settings', false],
+    ['staff-billing', 'Monthly Payments', false],
     ['developer-access-card', 'Developer Access', false]
   ];
   const controls = new Map();

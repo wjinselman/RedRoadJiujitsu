@@ -10,7 +10,7 @@
 <link href="assets/apple-touch-icon.png" rel="apple-touch-icon">
 <link rel="stylesheet" href="prod14.css?v=prod-37">
 <link rel="stylesheet" href="premium.css?v=prod-49">
-<script src="mobile-nav.js?v=59" defer=""></script><meta name="referrer" content="no-referrer"><link rel="stylesheet" href="experience.css?v=57"><script src="experience.js?v=57" defer=""></script><link rel="stylesheet" href="dashboard-sections.css?v=1"><script src="dashboard-sections.js?v=1" defer></script></head>
+<script src="mobile-nav.js?v=59" defer=""></script><meta name="referrer" content="no-referrer"><link rel="stylesheet" href="experience.css?v=57"><script src="experience.js?v=57" defer=""></script><link rel="stylesheet" href="dashboard-sections.css?v=1"><script src="dashboard-sections.js?v=3" defer></script><link rel="stylesheet" href="billing.css?v=1"></head>
 <body class="staff-page"><noscript>&lt;p style="padding:16px;background:#241116;color:white"&gt;JavaScript is required for secure sign-in, check-in and waiver submission. Please enable it before completing a form.&lt;/p&gt;</noscript>
 <div aria-hidden="true" class="site-emblem-bg">
 </div>
@@ -118,8 +118,8 @@
 <strong id="stat-trials">0</strong>
 <small id="stat-trials-note">0 new requests</small>
 </div>
-</div><nav class="staff-section-nav" aria-label="Dashboard sections"><a href="#staff-members">Members</a><a href="#staff-trials">Trials</a><a href="#staff-attendance">Attendance</a><a href="#staff-waivers">Waivers</a><a href="#staff-settings">Settings</a><a href="#developer-access-card" id="staff-developer-link" hidden="">Developer</a></nav><div class="flash-message owner-message-slot" hidden="" id="owner-message">
-</div><div class="dash-card owner-card" id="staff-members">
+</div><nav class="staff-section-nav" aria-label="Dashboard sections"><a href="#staff-members">Members</a><a href="#staff-trials">Trials</a><a href="#staff-attendance">Attendance</a><a href="#staff-waivers">Waivers</a><a href="#staff-payment-alerts" id="staff-alerts-link" hidden>Payment Alerts</a><a href="#staff-billing" id="staff-billing-link" hidden>Payments</a><a href="#staff-settings">Settings</a><a href="#developer-access-card" id="staff-developer-link" hidden="">Developer</a></nav><div class="flash-message owner-message-slot" hidden="" id="owner-message">
+</div><section id="staff-payment-alerts" class="dash-card owner-card" hidden><div class="kicker">Admin attention</div><h2>Active Members — Payment Due</h2><p class="portal-muted">Active accounts without current payment coverage. Family-covered members follow their payer; they are not separate charges. Coaches and payment-exempt accounts are excluded.</p><p id="payment-alert-summary" role="status"></p><div id="payment-alert-list" class="member-list"></div><button id="payment-alert-more" class="btn btn-dark" type="button" hidden>Load More Members for Alerts</button></section><div class="dash-card owner-card" id="staff-members">
 <div class="owner-member-head">
 <div>
 <div class="kicker">Member Management</div>
@@ -132,7 +132,7 @@
 <input id="owner-search" placeholder="Name, email, phone or household" type="search" aria-label="Search members by name, email, phone or household" autocomplete="off">
 </label>
 <label class="owner-filter"><span>Status</span><select id="owner-status-filter"><option value="all">All Statuses</option><option value="pending">Pending Approval</option><option value="active">Active</option><option value="past-due">Past Due</option><option value="missing-waiver">Missing Waiver</option><option value="inactive">Inactive</option><option value="archived">Archived</option></select></label>
-<label class="owner-filter"><span>Program</span><select id="owner-plan-filter"><option value="all">All Programs</option><option>Adult</option><option>Kids</option><option value="service">Military / First Responder</option><option>Family</option><option>Coach</option></select></label>
+<label class="owner-filter"><span>Program</span><select id="owner-plan-filter"><option value="all">All Programs</option><option>Adult</option><option>Kids</option><option value="service">Military / First Responder</option><option value="Family">Family (choose Adult or Kids for classes)</option><option>Coach</option></select></label>
 <button class="btn btn-dark" id="owner-export" type="button">Export CSV</button>
 <button aria-expanded="false" class="btn btn-red" id="toggle-add-member" type="button">+ Add Member</button>
 </div>
@@ -149,12 +149,12 @@
 <input id="owner-email" name="email" placeholder="name@example.com" required="" type="email">
 </div>
 <div>
-<label for="owner-plan">Plan</label>
+<label for="owner-plan">Class program</label>
 <select id="owner-plan" name="plan">
 <option>Adult</option>
 <option>Kids</option>
 <option>Military / First Responder</option>
-<option>Family</option>
+<option value="Family">Family (choose Adult or Kids for classes)</option>
 <option>Coach</option>
 </select>
 </div>
@@ -189,9 +189,12 @@
 <div><label for="owner-emergency-phone">Emergency Phone</label><input id="owner-emergency-phone" maxlength="40" name="emergencyPhone" type="tel"></div>
 <div><label for="owner-guardian-name">Parent / Legal Guardian</label><input id="owner-guardian-name" maxlength="160" name="guardianName"></div>
 <div data-kiosk-feature hidden=""><label for="owner-kiosk-pin">4-Digit Check-In PIN</label><input id="owner-kiosk-pin" autocomplete="new-password" inputmode="numeric" maxlength="4" minlength="4" name="kioskPin" pattern="[0-9]{4}" placeholder="0000" type="password"></div>
-<div class="owner-checks">
+<fieldset class="billing-fields form-wide"><legend>Billing</legend>
+<label for="owner-billing-category">Billing category</label><select id="owner-billing-category" name="billingCategory" required><option value="adult">Adult — $135</option></select>
+<div data-family-payer hidden><label for="owner-family-payer">Family payer</label><select id="owner-family-payer" name="familyPayer"><option value="">Select the family payer</option></select></div>
+<p class="portal-hint" data-billing-help>Billing is separate from class assignment. Save the family payer first, then link covered members.</p></fieldset><div class="owner-checks">
 <label>
-<input checked="" name="paid" type="checkbox"> Paid / Current</label>
+<input name="paid" type="checkbox"> Paid / Current</label>
 <label>
 <input checked="" name="active" type="checkbox"> Active Membership</label>
 <label>
@@ -219,12 +222,12 @@
 <input id="edit-member-name" maxlength="120" name="name" required="">
 </div>
 <div>
-<label for="edit-member-plan">Plan</label>
+<label for="edit-member-plan">Class program</label>
 <select id="edit-member-plan" name="plan">
 <option>Adult</option>
 <option>Kids</option>
 <option>Military / First Responder</option>
-<option>Family</option>
+<option value="Family">Family (choose Adult or Kids for classes)</option>
 <option>Coach</option>
 </select>
 </div>
@@ -259,7 +262,10 @@
 <div><label for="edit-member-emergency-phone">Emergency Phone</label><input id="edit-member-emergency-phone" maxlength="40" name="emergencyPhone" type="tel"></div>
 <div><label for="edit-member-guardian-name">Parent / Legal Guardian</label><input id="edit-member-guardian-name" maxlength="160" name="guardianName"></div>
 <div data-kiosk-feature hidden=""><label for="edit-member-kiosk-pin">New Check-In PIN</label><input id="edit-member-kiosk-pin" autocomplete="new-password" inputmode="numeric" maxlength="4" minlength="4" name="kioskPin" pattern="[0-9]{4}" placeholder="Leave blank to keep current" type="password"><small class="field-help">Enter four digits only when setting or changing this member’s kiosk PIN.</small></div>
-<div class="owner-checks">
+<fieldset class="billing-fields form-wide"><legend>Billing</legend>
+<label for="edit-member-billing-category">Billing category</label><select id="edit-member-billing-category" name="billingCategory" required><option value="adult">Adult — $135</option></select>
+<div data-family-payer hidden><label for="edit-member-family-payer">Family payer</label><select id="edit-member-family-payer" name="familyPayer"><option value="">Select the family payer</option></select></div>
+<p class="portal-hint" data-billing-help>Billing is separate from class assignment. Save the family payer first, then link covered members.</p></fieldset><div class="owner-checks">
 <label>
 <input id="edit-member-paid" name="paid" type="checkbox"> Paid / Current</label>
 <label>
@@ -313,7 +319,7 @@
 <div><span>Last Check-In</span><strong id="attendance-last-time">—</strong></div>
 </div>
 <div aria-live="polite" class="member-list attendance-list" id="attendance-list"></div>
-</div><section id="staff-waivers" class="dash-card owner-card"><div class="owner-member-head"><div><div class="kicker">On File</div><h2>Signed Waivers</h2><p class="portal-muted">Member, trial and waiver-only records. Open a saved record to print the signature and its original agreement.</p></div><button class="btn btn-dark" id="waiver-refresh" type="button">Refresh Waivers</button></div><label class="owner-search"><span>Find a signed waiver</span><input id="waiver-search" type="search" autocomplete="off" placeholder="Name, email or receipt ID"></label><p id="signed-waiver-count" class="portal-hint" role="status"></p><div class="flash-message" id="waiver-library-message" hidden=""></div><div class="edit-member-panel waiver-record-panel" hidden="" id="owner-waiver-panel">
+</div><section id="staff-billing" class="dash-card owner-card" hidden><div class="kicker">Accounting</div><h2>Monthly Payments</h2><p class="portal-muted">Record payments with the Paid checkbox in Edit Member. Checking Paid and saving an unpaid account records one calendar month; saving an already-paid account adds nothing. Unchecking Paid keeps the payment history.</p><div class="billing-report-controls"><label>Report month <input id="billing-month" type="month"></label><button class="btn btn-dark" id="billing-load" type="button">Load Report</button><button class="btn btn-dark" id="billing-print" type="button" disabled>Print Monthly Report</button></div><p id="billing-report-status" role="status"></p><div id="billing-report-results" class="billing-report-results"></div></section><section id="staff-waivers" class="dash-card owner-card"><div class="owner-member-head"><div><div class="kicker">On File</div><h2>Signed Waivers</h2><p class="portal-muted">Member, trial and waiver-only records. Open a saved record to print the signature and its original agreement.</p></div><button class="btn btn-dark" id="waiver-refresh" type="button">Refresh Waivers</button></div><label class="owner-search"><span>Find a signed waiver</span><input id="waiver-search" type="search" autocomplete="off" placeholder="Name, email or receipt ID"></label><p id="signed-waiver-count" class="portal-hint" role="status"></p><div class="flash-message" id="waiver-library-message" hidden=""></div><div class="edit-member-panel waiver-record-panel" hidden="" id="owner-waiver-panel">
 <div class="portal-card-head"><div><div class="kicker">Signed Record</div><h3 id="owner-waiver-title">Member Waiver</h3></div><button class="btn btn-quiet btn-mini" id="close-owner-waiver" type="button">Close</button></div>
 <div id="owner-waiver-details"></div>
 <div class="member-actions"><a class="btn btn-dark" href="assets/red-road-liability-waiver.pdf" rel="noopener" target="_blank">Open Agreement PDF</a></div>
@@ -407,7 +413,7 @@
 </div>
 </section>
 </main>
-<script src="portal.js?v=66" type="module">
+<script src="portal.js?v=68" type="module">
 </script>
 
 

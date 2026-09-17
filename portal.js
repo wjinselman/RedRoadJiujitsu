@@ -1,3 +1,5 @@
+import {toggleMemberPaid} from './quick-paid.js?v=1';
+let quickPaymentBusy = false;
 import {setupEmailInvitation} from './email-setup.js?v=3';
 import {activePaymentAlerts} from './admin-alerts.js?v=1';
 
@@ -1168,6 +1170,7 @@ function renderOwnerList() {
       <div class="member-row-actions">
 
         ${canManage ? '<button class="btn btn-mini btn-dark" type="button" data-action="edit">Edit</button>' : ''}
+        ${canManage && !isPaymentExempt(member) && member.archived !== true && profiles.get(member.email)?.category !== 'family-covered' ? `<button class="btn btn-mini btn-dark" type="button" data-action="quick-paid" ${!billingReady || quickPaymentBusy ? 'disabled' : ''} title="Changes payment coverage. Mark Unpaid keeps recorded payment history.">${isPaymentCurrent(member) ? 'Mark Unpaid' : 'Mark Paid'}</button>` : ''}
 
         ${member.waiverSigned ? '<button class="btn btn-mini btn-dark" type="button" data-action="view-waiver">Waiver</button>' : ''}
 
@@ -2925,6 +2928,20 @@ function setupOwnerPage() {
     if (!member) return;
 
 
+
+    if (button.dataset.action === 'quick-paid') {
+      if (!['owner','developer'].includes(ownerIdentity?.role) || quickPaymentBusy) return;
+      quickPaymentBusy = true;
+      button.disabled = true; button.textContent = 'Saving…';
+      try {
+        const result = await toggleMemberPaid(member,ownerIdentity.role);
+        Object.assign(member,result.member);
+        invalidateReport();
+        flash(ownerMessage,result.wantsPaid ? (result.restoring ? 'Paid status restored for the existing period. No duplicate payment added.' : 'Payment recorded and paid-through date updated.') : 'Marked unpaid. Recorded payment history is retained.');
+      } catch(error) { flash(ownerMessage,error.message || 'Could not update payment status. Refresh and try again.','error'); }
+      finally { quickPaymentBusy=false;renderOwner(); }
+      return;
+    }
 
     if (button.dataset.action === 'edit') {
 

@@ -1170,7 +1170,7 @@ function renderOwnerList() {
       <div class="member-row-actions">
 
         ${canManage ? '<button class="btn btn-mini btn-dark" type="button" data-action="edit">Edit</button>' : ''}
-        ${canManage && !isPaymentExempt(member) && member.archived !== true && profiles.get(member.email)?.category !== 'family-covered' ? `<button class="btn btn-mini btn-dark" type="button" data-action="quick-paid" ${!billingReady || quickPaymentBusy ? 'disabled' : ''} title="Changes payment coverage. Mark Unpaid keeps recorded payment history.">${isPaymentCurrent(member) ? 'Mark Unpaid' : 'Mark Paid'}</button>` : ''}
+        ${canManage && !isPaymentExempt(member) && member.archived !== true && profiles.get(member.email)?.category !== 'family-covered' ? `<button class="btn btn-mini btn-dark" style="background:transparent;border-color:${isPaymentCurrent(member) ? '#28613f' : '#71313b'};color:${isPaymentCurrent(member) ? '#a9d8b6' : '#ffb1bb'};box-shadow:none" type="button" data-action="quick-paid" ${!billingReady || quickPaymentBusy ? 'disabled' : ''} title="Changes payment coverage. Mark Unpaid keeps recorded payment history.">${isPaymentCurrent(member) ? 'Mark Unpaid' : 'Mark Paid'}</button>` : ''}
 
         ${member.waiverSigned ? '<button class="btn btn-mini btn-dark" type="button" data-action="view-waiver">Waiver</button>' : ''}
 

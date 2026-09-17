@@ -1290,27 +1290,20 @@ async function loadOwnerMembers(append = false) {
 
   const page = waiverPages.members;
 
+  // Start independent reads together; optional kiosk data must not delay the roster.
+  const directoryRead = getDocs(query(collection(db, 'checkInDirectory'), limit(MAX_OWNER_MEMBERS))).catch(() => null);
+  const billingRead = loadBillingProfiles().catch(() => {});
   const snap = await getDocsFromServer(query(collection(db, 'members'), ...(append && page.cursor ? [startAfter(page.cursor)] : []), limit(MAX_OWNER_MEMBERS)));
+  await billingRead;
 
-  let kioskReady = new Set();
-
-  let directoryComplete = false;
-
-  try {
-
-    const directorySnap = await getDocs(query(collection(db, 'checkInDirectory'), limit(MAX_OWNER_MEMBERS)));
-
-    kioskReady = new Set(directorySnap.docs.map(item => normalizedEmail(item.id)));
-
-    directoryComplete = directorySnap.docs.length < MAX_OWNER_MEMBERS;
-
-  } catch (_) {}
+  const kioskReady = new Set();
+  const directoryComplete = false;
 
   const records = snap.docs.map(d => { const data = d.data(); return { ...data, id: d.id, stripes: stripeCount(data.stripes), kioskReady: kioskReady.has(normalizedEmail(d.id)) ? true : directoryComplete ? false : null }; });
 
   ownerMembers = append ? [...new Map([...ownerMembers, ...records].map(m => [m.email, m])).values()] : records;
 
-  try { await loadBillingProfiles(); } catch (_) {}
+
 
   ownerRosterLoaded = true;
 
@@ -1321,6 +1314,18 @@ async function loadOwnerMembers(append = false) {
   renderOwner();
 
   fillBillingForm($('#add-member-form'),{paid:false,plan:$('#owner-plan').value},ownerMembers);
+  // Enrich kiosk readiness after the usable roster is visible. Do not overwrite
+  // a newer roster or touch the page after this staff session has ended.
+  const loadedRoster = ownerMembers;
+  const loadedIdentity = ownerIdentity;
+  directoryRead.then(directorySnap => {
+    if (!directorySnap || !loadedIdentity || ownerIdentity !== loadedIdentity || ownerMembers !== loadedRoster) return;
+    const ready = new Set(directorySnap.docs.map(item => normalizedEmail(item.id)));
+    const complete = directorySnap.docs.length < MAX_OWNER_MEMBERS;
+    ownerMembers.forEach(member => { member.kioskReady = ready.has(normalizedEmail(member.id)) ? true : complete ? false : null; });
+    renderOwner();
+  });
+
 
 }
 
@@ -1963,6 +1968,8 @@ async function authorizeStaffOnce(user) {
   const loadStatus = $('#dashboard-load-status');
 
   flash(loadStatus, 'Loading your dashboard…');
+  $('#owner-member-list').innerHTML = '<div class="owner-empty" role="status">Loading members and payment status…</div>';
+  $('#owner-member-list').setAttribute('aria-busy', 'true');
 
   let rosterError = null;
 
@@ -1991,6 +1998,8 @@ async function authorizeStaffOnce(user) {
     flash(loadStatus, 'Dashboard data could not be loaded. ' + friendlyError(error) + ' Use Refresh to retry.', 'error');
 
   }
+
+  $('#owner-member-list').setAttribute('aria-busy', 'false');
 
   await loadTrialRequests().catch(() => {
 

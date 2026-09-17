@@ -1,6 +1,7 @@
 import {loadTopAttendance,clearTopAttendance} from './top-attendance.js?v=2';
 import {toggleMemberPaid} from './quick-paid.js?v=1';
 let quickPaymentBusy = false;
+let ownerBillingLoading = false;
 import {setupEmailInvitation} from './email-setup.js?v=3';
 import {activePaymentAlerts} from './admin-alerts.js?v=1';
 
@@ -317,9 +318,17 @@ async function getStaffAccess(email, optional = false) {
 
 
 
-  // Developer is checked first. Developer access itself is console-managed only.
+  // Settle every speculative read so a lower-priority denied role cannot
+  // reject an already-authorized developer or owner.
+  const settled = promise => promise.then(value => ({value}), error => ({error}));
+  const developerRead = settled(readRole('developers'));
+  const ownerRead = settled(readRole('owners'));
+  const coachRead = auth.currentUser?.emailVerified === true ? settled(readRole('members')) : null;
+  const result = async promise => { const item = await promise; if (item.error) throw item.error; return item.value; };
+  // Developer access remains console-managed and takes priority.
 
-  const developerSnap = await readRole('developers');
+
+  const developerSnap = await result(developerRead);
 
   if (developerSnap.exists() && developerSnap.data()?.enabled === true) {
 
@@ -329,7 +338,7 @@ async function getStaffAccess(email, optional = false) {
 
 
 
-  const ownerSnap = await readRole('owners');
+  const ownerSnap = await result(ownerRead);
 
   if (ownerSnap.exists() && ownerSnap.data()?.enabled === true) {
 
@@ -349,7 +358,7 @@ async function getStaffAccess(email, optional = false) {
 
   if (auth.currentUser?.emailVerified === true) {
 
-    const coachSnap = await readRole('members');
+    const coachSnap = await result(coachRead);
 
     if (coachSnap.exists()) {
 
@@ -1092,7 +1101,7 @@ function renderOwnerStats() {
 
   $('#stat-waiver-percent').textContent = `${total ? Math.round((waivers.length / total) * 100) : 0}%`;
 
-  if (!billingReady) { $('#stat-paid-percent').textContent = '—'; $('#stat-paid-count').textContent = 'Billing unavailable'; $('#stat-past-due').textContent = '—'; }
+  if (!billingReady) { $('#stat-paid-percent').textContent = '—'; $('#stat-paid-count').textContent = (ownerBillingLoading ? 'Loading payment status…' : 'Billing unavailable'); $('#stat-past-due').textContent = '—'; }
 
   if (!ownerRosterLoaded) {
 
@@ -1122,7 +1131,7 @@ function statusPills(member) {
 
   pills.push(`<span class="status-chip ${member.active ? 'active' : 'paused'}">${member.active ? 'Active' : 'Inactive'}</span>`);
 
-  pills.push(`<span class="status-chip ${isPaymentCurrent(member) ? 'active' : 'past-due'}">${esc(billingReady ? billingText(member) : 'Billing unavailable')}</span>`);
+  pills.push(`<span class="status-chip ${!billingReady ? 'pending' : isPaymentCurrent(member) ? 'active' : 'past-due'}">${esc(billingReady ? billingText(member) : (ownerBillingLoading ? 'Loading payment status…' : 'Billing unavailable'))}</span>`);
 
   if (member.coachAccess === true) pills.push('<span class="status-chip active">Coach</span>');
 
@@ -1177,7 +1186,7 @@ function renderOwnerList(coaches = false) {
       <div class="member-row-actions">
 
         ${canManage ? '<button class="btn btn-mini btn-dark" type="button" data-action="edit">Edit</button>' : ''}
-        ${canManage && !isPaymentExempt(member) && member.archived !== true && profiles.get(member.email)?.category !== 'family-covered' ? `<button class="btn btn-mini btn-dark" style="background:transparent;border-color:${isPaymentCurrent(member) ? '#28613f' : '#71313b'};color:${isPaymentCurrent(member) ? '#a9d8b6' : '#ffb1bb'};box-shadow:none" type="button" data-action="quick-paid" ${!billingReady || quickPaymentBusy ? 'disabled' : ''} title="${isPaymentCurrent(member) ? 'Click to mark unpaid. Recorded payment history is retained.' : 'Click to mark paid.'}" aria-label="${isPaymentCurrent(member) ? 'Paid. Click to mark unpaid.' : 'Unpaid. Click to mark paid.'}">${isPaymentCurrent(member) ? 'Paid' : 'Unpaid'}</button>` : ''}
+        ${canManage && !isPaymentExempt(member) && member.archived !== true && profiles.get(member.email)?.category !== 'family-covered' ? `<button class="btn btn-mini btn-dark" style="background:transparent;border-color:${isPaymentCurrent(member) ? '#28613f' : '#71313b'};color:${isPaymentCurrent(member) ? '#a9d8b6' : '#ffb1bb'};box-shadow:none" type="button" data-action="quick-paid" ${!billingReady || quickPaymentBusy ? 'disabled' : ''} title="${isPaymentCurrent(member) ? 'Click to mark unpaid. Recorded payment history is retained.' : 'Click to mark paid.'}" aria-label="${isPaymentCurrent(member) ? 'Paid. Click to mark unpaid.' : 'Unpaid. Click to mark paid.'}">${!billingReady ? (ownerBillingLoading ? 'Loading…' : 'Unavailable') : isPaymentCurrent(member) ? 'Paid' : 'Unpaid'}</button>` : ''}
 
         ${member.waiverSigned ? '<button class="btn btn-mini btn-dark" type="button" data-action="view-waiver">Waiver</button>' : ''}
 
@@ -1217,7 +1226,7 @@ function renderPaymentAlerts() {
 
   if (!ownerRosterLoaded || !billingReady) {
 
-    summary.textContent = 'Payment alerts are unavailable until the roster and billing load. Use Refresh to retry.';
+    summary.textContent = ownerBillingLoading ? 'Loading payment status…' : 'Payment alerts are unavailable until the roster and billing load. Use Refresh to retry.';
 
     return;
 
@@ -1272,9 +1281,11 @@ async function loadOwnerMembers(append = false) {
 
   // Start independent reads together; optional kiosk data must not delay the roster.
   const directoryRead = getDocs(query(collection(db, 'checkInDirectory'), limit(MAX_OWNER_MEMBERS))).catch(() => null);
-  const billingRead = loadBillingProfiles().catch(() => {});
+  ownerBillingLoading = true;
+  const billingRead = loadBillingProfiles().catch(() => {}).finally(() => { ownerBillingLoading = false; });
+  const loadingIdentity = ownerIdentity;
   const snap = await getDocsFromServer(query(collection(db, 'members'), ...(append && page.cursor ? [startAfter(page.cursor)] : []), limit(MAX_OWNER_MEMBERS)));
-  await billingRead;
+  if (!loadingIdentity || ownerIdentity !== loadingIdentity) return;
 
   const kioskReady = new Set();
   const directoryComplete = false;
@@ -1293,7 +1304,7 @@ async function loadOwnerMembers(append = false) {
 
   renderOwner();
 
-  fillBillingForm($('#add-member-form'),{paid:false,plan:$('#owner-plan').value},ownerMembers);
+  $('#owner-member-list').setAttribute('aria-busy', 'false');
   // Enrich kiosk readiness after the usable roster is visible. Do not overwrite
   // a newer roster or touch the page after this staff session has ended.
   const loadedRoster = ownerMembers;
@@ -1307,6 +1318,12 @@ async function loadOwnerMembers(append = false) {
   });
 
 
+  // Names and membership details are already visible. Billing updates them
+  // when ready; payment edits remain disabled until the authoritative read ends.
+  await billingRead;
+  if (ownerIdentity !== loadingIdentity || ownerMembers !== loadedRoster) return;
+  renderOwner();
+  fillBillingForm($('#add-member-form'),{paid:false,plan:$('#owner-plan').value},ownerMembers);
 }
 
 
@@ -1436,6 +1453,7 @@ async function saveMember(member, previous = null, intent = null) {
 
 
 function openEditMember(member) {
+  if (!billingReady) return flash($('#owner-message'), ownerBillingLoading ? 'Payment details are still loading. Please try Edit in a moment.' : 'Payment details could not load. Refresh before editing.', 'error');
 
   const panel = $('#edit-member-panel');
 
@@ -1953,6 +1971,24 @@ async function authorizeStaffOnce(user) {
   $('#owner-member-list').setAttribute('aria-busy', 'true');
   $('#owner-coach-list').textContent = 'Loading coaches…';
 
+  const extraData = Promise.allSettled([
+    loadTrialRequests().catch(() => {
+      $('#trial-request-list').textContent = 'Trial requests could not load. Use Refresh Trials to retry.';
+      $('#stat-trials').textContent = '—';
+      $('#stat-trials-note').textContent = 'Not loaded';
+    }),
+    loadAttendance().catch(() => {
+      $('#attendance-list').textContent = 'Attendance could not load. Use Refresh Attendance to retry.';
+      $('#attendance-today-count').textContent = '—';
+      $('#attendance-last-time').textContent = '—';
+    }),
+    loadStandaloneWaivers().catch(() => flash($('#waiver-library-message'),'Waivers could not load. Use Refresh Waivers to retry.','error')),
+    (async () => {
+      await loadAttendanceOptions().catch(() => { kioskModeEnabled = FEATURES.kioskAttendance === true; renderKioskMode(); });
+      if (developer) await Promise.allSettled([loadOwnerAccess(), ...(kioskModeEnabled ? [loadKioskAccess()] : [])]);
+    })()
+  ]);
+
   let rosterError = null;
 
   try {
@@ -1984,35 +2020,9 @@ async function authorizeStaffOnce(user) {
 
   $('#owner-member-list').setAttribute('aria-busy', 'false');
 
-  await loadTrialRequests().catch(() => {
-
-    $('#trial-request-list').innerHTML = '<div class="owner-empty" role="status">Trial requests could not be loaded. Use Refresh Trials to try again.</div>';
-
-    $('#stat-trials').textContent = '—';
-
-    $('#stat-trials-note').textContent = 'Not loaded';
-
-  });
-
-  await loadAttendance().catch(() => {
-
-    $('#attendance-list').innerHTML = '<div class="owner-empty" role="status">Attendance could not be loaded. Use Refresh Attendance to try again.</div>';
-
-    $('#attendance-today-count').textContent = '—';
-
-    $('#attendance-last-time').textContent = '—';
-
-  });
-
-  await loadStandaloneWaivers().catch(()=>flash($('#waiver-library-message'),'Waiver-only submissions could not be loaded. Check the new waiver-storage rules. Existing member and trial waivers remain available.','error'));
-
-  await loadAttendanceOptions().catch(() => { kioskModeEnabled = FEATURES.kioskAttendance === true; renderKioskMode(); });
-
-  if (developer) await Promise.allSettled([loadOwnerAccess(), ...(kioskModeEnabled ? [loadKioskAccess()] : [])]);
-
   setupBillingReport(!coach);
-
   if (!rosterError) clearFlash(loadStatus);
+  await extraData;
 
   return access;
 
@@ -2811,6 +2821,7 @@ function setupOwnerPage() {
 
 
   $('#toggle-add-member')?.addEventListener('click', () => {
+    if (!billingReady) return flash(ownerMessage, 'Wait for payment details to load before adding a member. Use Refresh if needed.', 'error');
 
     if (ownerIdentity?.role === 'coach') return;
 

@@ -75,12 +75,17 @@ async function openCheckIn(user) {
   if (user.emailVerified !== true) return flash($('#checkin-login-message'), 'You are signed in. Verify your email to continue: send the email below, open its verification link, then select “I’ve verified my email.”', 'error');
   try {
   const email = emailKey(user.email);
+  // Member and developer access are independent. Start both immediately.
+  // A missing/denied member record must not block an authorized developer test.
+  const memberRead = withTimeout(getDoc(doc(db, 'members', email))).then(value => ({value}), error => ({error}));
   const developer = await withTimeout(getDoc(doc(db, 'developers', email)));
   let record;
   if (developer.exists() && developer.data().enabled === true) {
     record = { email, name:'Developer Test', developerTest:true };
   } else {
-    const snap = await withTimeout(getDoc(doc(db, 'members', email)));
+    const memberResult = await memberRead;
+    if (memberResult.error) throw memberResult.error;
+    const snap = memberResult.value;
     if (attempt !== generation) return;
     if (!snap.exists()) return flash($('#checkin-login-message'), 'No member record was found. Use “New here? Create an account” below or ask a coach.', 'error');
     record = { ...snap.data(), email };
@@ -176,8 +181,10 @@ async function confirmCheckIn() {
   let attendanceRef;
   let saving = false;
   try {
-    await withTimeout(user.reload());
-    await withTimeout(user.getIdToken(true));
+    // Firebase refreshes an expired token automatically. Avoid two forced
+    // network refreshes for every attendance save. Firestore still checks the
+    // current member, class window and duplicate rules on the server.
+    await withTimeout(user.getIdToken());
     if (auth.currentUser?.uid !== user.uid || member !== record) return;
     if (!user.emailVerified) {
       await openCheckIn(user);

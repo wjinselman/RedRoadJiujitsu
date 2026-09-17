@@ -1,0 +1,11 @@
+RED ROAD LOADING UPDATE
+
+Replace portal.js, checkin.js, owner.html, members.html and checkin.html with these files, then deploy as usual. Based on the live version fetched September 17, 2026. No Firestore rules changes, migrations or member re-signups required.
+
+Admin: roster appears before billing completes; payment labels show loading and payment edits remain blocked until billing is ready. Independent dashboard sections and role checks load concurrently.
+
+Check-in: member/developer checks start together; normal check-in uses Firebase cached/automatically refreshed tokens rather than forcing two extra authentication requests. Email verification recheck and developer reset still perform their existing refresh checks. Class rules and attendance payload unchanged.
+
+Validation: JavaScript syntax and simulated delayed reads, billing failure, role precedence, inactive accounts, closed classes, duplicate clicks, server-confirmed saves and failed saves passed. Real signed-in phone timing still requires testing after deployment.
+
+Not deployed. Keep the existing files as a rollback backup.

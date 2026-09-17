@@ -1140,19 +1140,20 @@ function statusPills(member) {
 
 
 
-function renderOwnerList() {
+function renderOwnerList(coaches = false) {
+  coaches = coaches === true;
 
-  const list = $('#owner-member-list');
+  const list = $(coaches ? '#owner-coach-list' : '#owner-member-list');
 
-  const members = visibleRoster();
+  const members = coaches ? ownerMembers.filter(m => m.coachAccess === true).sort((a,b) => String(a.name||'').localeCompare(String(b.name||''))) : visibleRoster().filter(m => m.coachAccess !== true);
 
-  const note = $('#owner-load-note');
+  const note = $(coaches ? '#owner-coach-note' : '#owner-load-note');
 
-  if (note) note.textContent = `Showing ${members.length} of ${ownerMembers.length} loaded records.`;
+  if (note) note.textContent = `Showing ${members.length} ${coaches ? 'coaches' : 'members'} · ${ownerMembers.length} total roster records loaded.`;
 
   if (!members.length) {
 
-    list.innerHTML = '<div class="owner-empty">No members match this view.</div>';
+    list.innerHTML = coaches ? '<div class="owner-empty">No coaches in the loaded roster.</div>' : '<div class="owner-empty">No members match this view.</div>';
 
     return;
 
@@ -1248,6 +1249,7 @@ function renderOwner() {
   renderOwnerStats();
 
   renderOwnerList();
+  renderOwnerList(true);
 
   renderWaiverLibrary();
 
@@ -1944,6 +1946,7 @@ async function authorizeStaffOnce(user) {
   flash(loadStatus, 'Loading your dashboard…');
   $('#owner-member-list').innerHTML = '<div class="owner-empty" role="status">Loading members and payment status…</div>';
   $('#owner-member-list').setAttribute('aria-busy', 'true');
+  $('#owner-coach-list').textContent = 'Loading coaches…';
 
   let rosterError = null;
 
@@ -1968,6 +1971,7 @@ async function authorizeStaffOnce(user) {
     rosterError = error;
 
     $('#owner-member-list').innerHTML = '<div class="owner-empty" role="status">The roster could not be loaded. Use Refresh to try again.</div>';
+    $('#owner-coach-list').textContent = 'Coaches could not load. Use Refresh to try again.';
 
     flash(loadStatus, 'Dashboard data could not be loaded. ' + friendlyError(error) + ' Use Refresh to retry.', 'error');
 
@@ -2919,7 +2923,8 @@ function setupOwnerPage() {
 
 
 
-  listenAsync($('#owner-member-list'), 'click', async event => {
+  listenAsync($('#owner-app'), 'click', async event => {
+    if (!event.target.closest('#owner-member-list, #owner-coach-list')) return;
 
     const button = event.target.closest('button[data-action]');
 

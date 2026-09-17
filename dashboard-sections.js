@@ -3,6 +3,7 @@
   const sections = [
     ['staff-payment-alerts', 'Payment Alerts', true],
     ['staff-members', 'Members', true],
+    ['staff-coaches', 'Coaches', false],
     ['staff-trials', 'Trial Requests', false],
     ['staff-attendance', 'Attendance', false],
     ['staff-waivers', 'Signed Waivers', false],

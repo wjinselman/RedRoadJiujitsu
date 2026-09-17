@@ -22,7 +22,7 @@
 
 <link rel="stylesheet" href="premium.css?v=prod-49">
 
-<script src="mobile-nav.js?v=59" defer=""></script><meta name="referrer" content="no-referrer"><link rel="stylesheet" href="experience.css?v=57"><script src="experience.js?v=57" defer=""></script><link rel="stylesheet" href="dashboard-sections.css?v=1"><script src="dashboard-sections.js?v=3" defer></script><link rel="stylesheet" href="billing.css?v=2"><style>
+<script src="mobile-nav.js?v=59" defer=""></script><meta name="referrer" content="no-referrer"><link rel="stylesheet" href="experience.css?v=57"><script src="experience.js?v=57" defer=""></script><link rel="stylesheet" href="dashboard-sections.css?v=1"><script src="dashboard-sections.js?v=4" defer></script><link rel="stylesheet" href="billing.css?v=2"><style>
 .owner-percentage-grid>.dash-stat{box-sizing:border-box;height:146px;min-width:0}
 .owner-percentage-grid>.top-attendance-stat{display:flex;flex-direction:column;gap:8px;overflow:hidden}
 #stat-top-attendance-label{font-size:13px;line-height:18px;flex:none}
@@ -272,7 +272,7 @@
 </div>
 
 <div class="dash-stat top-attendance-stat" aria-live="polite"><span id="stat-top-attendance-label">Top Attendance · This Month</span><strong id="stat-top-attendance-name">—</strong><small id="stat-top-attendance-note">Loading this month…</small><button type="button" id="attendance-tie-details" class="text-action" hidden>View tied members</button></div>
-</div><nav class="staff-section-nav" aria-label="Dashboard sections"><a href="#staff-members">Members</a><a href="#staff-trials">Trials</a><a href="#staff-attendance">Attendance</a><a href="#staff-waivers">Waivers</a><a href="#staff-payment-alerts" id="staff-alerts-link" hidden>Payment Alerts</a><a href="#staff-billing" id="staff-billing-link" hidden>Payments</a><a href="#staff-settings">Settings</a><a href="#developer-access-card" id="staff-developer-link" hidden="">Developer</a></nav><div class="flash-message owner-message-slot" hidden="" id="owner-message">
+</div><nav class="staff-section-nav" aria-label="Dashboard sections"><a href="#staff-members">Members</a><a href="#staff-coaches">Coaches</a><a href="#staff-trials">Trials</a><a href="#staff-attendance">Attendance</a><a href="#staff-waivers">Waivers</a><a href="#staff-payment-alerts" id="staff-alerts-link" hidden>Payment Alerts</a><a href="#staff-billing" id="staff-billing-link" hidden>Payments</a><a href="#staff-settings">Settings</a><a href="#developer-access-card" id="staff-developer-link" hidden="">Developer</a></nav><div class="flash-message owner-message-slot" hidden="" id="owner-message">
 
 </div><div class="dash-card owner-card" id="staff-members">
 
@@ -612,6 +612,7 @@
 
 </div>
 
+<section id="staff-coaches" class="dash-card owner-card"><div class="kicker">Coaching Team</div><h2>Coaches</h2><p class="portal-muted">Accounts with Coach Access enabled. Coaches remain dues-exempt. Use Edit to manage their member details.</p><div class="member-list" id="owner-coach-list" aria-live="polite"></div><div class="owner-list-foot"><span id="owner-coach-note">Loads with the member roster.</span></div></section>
 <section id="staff-payment-alerts" class="dash-card owner-card" hidden><div class="kicker">Admin attention</div><h2>Active Members — Payment Due</h2><p class="portal-muted">Active accounts without current payment coverage. Family-covered members follow their payer; they are not separate charges. Coaches and payment-exempt accounts are excluded.</p><p id="payment-alert-summary" role="status"></p><div id="payment-alert-list" class="member-list"></div><button id="payment-alert-more" class="btn btn-dark" type="button" hidden>Load More Members for Alerts</button></section>
 
 <div class="dash-card owner-card trial-card" id="staff-trials">
@@ -864,7 +865,7 @@
 
 </main>
 
-<script src="portal.js?v=81" type="module">
+<script src="portal.js?v=82" type="module">
 
 </script>
 

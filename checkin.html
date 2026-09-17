@@ -7,8 +7,9 @@
 <main class="checkin-shell">
 <img class="checkin-logo" src="assets/red-road-master-crest.webp" alt="Red Road BJJ" width="760" height="760">
 <p class="flash-message" id="checkin-hours" role="status">Check-in hours: Monday–Friday, Kids 5:45–7 PM; Adults 6:45–8 PM (Central Time). Sign-in is available at any time.</p>
-<section class="login-card" id="checkin-login-view">
-<div class="kicker">Red Road BJJ</div><h1>Class Check-In</h1><p class="portal-muted">Sign in with your member account.</p>
+<section class="login-card" id="checkin-restoring" role="status" aria-live="polite"><h1>Class Check-In</h1><p>Looking for your saved sign-in…</p></section>
+<section class="login-card" id="checkin-login-view" hidden>
+<div class="kicker">Red Road BJJ</div><h1>Class Check-In</h1><p class="portal-muted">Sign in once on your own phone. Next time you scan, we’ll take you straight to your Check In button.</p>
 <form class="portal-form" id="checkin-login-form" method="post" data-service-form=""><div><label for="checkin-email">Email</label><input id="checkin-email" name="email" type="email" inputmode="email" autocomplete="email" required></div><div><label for="checkin-password">Password</label><input id="checkin-password" name="password" type="password" autocomplete="current-password" minlength="6" required></div><button class="btn btn-red btn-full" type="submit">Sign In</button></form>
 <div class="flash-message" id="checkin-login-message" role="status" aria-live="polite" hidden></div>
 <div id="checkin-verification" hidden style="margin-top:16px">
@@ -17,19 +18,18 @@
 <button class="btn btn-dark" id="checkin-recheck-verification" type="button">I’ve verified my email</button>
 </div>
 </div>
-<section id="checkin-guest-options" aria-labelledby="checkin-guest-title" style="margin-top:24px;padding-top:20px;border-top:1px solid #34373d">
-<h2 id="checkin-guest-title">New to Red Road?</h2>
-<p class="portal-muted">Not a member yet? Sign up to join, or sign a waiver for your visit—no member login needed for the waiver.</p>
-<div style="display:grid;gap:12px">
-<a class="btn btn-red btn-full" href="enroll.html">Sign Up</a>
-<a class="btn btn-dark btn-full" href="waiver.html">Sign a Waiver</a>
-</div>
-<p class="portal-hint">Signing up or signing a waiver does not check you into class. Ask a coach to confirm your visit and activate your membership when ready.</p>
-</section>
+<details id="checkin-guest-options" style="margin-top:24px;padding-top:20px;border-top:1px solid #34373d">
+<summary style="cursor:pointer;padding:12px 0">New here? Create an account</summary>
+<p class="portal-muted">New members enroll separately. A coach will activate your membership before class check-in is available.</p>
+<a class="btn btn-dark btn-full" href="enroll.html">Create a Member Account</a>
+<p class="portal-hint">Already on the roster but need a login? <a href="members.html">Set up your member login</a>.</p>
+<p class="portal-hint">Just visiting? <a href="waiver.html">Sign a waiver</a>.</p>
+</details>
 </section>
 <section class="login-card checkin-confirm" id="checkin-confirm-view" hidden>
 <div class="kicker">Welcome</div><h1 id="checkin-member-name">Member</h1><p class="portal-muted" id="checkin-class-name">Today’s class</p><div id="checkin-program-choice" hidden><label for="checkin-program">Choose your class</label><select id="checkin-program"><option value="">Select a class</option><option value="kids">Kids class</option><option value="adult">Adult class</option></select></div><button class="btn btn-red btn-full" id="checkin-confirm-button" type="button">Check In</button><div class="flash-message" id="checkin-message" role="status" aria-live="polite" hidden></div>
 <button id="checkin-reset-test" class="btn btn-dark btn-full" type="button" style="margin-top:16px" hidden>Reset my test check-in</button>
+<button class="text-action" id="checkin-switch-account" type="button" style="margin-top:16px">Not you? Switch account</button>
 <section class="attendance-panel" aria-labelledby="attendance-heading">
 <h2 id="attendance-heading">Your attendance this month</h2>
 <p id="attendance-status" role="status" aria-live="polite"></p>
@@ -48,7 +48,7 @@
 <script>
 (() => {
   const message = document.getElementById('checkin-login-message');
-  function warning(text) { message.textContent = text; message.dataset.tone = 'error'; message.hidden = false; }
+  function warning(text) { document.getElementById('checkin-restoring').hidden = true; document.getElementById('checkin-login-view').hidden = false; message.textContent = text; message.dataset.tone = 'error'; message.hidden = false; }
   document.getElementById('checkin-login-form').addEventListener('submit', event => {
     if (window.redRoadCheckinReady) return;
     event.preventDefault(); event.stopImmediatePropagation();
@@ -59,4 +59,4 @@
   }, 12000);
 })();
 </script>
-<script src="checkin.js?v=75" type="module"></script></body></html>
+<script src="checkin.js?v=76" type="module"></script></body></html>

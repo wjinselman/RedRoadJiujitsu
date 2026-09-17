@@ -1,7 +1,7 @@
 import { monthInfo, fetchMonth, renderMonth } from './attendance-month.js?v=1';
 import { listenAsync } from './ui-utils.js?v=49';
 import { currentClass, CLASS_HOURS, checkInNotice } from './class-schedule.js?v=2';
-import { firebaseConfigured, auth, db, signInWithEmailAndPassword, sendEmailVerification, onAuthStateChanged, doc, getDoc, getDocFromServer, deleteDoc, setDoc, serverTimestamp } from './firebase-client.js?v=52';
+import { firebaseConfigured, auth, db, signOut, signInWithEmailAndPassword, sendEmailVerification, onAuthStateChanged, doc, getDoc, getDocFromServer, deleteDoc, setDoc, serverTimestamp } from './firebase-client.js?v=52';
 const $ = selector => document.querySelector(selector);
 const emailKey = value => String(value || '').trim().toLowerCase();
 let member = null, pending = false, completed = '', generation = 0, signingIn = false;
@@ -62,15 +62,18 @@ function refreshClass() {
   $('#checkin-class-name').textContent = checkInNotice(member);
 }
 async function openCheckIn(user) {
+  if (user?.isAnonymous) user = null;
   const attempt = ++generation;
   member = null; completed = ''; attendanceRows = []; attendanceMonth = ''; ++attendanceGeneration;
   $('#attendance-details').hidden = true; $('#attendance-status').textContent = '';
   $('#checkin-reset-test').hidden = true; showHours();
-  $('#checkin-login-view').hidden = false;
+  $('#checkin-login-view').hidden = Boolean(user?.emailVerified);
+  $('#checkin-restoring').hidden = !user?.emailVerified;
   $('#checkin-confirm-view').hidden = true;
   $('#checkin-verification').hidden = !user || user.emailVerified === true;
-  if (!user) return;
+  if (!user) { $('#checkin-login-message').hidden = true; return; }
   if (user.emailVerified !== true) return flash($('#checkin-login-message'), 'You are signed in. Verify your email to continue: send the email below, open its verification link, then select “I’ve verified my email.”', 'error');
+  try {
   const email = emailKey(user.email);
   const developer = await withTimeout(getDoc(doc(db, 'developers', email)));
   let record;
@@ -79,7 +82,7 @@ async function openCheckIn(user) {
   } else {
     const snap = await withTimeout(getDoc(doc(db, 'members', email)));
     if (attempt !== generation) return;
-    if (!snap.exists()) return flash($('#checkin-login-message'), 'No member record was found. Use Sign Up below or ask a coach.', 'error');
+    if (!snap.exists()) return flash($('#checkin-login-message'), 'No member record was found. Use “New here? Create an account” below or ask a coach.', 'error');
     record = { ...snap.data(), email };
     if (record.enabled !== true || record.active !== true || record.archived === true) return flash($('#checkin-login-message'), 'Your membership must be active. Ask a coach for help.', 'error');
   }
@@ -96,6 +99,12 @@ async function openCheckIn(user) {
   $('#checkin-confirm-view').hidden = false;
   refreshClass();
   void loadAttendance();
+  } finally {
+    if (attempt === generation) {
+      $('#checkin-restoring').hidden = true;
+      if (!member) $('#checkin-login-view').hidden = false;
+    }
+  }
 }
 function testResetTarget() {
   if (!member?.developerTest || !['kids','adult'].includes(member.selectedProgram)) return null;
@@ -271,16 +280,23 @@ async function verificationAction(send) {
 
 showHours();
 window.redRoadCheckinReady = true;
-if (!firebaseConfigured) flash($('#checkin-login-message'), 'Check-in is not connected yet.', 'error');
+if (!firebaseConfigured) { $('#checkin-restoring').hidden = true; $('#checkin-login-view').hidden = false; flash($('#checkin-login-message'), 'Check-in is not connected yet.', 'error'); }
 else {
+  $('#checkin-switch-account').addEventListener('click', async () => {
+    if (pending) return;
+    try { await signOut(auth); $('#checkin-password').value = ''; }
+    catch (_) { flash($('#checkin-message'), 'Could not sign out. Please try again.', 'error'); }
+  });
   $('#checkin-reset-test').addEventListener('click', resetTestCheckIn);
   $('#attendance-retry').addEventListener('click', () => { void loadAttendance(); });
   $('#checkin-send-verification').addEventListener('click', () => verificationAction(true));
   $('#checkin-recheck-verification').addEventListener('click', () => verificationAction(false));
   listenAsync($('#checkin-login-form'), 'submit', async event => {
     event.preventDefault();
+    if (signingIn) return;
     signingIn = true;
     const button = $('#checkin-login-form button[type="submit"]');
+    button.disabled = true;
     button.textContent = 'Signing In…';
     flash($('#checkin-login-message'), 'Signing in and checking your access…');
     try {
@@ -295,7 +311,7 @@ else {
         ? 'Email or password is incorrect.'
         : 'Unable to finish sign-in. Check your connection and try again.';
       flash($('#checkin-login-message'), message, 'error');
-    } finally { signingIn = false; button.textContent = 'Sign In'; }
+    } finally { signingIn = false; button.disabled = false; button.textContent = 'Sign In'; $('#checkin-password').value = ''; }
   });
   $('#checkin-program').addEventListener('change', () => { if (member) { member.selectedProgram = $('#checkin-program').value; refreshClass(); } });
   $('#checkin-confirm-button').addEventListener('click', confirmCheckIn);

@@ -1140,12 +1140,17 @@ function statusPills(member) {
 
 
 
+// Roster grouping only: a Coach program does not grant staff permissions.
+function belongsInCoaches(member) {
+  return member.coachAccess === true || String(member.plan || '').trim().toLowerCase() === 'coach';
+}
+
 function renderOwnerList(coaches = false) {
   coaches = coaches === true;
 
   const list = $(coaches ? '#owner-coach-list' : '#owner-member-list');
 
-  const members = coaches ? ownerMembers.filter(m => m.coachAccess === true).sort((a,b) => String(a.name||'').localeCompare(String(b.name||''))) : visibleRoster().filter(m => m.coachAccess !== true);
+  const members = coaches ? ownerMembers.filter(belongsInCoaches).sort((a,b) => String(a.name||'').localeCompare(String(b.name||''))) : visibleRoster().filter(m => !belongsInCoaches(m));
 
   const note = $(coaches ? '#owner-coach-note' : '#owner-load-note');
 

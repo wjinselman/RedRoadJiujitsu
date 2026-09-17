@@ -1,4 +1,4 @@
-import {setupEmailInvitation} from './email-setup.js?v=1';
+import {setupEmailInvitation} from './email-setup.js?v=3';
 import {activePaymentAlerts} from './admin-alerts.js?v=1';
 
 import {profiles,billingReady,loadBillingProfiles,loadMyBilling,memberBilling,saveWithBilling,ensureNoCoveredMembers} from './billing-store.js?v=1';
@@ -521,13 +521,8 @@ async function openMemberForUser(user) {
     const member = await getMemberRecord(user.email);
 
     if (!member) {
-
-      await signOut(auth);
-
-      flash(message, 'This verified email does not currently have active portal access. Contact Red Road if you believe this is an error.', 'error');
-
+      window.location.replace('enroll.html?continue=1');
       return;
-
     }
 
     try { await loadMyBilling(member.email); } catch (_) { member._billingUnavailable = true; }

@@ -16,6 +16,7 @@ export function setupEmailInvitation(){
   const form=$('#member-setup-form'),email=$('#member-setup-email'),message=$('#member-setup-message'),button=$('#member-setup-send');
   let busy=false;
   trigger.addEventListener('click',()=>{form.reset();message.textContent='';button.disabled=false;dialog.showModal();email.focus();});
+  if (new URLSearchParams(window.location.search).get('setup') === '1') trigger.click();
   $('#member-setup-close').addEventListener('click',()=>{if(!busy)dialog.close();});
   dialog.addEventListener('cancel',e=>{if(busy)e.preventDefault();});
   form.addEventListener('submit',async event=>{
@@ -50,8 +51,9 @@ if($('#finish-setup-form')){
       if(auth.currentUser?.uid!==verifiedUser.uid)throw Error('Session changed');
       await updatePassword(verifiedUser,password);
       form.reset();form.hidden=true;
-      message.textContent='Your email is verified and your password is saved. You can now sign in. Red Road staff must activate your membership before you can check in.';
+      message.textContent='Your email is verified and your password is saved. Continue to finish your member details and waiver. If you are already on the roster, we’ll open your member portal.';
       $('#setup-success').hidden=false;
+      window.location.assign('enroll.html?continue=1');
     }catch(error){message.textContent=errorText(error);}
     finally{busy=false;submit.disabled=false;}
   });

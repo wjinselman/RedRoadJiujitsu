@@ -1,3 +1,4 @@
+import {runTransaction} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
 import {
   firebaseConfigured,
   auth,
@@ -8,7 +9,7 @@ import {
   serverTimestamp,
   sendEmailVerification,
   signOut
-} from './firebase-client.js?v=49';
+} from './firebase-client.js?v=52';
 import { localDate } from './ui-utils.js?v=49';
 import { attachWaiverPrint } from './waiver-pdf.js?v=49';
 
@@ -218,7 +219,7 @@ form.addEventListener('submit', async event => {
         paid: false,
         paymentExempt: false,
         coachAccess: false,
-        active: false,
+        active: true,
         enabled: true,
         archived: false,
         joinedAt: signedAt.slice(0, 10),
@@ -235,13 +236,16 @@ form.addEventListener('submit', async event => {
         updatedAt: serverTimestamp()
       };
       const waiver = { ...record, signerUid: user.uid, createdAt: serverTimestamp() };
-      const batch = writeBatch(db);
-      batch.set(doc(db, 'members', email), member);
-      batch.set(doc(db, 'waivers', email), waiver);
-      await batch.commit();
+      await runTransaction(db, async transaction => {
+        const memberRef = doc(db, 'members', email);
+        const existing = await transaction.get(memberRef);
+        if (existing.exists()) throw Error('Your membership already exists. Open Member Login; your existing member details have not been changed.');
+        transaction.set(memberRef, member);
+        transaction.set(doc(db, 'waivers', email), waiver);
+      });
       completed = true;
       let verificationSent = true;
-      await sendEmailVerification(user).catch(() => { verificationSent = false; });
+      if (!user.emailVerified) await sendEmailVerification(user).catch(() => { verificationSent = false; });
       await signOut(auth).catch(() => {});
       try {
         sessionStorage.removeItem('redroad:pendingEnrollment');
@@ -250,7 +254,7 @@ form.addEventListener('submit', async event => {
       receiptForDownload = record;
       success.hidden = false;
       delete success.dataset.tone;
-      success.innerHTML = `<strong>Signup and waiver complete.</strong><br>Your account is pending staff activation. ${verificationSent ? 'Check your email and verify your address.' : 'The verification email could not be sent. Sign in at Member Login to request another verification email.'} Then use <a class="waiver-inline-link" href="members.html">Member Login</a> to view your status.`;
+      success.innerHTML = `<strong>Signup and waiver complete.</strong><br>Your membership is active. Staff record payments separately. ${user.emailVerified ? 'Your email is already verified.' : verificationSent ? 'Check your email and verify your address.' : 'The verification email could not be sent. Sign in at Member Login to request another verification email.'} Then use <a class="waiver-inline-link" href="members.html">Member Login</a> to view your status.`;
     } else {
       if (!firebaseConfigured || !auth || !db) throw new Error('Waiver storage is not connected. Nothing has been submitted. Ask Red Road staff for help.');
       let user = auth.currentUser;

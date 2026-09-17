@@ -1,421 +1,842 @@
 <!DOCTYPE html><html lang="en" class="portal-document rr-scroll-document"><head>
+
 <meta charset="utf-8">
+
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport">
+
 <meta content="#08090b" name="theme-color">
+
 <meta content="noindex,nofollow" name="robots">
+
 <title>Staff Dashboard | Red Road Jiu Jitsu</title>
+
 <link href="redroad-v25.css?v=prod-49" rel="stylesheet">
+
 <style>html,body{background:#07080a!important;color-scheme:dark}body{min-height:100%;margin:0}</style>
+
 <link href="assets/favicon-64.png" rel="icon" sizes="64x64" type="image/png">
+
 <link href="assets/apple-touch-icon.png" rel="apple-touch-icon">
+
 <link rel="stylesheet" href="prod14.css?v=prod-37">
+
 <link rel="stylesheet" href="premium.css?v=prod-49">
-<script src="mobile-nav.js?v=59" defer=""></script><meta name="referrer" content="no-referrer"><link rel="stylesheet" href="experience.css?v=57"><script src="experience.js?v=57" defer=""></script><link rel="stylesheet" href="dashboard-sections.css?v=1"><script src="dashboard-sections.js?v=3" defer></script><link rel="stylesheet" href="billing.css?v=1"></head>
+
+<script src="mobile-nav.js?v=59" defer=""></script><meta name="referrer" content="no-referrer"><link rel="stylesheet" href="experience.css?v=57"><script src="experience.js?v=57" defer=""></script><link rel="stylesheet" href="dashboard-sections.css?v=1"><script src="dashboard-sections.js?v=3" defer></script><link rel="stylesheet" href="billing.css?v=2"></head>
+
 <body class="staff-page"><noscript>&lt;p style="padding:16px;background:#241116;color:white"&gt;JavaScript is required for secure sign-in, check-in and waiver submission. Please enable it before completing a form.&lt;/p&gt;</noscript>
+
 <div aria-hidden="true" class="site-emblem-bg">
+
 </div>
+
 <header class="top">
+
 <div class="shell nav">
+
 <a class="brand" href="index.html">
+
 <img alt="Red Road Jiu Jitsu logo" src="assets/red-road-master-crest.webp" width="760" height="760" decoding="async" loading="eager">
+
 <div>
+
 <strong>Red Road BJJ</strong>
+
 <span id="staff-role-brand">Owner</span>
+
 </div>
+
 </a>
+
 <a class="btn btn-dark nav-return" href="index.html">Public Website</a>
+
 </div>
+
 </header>
+
 <main>
+
 <section class="portal-hero compact">
+
 <div class="shell">
+
 <div class="kicker" id="staff-role-kicker">Owner</div>
+
 <h1 class="portal-title">The School at a <span class="red">Glance.</span>
+
 </h1>
+
 <p>Manage your roster, review trial requests and keep the school moving.</p>
+
 </div>
+
 </section>
+
 <section class="section portal-section">
+
 <div class="shell">
+
 <div class="login-card owner-login-card" hidden="" id="firebase-setup-view">
+
 <div class="kicker">Setup Required</div>
+
 <h2>Owner Portal Not Connected Yet.</h2>
+
 <p class="portal-muted">Paste the Firebase Web App config into <strong>firebase-config.js</strong>, deploy the included Firestore rules, then add the owner email to the <strong>owners</strong> collection.</p>
+
 </div>
+
 <div class="login-card owner-login-card" id="owner-login-view">
+
 <div class="portal-card-head">
+
 <div>
+
 <div class="kicker">Owner Sign In</div>
+
 <h2>Private Access.</h2>
+
 </div>
+
 <span class="secure-badge">Staff Only</span>
+
 </div>
+
 <form class="portal-form" id="owner-login-form" method="post" data-service-form="">
+
 <div>
+
 <label for="owner-login-email">Email</label>
+
 <input autocomplete="email" id="owner-login-email" inputmode="email" placeholder="owner@example.com" required="" type="email">
+
 </div>
+
 <div>
+
 <label for="owner-login-password">Password</label>
+
 <input autocomplete="current-password" id="owner-login-password" minlength="6" placeholder="Password" required="" type="password">
+
 </div>
+
 <button class="btn btn-red btn-full" type="submit">Sign In</button>
+
 </form>
+
 <div class="auth-secondary-actions">
+
 <button class="text-action" id="owner-activate" type="button">First time? Activate owner account</button>
+
 <button class="text-action" id="owner-reset" type="button">Forgot password?</button>
+
 </div>
+
 <div class="flash-message" hidden="" id="owner-login-message">
+
 </div>
+
 </div>
+
 <div hidden="" id="owner-app">
+
 <div class="owner-toolbar">
+
 <div>
+
 <div class="kicker" id="dashboard-role-label">Owner Dashboard</div>
+
 <h2 id="owner-welcome">Red Road</h2>
+
 <div class="portal-email" id="owner-email-display">
+
 </div>
+
 </div>
+
 <div class="owner-toolbar-actions">
+
 <button class="btn btn-dark btn-mini" id="owner-refresh" type="button">Refresh</button>
+
 <button class="btn btn-dark btn-mini" id="owner-logout" type="button">Sign Out</button>
+
 </div>
+
 </div>
+
 <p class="flash-message" id="dashboard-load-status" role="status" hidden></p>
+
 <div class="dash-grid owner-stats owner-percentage-grid">
+
 <div class="dash-stat">
+
 <span>Members</span>
+
 <strong id="stat-members">0</strong>
+
 <small>Current roster</small>
+
 </div>
+
 <div class="dash-stat pending-stat">
+
 <span>Pending Approval</span>
+
 <strong id="stat-pending">0</strong>
+
 <small id="stat-pending-note">0 signups to review</small>
+
 </div>
+
 <div class="dash-stat">
+
 <span>Active</span>
+
 <strong id="stat-active-percent">0%</strong>
+
 <small id="stat-active-count">0 active</small>
+
 </div>
+
 <div class="dash-stat">
+
 <span>Paid / Current</span>
+
 <strong id="stat-paid-percent">0%</strong>
+
 <small id="stat-paid-count">0 current</small>
+
 </div>
+
 <div class="dash-stat">
+
 <span>Past Due</span>
+
 <strong id="stat-past-due">0</strong>
+
 <small>Active accounts</small>
+
 </div>
+
 <div class="dash-stat">
+
 <span>Waivers</span>
+
 <strong id="stat-waiver-percent">0%</strong>
+
 <small id="stat-waiver-count">0 signed</small>
+
 </div>
+
 <div class="dash-stat">
+
 <span>Free Trials</span>
+
 <strong id="stat-trials">0</strong>
+
 <small id="stat-trials-note">0 new requests</small>
+
 </div>
+
 </div><nav class="staff-section-nav" aria-label="Dashboard sections"><a href="#staff-members">Members</a><a href="#staff-trials">Trials</a><a href="#staff-attendance">Attendance</a><a href="#staff-waivers">Waivers</a><a href="#staff-payment-alerts" id="staff-alerts-link" hidden>Payment Alerts</a><a href="#staff-billing" id="staff-billing-link" hidden>Payments</a><a href="#staff-settings">Settings</a><a href="#developer-access-card" id="staff-developer-link" hidden="">Developer</a></nav><div class="flash-message owner-message-slot" hidden="" id="owner-message">
+
 </div><section id="staff-payment-alerts" class="dash-card owner-card" hidden><div class="kicker">Admin attention</div><h2>Active Members — Payment Due</h2><p class="portal-muted">Active accounts without current payment coverage. Family-covered members follow their payer; they are not separate charges. Coaches and payment-exempt accounts are excluded.</p><p id="payment-alert-summary" role="status"></p><div id="payment-alert-list" class="member-list"></div><button id="payment-alert-more" class="btn btn-dark" type="button" hidden>Load More Members for Alerts</button></section><div class="dash-card owner-card" id="staff-members">
+
 <div class="owner-member-head">
+
 <div>
+
 <div class="kicker">Member Management</div>
+
 <h2>Members</h2>
+
 <p class="portal-muted">New online signups appear first as Pending Approval. Open Edit and enable Active Membership after review.</p>
+
 </div>
+
 <div class="owner-member-tools">
+
 <label class="owner-search">
+
 <span>Search</span>
+
 <input id="owner-search" placeholder="Name, email, phone or household" type="search" aria-label="Search members by name, email, phone or household" autocomplete="off">
+
 </label>
+
 <label class="owner-filter"><span>Status</span><select id="owner-status-filter"><option value="all">All Statuses</option><option value="pending">Pending Approval</option><option value="active">Active</option><option value="past-due">Past Due</option><option value="missing-waiver">Missing Waiver</option><option value="inactive">Inactive</option><option value="archived">Archived</option></select></label>
+
 <label class="owner-filter"><span>Program</span><select id="owner-plan-filter"><option value="all">All Programs</option><option>Adult</option><option>Kids</option><option value="service">Military / First Responder</option><option value="Family">Family (choose Adult or Kids for classes)</option><option>Coach</option></select></label>
+
 <button class="btn btn-dark" id="owner-export" type="button">Export CSV</button>
+
 <button aria-expanded="false" class="btn btn-red" id="toggle-add-member" type="button">+ Add Member</button>
+
 </div>
+
 </div>
+
+
 
 <div class="add-member-panel" hidden="" id="add-member-panel">
+
 <form class="owner-form launch-owner-form" id="add-member-form" method="post" data-service-form="">
+
 <div>
+
 <label for="owner-name">Name</label>
+
 <input id="owner-name" maxlength="120" name="name" placeholder="Member name" required="">
-</div>
-<div>
-<label for="owner-email">Email</label>
-<input id="owner-email" name="email" placeholder="name@example.com" required="" type="email">
-</div>
-<div>
-<label for="owner-plan">Class program</label>
-<select id="owner-plan" name="plan">
-<option>Adult</option>
-<option>Kids</option>
-<option>Military / First Responder</option>
-<option value="Family">Family (choose Adult or Kids for classes)</option>
-<option>Coach</option>
-</select>
-</div>
-<div>
-<label for="owner-rank">Belt</label>
-<select id="owner-rank" name="rank">
-<option>White Belt</option>
-<option>Blue Belt</option>
-<option>Purple Belt</option>
-<option>Brown Belt</option>
-<option>Black Belt</option>
-</select>
-</div>
-<div>
-<label for="owner-stripes">Stripes</label>
-<select id="owner-stripes" name="stripes">
-<option value="0">No Stripes</option>
-<option value="1">1 Stripe</option>
-<option value="2">2 Stripes</option>
-<option value="3">3 Stripes</option>
-<option value="4">4 Stripes</option>
-</select>
-</div>
-<div>
-<label for="owner-joined">Joined</label>
-<input id="owner-joined" name="joinedAt" type="date">
-</div>
-<div><label for="owner-phone">Phone</label><input id="owner-phone" maxlength="40" name="phone" type="tel"></div>
-<div><label for="owner-household-email">Parent / Household Email</label><input id="owner-household-email" maxlength="254" name="householdEmail" type="email"></div>
-<div class="form-wide"><label for="owner-address">Address</label><input id="owner-address" maxlength="240" name="address"></div>
-<div><label for="owner-emergency-name">Emergency Contact</label><input id="owner-emergency-name" maxlength="160" name="emergencyName"></div>
-<div><label for="owner-emergency-phone">Emergency Phone</label><input id="owner-emergency-phone" maxlength="40" name="emergencyPhone" type="tel"></div>
-<div><label for="owner-guardian-name">Parent / Legal Guardian</label><input id="owner-guardian-name" maxlength="160" name="guardianName"></div>
-<div data-kiosk-feature hidden=""><label for="owner-kiosk-pin">4-Digit Check-In PIN</label><input id="owner-kiosk-pin" autocomplete="new-password" inputmode="numeric" maxlength="4" minlength="4" name="kioskPin" pattern="[0-9]{4}" placeholder="0000" type="password"></div>
-<fieldset class="billing-fields form-wide"><legend>Billing</legend>
-<label for="owner-billing-category">Billing category</label><select id="owner-billing-category" name="billingCategory" required><option value="adult">Adult — $135</option></select>
-<div data-family-payer hidden><label for="owner-family-payer">Family payer</label><select id="owner-family-payer" name="familyPayer"><option value="">Select the family payer</option></select></div>
-<p class="portal-hint" data-billing-help>Billing is separate from class assignment. Save the family payer first, then link covered members.</p></fieldset><div class="owner-checks">
-<label>
-<input name="paid" type="checkbox"> Paid / Current</label>
-<label>
-<input checked="" name="active" type="checkbox"> Active Membership</label>
-<label>
-<input checked="" name="enabled" type="checkbox"> Portal Enabled</label>
-<label>
-<input name="coachAccess" type="checkbox"> Coach — dashboard access, dues exempt, always current</label>
-<label>
-<input name="paymentExempt" type="checkbox"> Payment Exempt</label>
-</div>
-<button class="btn btn-red btn-full owner-form-submit" type="submit">Add Member</button>
-</form>
-</div>
-<div class="edit-member-panel" hidden="" id="edit-member-panel">
-<div class="portal-card-head">
-<div>
-<div class="kicker">Edit Member</div>
-<h3 id="edit-member-title">Member</h3>
-</div>
-<button class="btn btn-quiet btn-mini" id="close-edit-member" type="button">Close</button>
-</div>
-<form class="owner-form launch-owner-form" id="edit-member-form" method="post" data-service-form="">
-<input id="edit-member-email" name="email" type="hidden">
-<div>
-<label for="edit-member-name">Name</label>
-<input id="edit-member-name" maxlength="120" name="name" required="">
-</div>
-<div>
-<label for="edit-member-plan">Class program</label>
-<select id="edit-member-plan" name="plan">
-<option>Adult</option>
-<option>Kids</option>
-<option>Military / First Responder</option>
-<option value="Family">Family (choose Adult or Kids for classes)</option>
-<option>Coach</option>
-</select>
-</div>
-<div>
-<label for="edit-member-rank">Belt</label>
-<select id="edit-member-rank" name="rank">
-<option>White Belt</option>
-<option>Blue Belt</option>
-<option>Purple Belt</option>
-<option>Brown Belt</option>
-<option>Black Belt</option>
-</select>
-</div>
-<div>
-<label for="edit-member-stripes">Stripes</label>
-<select id="edit-member-stripes" name="stripes">
-<option value="0">No Stripes</option>
-<option value="1">1 Stripe</option>
-<option value="2">2 Stripes</option>
-<option value="3">3 Stripes</option>
-<option value="4">4 Stripes</option>
-</select>
-</div>
-<div>
-<label for="edit-member-joined">Joined</label>
-<input id="edit-member-joined" name="joinedAt" type="date">
-</div>
-<div><label for="edit-member-phone">Phone</label><input id="edit-member-phone" maxlength="40" name="phone" type="tel"></div>
-<div><label for="edit-member-household-email">Parent / Household Email</label><input id="edit-member-household-email" maxlength="254" name="householdEmail" type="email"></div>
-<div class="form-wide"><label for="edit-member-address">Address</label><input id="edit-member-address" maxlength="240" name="address"></div>
-<div><label for="edit-member-emergency-name">Emergency Contact</label><input id="edit-member-emergency-name" maxlength="160" name="emergencyName"></div>
-<div><label for="edit-member-emergency-phone">Emergency Phone</label><input id="edit-member-emergency-phone" maxlength="40" name="emergencyPhone" type="tel"></div>
-<div><label for="edit-member-guardian-name">Parent / Legal Guardian</label><input id="edit-member-guardian-name" maxlength="160" name="guardianName"></div>
-<div data-kiosk-feature hidden=""><label for="edit-member-kiosk-pin">New Check-In PIN</label><input id="edit-member-kiosk-pin" autocomplete="new-password" inputmode="numeric" maxlength="4" minlength="4" name="kioskPin" pattern="[0-9]{4}" placeholder="Leave blank to keep current" type="password"><small class="field-help">Enter four digits only when setting or changing this member’s kiosk PIN.</small></div>
-<fieldset class="billing-fields form-wide"><legend>Billing</legend>
-<label for="edit-member-billing-category">Billing category</label><select id="edit-member-billing-category" name="billingCategory" required><option value="adult">Adult — $135</option></select>
-<div data-family-payer hidden><label for="edit-member-family-payer">Family payer</label><select id="edit-member-family-payer" name="familyPayer"><option value="">Select the family payer</option></select></div>
-<p class="portal-hint" data-billing-help>Billing is separate from class assignment. Save the family payer first, then link covered members.</p></fieldset><div class="owner-checks">
-<label>
-<input id="edit-member-paid" name="paid" type="checkbox"> Paid / Current</label>
-<label>
-<input id="edit-member-active" name="active" type="checkbox"> Active Membership</label>
-<label>
-<input id="edit-member-enabled" name="enabled" type="checkbox"> Portal Enabled</label>
-<label>
-<input id="edit-member-coach-access" name="coachAccess" type="checkbox"> Coach — dashboard access, dues exempt, always current</label>
-<label>
-<input id="edit-member-payment-exempt" name="paymentExempt" type="checkbox"> Payment Exempt</label>
-</div>
-<button class="btn btn-red btn-full owner-form-submit" type="submit">Save Changes</button>
-</form>
+
 </div>
 
+<div>
+
+<label for="owner-email">Email</label>
+
+<input id="owner-email" name="email" placeholder="name@example.com" required="" type="email">
+
+</div>
+
+<div>
+
+<label for="owner-plan">Class program</label>
+
+<select id="owner-plan" name="plan">
+
+<option>Adult</option>
+
+<option>Kids</option>
+
+<option>Military / First Responder</option>
+
+<option value="Family">Family (choose Adult or Kids for classes)</option>
+
+<option>Coach</option>
+
+</select>
+
+</div>
+
+<div>
+
+<label for="owner-rank">Belt</label>
+
+<select id="owner-rank" name="rank">
+
+<option>White Belt</option>
+
+<option>Blue Belt</option>
+
+<option>Purple Belt</option>
+
+<option>Brown Belt</option>
+
+<option>Black Belt</option>
+
+</select>
+
+</div>
+
+<div>
+
+<label for="owner-stripes">Stripes</label>
+
+<select id="owner-stripes" name="stripes">
+
+<option value="0">No Stripes</option>
+
+<option value="1">1 Stripe</option>
+
+<option value="2">2 Stripes</option>
+
+<option value="3">3 Stripes</option>
+
+<option value="4">4 Stripes</option>
+
+</select>
+
+</div>
+
+<div>
+
+<label for="owner-joined">Joined</label>
+
+<input id="owner-joined" name="joinedAt" type="date">
+
+</div>
+
+<div><label for="owner-phone">Phone</label><input id="owner-phone" maxlength="40" name="phone" type="tel"></div>
+
+<div><label for="owner-household-email">Parent / Household Email</label><input id="owner-household-email" maxlength="254" name="householdEmail" type="email"></div>
+
+<div class="form-wide"><label for="owner-address">Address</label><input id="owner-address" maxlength="240" name="address"></div>
+
+<div><label for="owner-emergency-name">Emergency Contact</label><input id="owner-emergency-name" maxlength="160" name="emergencyName"></div>
+
+<div><label for="owner-emergency-phone">Emergency Phone</label><input id="owner-emergency-phone" maxlength="40" name="emergencyPhone" type="tel"></div>
+
+<div><label for="owner-guardian-name">Parent / Legal Guardian</label><input id="owner-guardian-name" maxlength="160" name="guardianName"></div>
+
+<div data-kiosk-feature hidden=""><label for="owner-kiosk-pin">4-Digit Check-In PIN</label><input id="owner-kiosk-pin" autocomplete="new-password" inputmode="numeric" maxlength="4" minlength="4" name="kioskPin" pattern="[0-9]{4}" placeholder="0000" type="password"></div>
+
+<fieldset class="billing-fields form-wide"><legend>Billing</legend>
+
+<label for="owner-billing-category">Billing category</label><select id="owner-billing-category" name="billingCategory" required><option value="adult">Adult — $135</option></select>
+
+<div data-family-payer hidden><label for="owner-family-payer">Family payer</label><select id="owner-family-payer" name="familyPayer"><option value="">Select the family payer</option></select></div>
+
+<p class="portal-hint" data-billing-help>Billing is separate from class assignment. Save the family payer first, then link covered members.</p></fieldset><div class="owner-checks">
+
+<label>
+
+<input name="paid" type="checkbox"> Paid / Current</label>
+
+<label>
+
+<input checked="" name="active" type="checkbox"> Active Membership</label>
+
+<label>
+
+<input checked="" name="enabled" type="checkbox"> Portal Enabled</label>
+
+<label>
+
+<input name="coachAccess" type="checkbox"> Coach — dashboard access, dues exempt, always current</label>
+
+<label>
+
+<input name="paymentExempt" type="checkbox"> Payment Exempt</label>
+
+</div>
+
+<button class="btn btn-red btn-full owner-form-submit" type="submit">Add Member</button>
+
+</form>
+
+</div>
+
+<div class="edit-member-panel" hidden="" id="edit-member-panel">
+
+<div class="portal-card-head">
+
+<div>
+
+<div class="kicker">Edit Member</div>
+
+<h3 id="edit-member-title">Member</h3>
+
+</div>
+
+<button class="btn btn-quiet btn-mini" id="close-edit-member" type="button">Close</button>
+
+</div>
+
+<form class="owner-form launch-owner-form" id="edit-member-form" method="post" data-service-form="">
+
+<input id="edit-member-email" name="email" type="hidden">
+
+<div>
+
+<label for="edit-member-name">Name</label>
+
+<input id="edit-member-name" maxlength="120" name="name" required="">
+
+</div>
+
+<div>
+
+<label for="edit-member-plan">Class program</label>
+
+<select id="edit-member-plan" name="plan">
+
+<option>Adult</option>
+
+<option>Kids</option>
+
+<option>Military / First Responder</option>
+
+<option value="Family">Family (choose Adult or Kids for classes)</option>
+
+<option>Coach</option>
+
+</select>
+
+</div>
+
+<div>
+
+<label for="edit-member-rank">Belt</label>
+
+<select id="edit-member-rank" name="rank">
+
+<option>White Belt</option>
+
+<option>Blue Belt</option>
+
+<option>Purple Belt</option>
+
+<option>Brown Belt</option>
+
+<option>Black Belt</option>
+
+</select>
+
+</div>
+
+<div>
+
+<label for="edit-member-stripes">Stripes</label>
+
+<select id="edit-member-stripes" name="stripes">
+
+<option value="0">No Stripes</option>
+
+<option value="1">1 Stripe</option>
+
+<option value="2">2 Stripes</option>
+
+<option value="3">3 Stripes</option>
+
+<option value="4">4 Stripes</option>
+
+</select>
+
+</div>
+
+<div>
+
+<label for="edit-member-joined">Joined</label>
+
+<input id="edit-member-joined" name="joinedAt" type="date">
+
+</div>
+
+<div><label for="edit-member-phone">Phone</label><input id="edit-member-phone" maxlength="40" name="phone" type="tel"></div>
+
+<div><label for="edit-member-household-email">Parent / Household Email</label><input id="edit-member-household-email" maxlength="254" name="householdEmail" type="email"></div>
+
+<div class="form-wide"><label for="edit-member-address">Address</label><input id="edit-member-address" maxlength="240" name="address"></div>
+
+<div><label for="edit-member-emergency-name">Emergency Contact</label><input id="edit-member-emergency-name" maxlength="160" name="emergencyName"></div>
+
+<div><label for="edit-member-emergency-phone">Emergency Phone</label><input id="edit-member-emergency-phone" maxlength="40" name="emergencyPhone" type="tel"></div>
+
+<div><label for="edit-member-guardian-name">Parent / Legal Guardian</label><input id="edit-member-guardian-name" maxlength="160" name="guardianName"></div>
+
+<div data-kiosk-feature hidden=""><label for="edit-member-kiosk-pin">New Check-In PIN</label><input id="edit-member-kiosk-pin" autocomplete="new-password" inputmode="numeric" maxlength="4" minlength="4" name="kioskPin" pattern="[0-9]{4}" placeholder="Leave blank to keep current" type="password"><small class="field-help">Enter four digits only when setting or changing this member’s kiosk PIN.</small></div>
+
+<fieldset class="billing-fields form-wide"><legend>Billing</legend>
+
+<label for="edit-member-billing-category">Billing category</label><select id="edit-member-billing-category" name="billingCategory" required><option value="adult">Adult — $135</option></select>
+
+<div data-family-payer hidden><label for="edit-member-family-payer">Family payer</label><select id="edit-member-family-payer" name="familyPayer"><option value="">Select the family payer</option></select></div>
+
+<p class="portal-hint" data-billing-help>Billing is separate from class assignment. Save the family payer first, then link covered members.</p></fieldset><div class="owner-checks">
+
+<label>
+
+<input id="edit-member-paid" name="paid" type="checkbox"> Paid / Current</label>
+
+<label>
+
+<input id="edit-member-active" name="active" type="checkbox"> Active Membership</label>
+
+<label>
+
+<input id="edit-member-enabled" name="enabled" type="checkbox"> Portal Enabled</label>
+
+<label>
+
+<input id="edit-member-coach-access" name="coachAccess" type="checkbox"> Coach — dashboard access, dues exempt, always current</label>
+
+<label>
+
+<input id="edit-member-payment-exempt" name="paymentExempt" type="checkbox"> Payment Exempt</label>
+
+</div>
+
+<button class="btn btn-red btn-full owner-form-submit" type="submit">Save Changes</button>
+
+</form>
+
+</div>
+
+
+
 <div aria-live="polite" class="member-list" id="owner-member-list">
+
 </div>
+
 <div class="owner-list-foot">
+
 <span id="owner-load-note">Loads once when you open or manually refresh this page.</span>
+
 <span>Maximum 250 members per read.</span>
+
 </div>
+
 </div>
+
 <div class="dash-card owner-card trial-card" id="staff-trials">
+
 <div class="owner-member-head">
+
 <div>
+
 <div class="kicker">First Class Free</div>
+
 <h2>Trial Requests</h2>
+
 <p class="portal-muted">Visitors who signed the waiver without creating a membership account appear here.</p>
+
 </div>
+
 <button class="btn btn-dark" id="trial-refresh" type="button">Refresh Trials</button>
+
 </div>
+
 <div aria-live="polite" class="member-list" id="trial-request-list"></div>
+
 </div>
+
 <div class="dash-card owner-card attendance-card" id="staff-attendance">
+
 <div class="owner-member-head">
+
 <div>
+
 <div class="kicker">Class Check-In</div>
+
 <h2>Attendance</h2>
+
 <p class="portal-muted">Members scan the gym QR code and check in securely from their own phones. Review and correct today’s attendance here.</p>
+
 </div>
+
 <div class="owner-toolbar-actions">
+
 <button class="btn btn-dark" id="attendance-refresh" type="button">Refresh Attendance</button>
+
 </div>
+
 </div>
+
 <div class="attendance-qr-card">
+
 <img src="assets/red-road-check-in-qr.png" alt="QR code linking to Red Road member phone check-in" width="900" height="900" loading="lazy" decoding="async">
+
 <div><h3>Gym Check-In QR</h3><p class="portal-muted">Print and post this code at the entrance. Scanning it opens the dedicated check-in page.</p><a class="btn btn-dark btn-mini" href="assets/red-road-check-in-qr.png" download="red-road-check-in-qr.png">Download QR Code</a></div>
+
 </div>
+
 <div class="attendance-summary">
+
 <div><span>Checked In Today</span><strong id="attendance-today-count">0</strong></div>
+
 <div><span>Last Check-In</span><strong id="attendance-last-time">—</strong></div>
+
 </div>
+
 <div aria-live="polite" class="member-list attendance-list" id="attendance-list"></div>
-</div><section id="staff-billing" class="dash-card owner-card" hidden><div class="kicker">Accounting</div><h2>Monthly Payments</h2><p class="portal-muted">Record payments with the Paid checkbox in Edit Member. Checking Paid and saving an unpaid account records one calendar month; saving an already-paid account adds nothing. Unchecking Paid keeps the payment history.</p><div class="billing-report-controls"><label>Report month <input id="billing-month" type="month"></label><button class="btn btn-dark" id="billing-load" type="button">Load Report</button><button class="btn btn-dark" id="billing-print" type="button" disabled>Print Monthly Report</button></div><p id="billing-report-status" role="status"></p><div id="billing-report-results" class="billing-report-results"></div></section><section id="staff-waivers" class="dash-card owner-card"><div class="owner-member-head"><div><div class="kicker">On File</div><h2>Signed Waivers</h2><p class="portal-muted">Member, trial and waiver-only records. Open a saved record to print the signature and its original agreement.</p></div><button class="btn btn-dark" id="waiver-refresh" type="button">Refresh Waivers</button></div><label class="owner-search"><span>Find a signed waiver</span><input id="waiver-search" type="search" autocomplete="off" placeholder="Name, email or receipt ID"></label><p id="signed-waiver-count" class="portal-hint" role="status"></p><div class="flash-message" id="waiver-library-message" hidden=""></div><div class="edit-member-panel waiver-record-panel" hidden="" id="owner-waiver-panel">
+
+</div><section id="staff-billing" class="dash-card owner-card" hidden><div class="kicker">Accounting</div><h2>Monthly Payments</h2><p class="portal-muted">Expected dues from your active roster, plus payments you mark Paid. Use the month selector to compare saved totals and print a report.</p><div class="billing-report-controls"><label>Report month <input id="billing-month" type="month"></label><button class="btn btn-dark" id="billing-load" type="button">Load Report</button><button class="btn btn-dark" id="billing-print" type="button" disabled>Print Monthly Report</button></div><p id="billing-report-status" role="status"></p><div id="billing-report-results" class="billing-report-results"></div></section><section id="staff-waivers" class="dash-card owner-card"><div class="owner-member-head"><div><div class="kicker">On File</div><h2>Signed Waivers</h2><p class="portal-muted">Member, trial and waiver-only records. Open a saved record to print the signature and its original agreement.</p></div><button class="btn btn-dark" id="waiver-refresh" type="button">Refresh Waivers</button></div><label class="owner-search"><span>Find a signed waiver</span><input id="waiver-search" type="search" autocomplete="off" placeholder="Name, email or receipt ID"></label><p id="signed-waiver-count" class="portal-hint" role="status"></p><div class="flash-message" id="waiver-library-message" hidden=""></div><div class="edit-member-panel waiver-record-panel" hidden="" id="owner-waiver-panel">
+
 <div class="portal-card-head"><div><div class="kicker">Signed Record</div><h3 id="owner-waiver-title">Member Waiver</h3></div><button class="btn btn-quiet btn-mini" id="close-owner-waiver" type="button">Close</button></div>
+
 <div id="owner-waiver-details"></div>
+
 <div class="member-actions"><a class="btn btn-dark" href="assets/red-road-liability-waiver.pdf" rel="noopener" target="_blank">Open Agreement PDF</a></div>
+
 </div><div class="member-list" id="signed-waiver-list" aria-live="polite"></div><button id="waiver-load-more" class="btn btn-dark" type="button" hidden>Load More Saved Records</button><p class="portal-hint">Search covers loaded records. Use Load More for older records, up to 250 per source per click. Printing does not modify the saved record.</p></section>
 
 
 
+
+
+
+
 <div class="dash-card owner-card security-card" id="staff-settings">
+
 <div class="member-settings-panel">
+
 <div class="portal-card-head"><div><div class="kicker">Attendance Options</div><h3>Kiosk Mode</h3></div></div>
+
 <p class="portal-muted">Phone and QR check-in stays available. Enable this only if Red Road decides to use a shared check-in device.</p>
+
 <form class="owner-form launch-owner-form" id="attendance-options-form" method="post" data-service-form="">
+
 <div><label for="kiosk-mode-select">Shared kiosk</label><select id="kiosk-mode-select" name="kioskMode"><option value="disabled">Disabled</option><option value="enabled">Enabled</option></select></div>
+
 <button class="btn btn-dark owner-form-submit" type="submit">Save Attendance Options</button>
+
 </form>
+
 <div class="flash-message" hidden="" id="attendance-options-message"></div>
+
 </div>
+
 <div class="owner-member-head">
+
 <div>
+
 <div class="kicker">Account Security</div>
+
 <h2>Your Password</h2>
+
 <p class="portal-muted">Change your own staff password securely. Passwords are handled by Firebase Authentication and are never stored in Firestore.</p>
+
 </div>
+
 <button aria-expanded="false" class="btn btn-dark" id="toggle-change-password" type="button">Change Password</button>
+
 </div>
+
 <div class="add-member-panel" hidden="" id="change-password-panel">
+
 <form class="owner-form launch-owner-form" id="change-password-form" method="post" data-service-form="">
+
 <div>
+
 <label for="staff-current-password">Current Password</label>
+
 <input autocomplete="current-password" id="staff-current-password" minlength="6" name="currentPassword" required="" type="password">
+
 </div>
+
 <div>
+
 <label for="staff-new-password">New Password</label>
+
 <input autocomplete="new-password" id="staff-new-password" minlength="8" name="newPassword" required="" type="password">
+
 </div>
+
 <div>
+
 <label for="staff-confirm-password">Confirm New Password</label>
+
 <input autocomplete="new-password" id="staff-confirm-password" minlength="8" name="confirmPassword" required="" type="password">
+
 </div>
+
 <button class="btn btn-red btn-full owner-form-submit" type="submit">Update Password</button>
+
 </form>
+
 </div>
+
 </div><div class="dash-card owner-card developer-only" hidden="" id="developer-access-card">
+
 <div class="owner-member-head">
+
 <div>
+
 <div class="kicker">Developer Access</div>
+
 <h2>Owner Access</h2>
+
 <p class="portal-muted">Developer-only access control. This section is hidden from owners and coaches.</p>
+
 </div>
+
 <button aria-expanded="false" class="btn btn-red" id="toggle-add-owner" type="button">+ Add Owner</button>
+
 </div>
+
 <div class="add-member-panel" hidden="" id="add-owner-panel">
+
 <form class="owner-form launch-owner-form" id="add-owner-form" method="post" data-service-form="">
+
 <div>
+
 <label for="access-owner-name">Name</label>
+
 <input id="access-owner-name" maxlength="120" name="name" placeholder="Owner name" required="">
+
 </div>
+
 <div>
+
 <label for="access-owner-email">Email</label>
+
 <input id="access-owner-email" name="email" placeholder="owner@example.com" required="" type="email">
+
 </div>
+
 <div class="owner-checks">
+
 <label>
+
 <input checked="" name="enabled" type="checkbox"> Enabled</label>
+
 </div>
+
 <button class="btn btn-red btn-full owner-form-submit" type="submit">Add Owner Access</button>
+
 </form>
+
 </div>
+
 <div aria-live="polite" class="member-list" id="owner-access-list">
+
 </div>
+
 <div class="owner-list-foot">
+
 <span>Maximum 50 owner records per manual load.</span>
+
 <span>Coach access is assigned from the member record below.</span>
+
 </div>
+
 <div class="kiosk-access-block" data-kiosk-feature hidden="">
+
 <div class="owner-member-head">
+
 <div><div class="kicker">Check-In Device</div><h3>iPad Kiosk Access</h3><p class="portal-muted">Approve a dedicated account for the front-desk iPad. It can only see the check-in directory and create attendance records.</p></div>
+
 <button aria-expanded="false" class="btn btn-dark" id="toggle-add-kiosk" type="button">+ Add Kiosk</button>
+
 </div>
+
 <div class="add-member-panel" hidden="" id="add-kiosk-panel">
+
 <form class="owner-form launch-owner-form" id="add-kiosk-form" method="post" data-service-form="">
+
 <div><label for="kiosk-access-name">Device Name</label><input id="kiosk-access-name" maxlength="120" name="name" placeholder="Front Desk iPad" required=""></div>
+
 <div><label for="kiosk-access-email">Kiosk Email</label><input id="kiosk-access-email" name="email" type="email" placeholder="redroadcheckin@gmail.com" required=""></div>
+
 <div class="owner-checks"><label><input checked="" name="enabled" type="checkbox"> Enabled</label></div>
+
 <button class="btn btn-red btn-full owner-form-submit" type="submit">Approve Kiosk</button>
+
 </form>
+
 </div>
+
 <div aria-live="polite" class="member-list" id="kiosk-access-list"></div>
+
 </div>
+
 </div></div>
+
 </div>
+
 </section>
+
 </main>
-<script src="portal.js?v=68" type="module">
+
+<script src="portal.js?v=69" type="module">
+
 </script>
 
 
 
+
+
+
+
 </body></html>
+

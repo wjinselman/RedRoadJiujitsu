@@ -1,163 +1,326 @@
 <!DOCTYPE html><html lang="en" class="portal-document rr-scroll-document"><head>
+
 <meta charset="utf-8">
+
 <meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport">
+
 <meta content="#08090b" name="theme-color">
+
 <meta content="noindex,nofollow" name="robots">
+
 <title>Member Portal | Red Road Jiu Jitsu</title>
+
 <link href="redroad-v25.css?v=prod-49" rel="stylesheet">
+
 <style>html,body{background:#07080a!important;color-scheme:dark}body{min-height:100%;margin:0}</style>
+
 <link href="assets/favicon-64.png" rel="icon" sizes="64x64" type="image/png">
+
 <link href="assets/apple-touch-icon.png" rel="apple-touch-icon">
+
 <link rel="stylesheet" href="prod14.css?v=prod-37">
+
 <link rel="stylesheet" href="premium.css?v=prod-49">
+
 <script src="mobile-nav.js?v=59" defer=""></script><meta name="referrer" content="no-referrer"><link rel="stylesheet" href="experience.css?v=57"><script src="experience.js?v=57" defer=""></script></head>
+
 <body class="member-page"><noscript>&lt;p style="padding:16px;background:#241116;color:white"&gt;JavaScript is required for secure sign-in, check-in and waiver submission. Please enable it before completing a form.&lt;/p&gt;</noscript>
+
 <div aria-hidden="true" class="site-emblem-bg">
+
 </div>
+
 <header class="top">
+
 <div class="shell nav">
+
 <a class="brand" href="index.html">
+
 <img alt="Red Road Jiu Jitsu logo" src="assets/red-road-master-crest.webp" width="760" height="760" decoding="async" loading="eager">
+
 <div>
+
 <strong>Red Road BJJ</strong>
+
 <span>Member Portal</span>
+
 </div>
+
 </a>
+
 <a class="btn btn-dark nav-return" href="index.html">Public Website</a>
+
 </div>
+
 </header>
+
 <main>
+
 <section class="portal-hero compact">
+
 <div class="portal-shell">
+
 <div class="kicker">Member Area</div>
+
 <h1 class="portal-title">Your Training. <span class="red">Your Status.</span>
+
 </h1>
+
 <p>Your membership, rank, waiver and recent training, together in one private place.</p>
+
 </div>
+
 </section>
+
 <section class="section portal-section">
+
 <div class="portal-shell">
+
 <div class="login-card" hidden="" id="firebase-setup-view">
+
 <div class="portal-card-head">
+
 <div>
+
 <div class="kicker">Setup Required</div>
+
 <h2>Portal Not Connected Yet.</h2>
+
 </div>
+
 </div>
+
 <p class="portal-muted">Firebase is intentionally not configured in this ZIP. Paste the project Web App config into <strong>firebase-config.js</strong> before launch.</p>
+
 </div>
+
 <div class="login-card" id="member-login-view">
+
 <div class="portal-card-head">
+
 <div>
+
 <div class="kicker">Member Sign In</div>
+
 <h2>Welcome Back.</h2>
+
 </div>
+
 <span class="secure-badge">Private</span>
+
 </div>
+
 <form class="portal-form" id="member-login-form" method="post" data-service-form="">
+
 <div>
+
 <label for="member-email">Email</label>
+
 <input autocomplete="email" id="member-email" inputmode="email" name="email" placeholder="you@example.com" required="" type="email">
+
 </div>
+
 <div>
+
 <label for="member-password">Password</label>
+
 <input autocomplete="current-password" id="member-password" minlength="6" name="password" placeholder="Password" required="" type="password">
+
 </div>
+
 <button class="btn btn-red btn-full" type="submit">Sign In</button>
+
 </form>
+
 <div class="auth-secondary-actions">
+
 <button class="text-action" id="member-activate" type="button">First time? Activate account</button>
+
 <button class="text-action" id="member-reset" type="button">Forgot password?</button>
+
 </div>
+
 <p class="portal-hint">Use the email Red Road has on file. First-time activation requires access to that email so it can be verified before the portal opens.</p>
+
 <p class="portal-hint">New to Red Road? <a class="waiver-inline-link" href="waiver.html?trial=1">Try one class free without an account</a>, <a class="waiver-inline-link" href="enroll.html">start enrollment</a>, or <a class="waiver-inline-link" href="waiver.html">view/sign the waiver</a>.</p>
+
 <div class="flash-message" hidden="" id="member-login-message">
+
 </div>
+
 </div>
+
 <div class="dash-card member-dashboard" hidden="" id="member-dashboard">
+
 <div class="portal-card-head">
+
 <div>
+
 <div class="kicker">Member Dashboard</div>
+
 <h2>
+
 <span id="member-name">Member</span>
+
 </h2>
+
 <div class="portal-email" id="member-email-display">
+
 </div>
+
 </div>
+
 <button class="btn btn-dark btn-mini" id="member-logout" type="button">Sign Out</button>
+
 </div>
+
 <div class="member-status-hero">
+
 <div>
+
 <span>Membership</span>
+
 <strong id="member-active-label">—</strong>
+
 </div>
+
 <div>
+
 <span>Payment</span>
+
 <strong id="member-paid-label">—</strong>
+
 </div>
+
 <div>
+
 <span>Waiver</span>
+
 <strong id="member-waiver-label">—</strong>
+
 </div>
+
 </div>
+
 <div class="member-dashboard-grid compact-member-grid">
+
 <div class="dash-stat">
+
 <span>Rank</span>
+
 <strong id="member-rank">—</strong>
+
 <small>Current belt / rank</small>
+
+</div>
+
+
+
+<div class="dash-stat">
+
+<span>Plan</span>
+
+<strong id="member-plan">—</strong>
+
+<small>Membership plan</small>
+
 </div>
 
 <div class="dash-stat">
-<span>Plan</span>
-<strong id="member-plan">—</strong>
-<small>Membership plan</small>
-</div>
-<div class="dash-stat">
+
 <span>Joined</span>
+
 <strong id="member-joined">—</strong>
+
 <small>Member since</small>
+
 </div>
+
 </div>
+
 <div class="member-access-note" hidden="" id="member-access-note">
+
 </div>
+
 <div class="flash-message" hidden="" id="member-dashboard-message"></div>
+
 <div class="member-actions">
+
 <a class="btn btn-red" href="index.html#schedule">Class Schedule</a>
+
 <a class="btn btn-dark" href="index.html#location">Directions</a>
+
 <button aria-expanded="false" class="btn btn-dark" id="toggle-member-attendance" type="button">My Attendance</button>
+
 <button aria-expanded="false" class="btn btn-dark" id="toggle-member-profile" type="button">Edit Profile</button>
+
 <button class="btn btn-dark" hidden="" id="member-view-waiver" type="button">View Signed Waiver</button>
+
 </div>
+
 <div class="member-settings-panel attendance-history-panel" hidden="" id="member-attendance-panel">
+
 <div class="portal-card-head"><div><div class="kicker">Attendance</div><h3 id="member-attendance-month">This Month</h3></div><strong id="member-attendance-count">0</strong></div>
+
 <div class="attendance-month-nav"><button class="btn btn-quiet btn-mini" id="attendance-prev-month" type="button">← Previous</button><button class="btn btn-quiet btn-mini" id="attendance-next-month" type="button">Next →</button></div>
+
 <div class="member-attendance-list" id="member-attendance-list"><p class="portal-muted">Loading attendance…</p></div>
+
 </div>
+
 <div class="member-settings-panel" hidden="" id="member-profile-panel">
+
 <div class="portal-card-head"><div><div class="kicker">Member Settings</div><h3>Contact &amp; Emergency Information</h3></div></div>
+
 <p class="portal-muted">You can update contact details here. Membership, payment, rank and waiver status remain staff-controlled.</p>
+
 <form class="owner-form launch-owner-form" id="member-profile-form" method="post" data-service-form="">
+
 <div><label for="profile-phone">Phone</label><input id="profile-phone" maxlength="40" name="phone" type="tel"></div>
+
 <div><label for="profile-household-email">Parent / Household Email</label><input id="profile-household-email" maxlength="254" name="householdEmail" type="email"></div>
+
 <div class="form-wide"><label for="profile-address">Address</label><input id="profile-address" maxlength="240" name="address"></div>
+
 <div><label for="profile-emergency-name">Emergency Contact</label><input id="profile-emergency-name" maxlength="160" name="emergencyName"></div>
+
 <div><label for="profile-emergency-phone">Emergency Phone</label><input id="profile-emergency-phone" maxlength="40" name="emergencyPhone" type="tel"></div>
+
 <div class="form-wide"><label for="profile-guardian-name">Parent / Legal Guardian</label><input id="profile-guardian-name" maxlength="160" name="guardianName"></div>
+
 <button class="btn btn-red btn-full owner-form-submit" type="submit">Save Profile</button>
+
 </form>
+
 </div>
+
 <div class="member-settings-panel waiver-record-panel" hidden="" id="member-waiver-panel">
+
 <div class="portal-card-head"><div><div class="kicker">Signed Record</div><h3>Your Liability Waiver</h3></div><button class="btn btn-quiet btn-mini" id="close-member-waiver" type="button">Close</button></div>
+
 <div id="member-waiver-details"></div>
+
 <div class="member-actions"><a class="btn btn-dark" href="assets/red-road-liability-waiver.pdf" rel="noopener" target="_blank">Open Agreement PDF</a></div>
+
 </div>
+
 </div>
+
 </div>
+
 </section>
+
 </main>
-<script src="portal.js?v=68" type="module">
+
+<script src="portal.js?v=69" type="module">
+
 </script>
 
 
 
+
+
+
+
 </body></html>
+

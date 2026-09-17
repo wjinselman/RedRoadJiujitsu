@@ -1,1 +1,27 @@
 .billing-fields{border:1px solid #34373d;border-radius:8px;padding:16px;display:grid;gap:10px}.billing-fields legend{padding:0 8px;font-weight:700}.billing-fields [hidden]{display:none!important}.billing-report-controls{display:flex;gap:12px;align-items:end;flex-wrap:wrap}.billing-report-controls label{display:grid;gap:6px}.billing-report-results{overflow-x:auto}.billing-report-results table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.85rem}.billing-report-results td,.billing-report-results th{padding:10px;border-bottom:1px solid #34373d;text-align:left;overflow-wrap:anywhere}.billing-report-results h1{font-size:1.5rem}.billing-report-results h2{font-size:1.2rem;margin-top:24px}
+.billing-report-results{overflow:visible;margin-top:24px}
+.billing-report-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.billing-report-head h3{font-size:1.3rem;margin:0}.billing-report-head p{font-size:.8rem;color:#b4bac5;margin:0}
+.billing-metrics{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
+.billing-metric{padding:24px;border:1px solid #3d414a;border-radius:12px;background:#16191f}
+.billing-metric.expected{border-top:3px solid #df142b;background:linear-gradient(125deg,#27151b,#17191f)}
+.billing-metric>span{display:block;font-size:.8rem;font-weight:700;color:#c8ccd5}
+.billing-metric>strong{display:block;margin:12px 0;font-size:clamp(1.9rem,4vw,2.7rem);line-height:1.1;color:white;font-variant-numeric:tabular-nums}
+.billing-metric p{margin:0;font-size:.8rem;color:#b4bac5}
+.billing-footnote{font-size:.8rem!important;line-height:1.6;color:#b4bac5;margin:12px 0}
+.billing-report-results h3{font-size:1.1rem}
+.billing-breakdown,.billing-comparison{margin-top:26px}
+.billing-table-scroll{overflow-x:auto}.billing-report-results table{margin:12px 0;width:100%;font-variant-numeric:tabular-nums}
+.billing-report-results table th{font-weight:600}.billing-report-results thead th{font-size:.75rem;color:#bcc2cd}.billing-report-results tfoot{background:#191c22;font-weight:700}
+.billing-report-results th:not(:first-child),.billing-report-results td:not(:first-child){text-align:right}
+.billing-report-results .billing-details td,.billing-report-results .billing-details th{text-align:left}
+.billing-comparison{border:1px solid #343943;border-radius:12px;padding:20px}.billing-comparison h3{margin:0}
+.billing-bar-row{margin:20px 0 0}.billing-bar-heading{display:flex;justify-content:space-between;gap:10px;align-items:baseline;font-size:.85rem;margin-bottom:8px}.billing-bar-heading small{display:block;color:#acb4c2;font-size:.7rem;margin-top:3px}.billing-bar-heading strong{white-space:nowrap}
+.billing-bar-track{background:#252a33;border-radius:5px;height:15px;overflow:hidden}.billing-bar{height:100%;background:#dc142a;border-radius:5px}.billing-bar.previous{background:#788599}
+.billing-details{margin-top:18px;border-top:1px solid #353941;padding-top:16px}.billing-details summary{cursor:pointer;font-weight:600;font-size:.9rem;padding:5px 0}.billing-details summary:focus-visible{outline:2px solid #eee}
+.billing-email{display:block;font-weight:400;font-size:.7rem;color:#b4bac5;margin-top:4px}.billing-empty{padding:18px;border:1px dashed #454b57;border-radius:10px;margin-top:20px}.billing-empty p{font-size:.85rem;color:#c1c6cf;margin-bottom:0}
+.billing-exempt-list{list-style:none;padding:0}.billing-exempt-list li{display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;border-bottom:1px solid #333;padding:10px 0;font-size:.85rem}.billing-exempt-list li span:first-child{flex:1}.billing-exempt-list li span:nth-child(2){color:#b4bac5}
+.billing-sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.billing-report-controls input{min-height:44px;padding:8px 12px;border:1px solid #444b57;background:#171b22;color:#fff;border-radius:6px;color-scheme:dark}
+#billing-report-status{font-size:.8rem;color:#b4bac5;margin:12px 0}
+@media(max-width:620px){.billing-metrics{grid-template-columns:1fr}.billing-metric{padding:20px}.billing-report-controls{align-items:stretch}.billing-report-controls label{width:100%}.billing-report-controls button{flex:1;padding:12px;font-size:.72rem}.billing-comparison{padding:16px}.billing-report-results td,.billing-report-results th{padding:9px 7px}.billing-report-head{display:block}.billing-report-head p{margin-top:8px}}

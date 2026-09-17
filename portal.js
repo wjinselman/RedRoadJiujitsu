@@ -1,3 +1,4 @@
+import {loadTopAttendance,clearTopAttendance} from './top-attendance.js?v=2';
 import {toggleMemberPaid} from './quick-paid.js?v=1';
 let quickPaymentBusy = false;
 import {setupEmailInvitation} from './email-setup.js?v=3';
@@ -1670,6 +1671,7 @@ function renderAttendance() {
 
 
 async function loadAttendance() {
+  void loadTopAttendance();
 
   const snap = await getDocs(query(collection(db, 'attendance'), orderBy('checkedInAt', 'desc'), limit(250)));
 
@@ -2239,6 +2241,7 @@ function setupOwnerPage() {
 
     $('#signed-waiver-list').replaceChildren();
 
+    clearTopAttendance();
     ownerIdentity = null;
 
     renderPaymentAlerts();
@@ -2502,6 +2505,7 @@ function setupOwnerPage() {
       await deleteDoc(doc(db, 'attendance', record.id));
 
       ownerAttendance = ownerAttendance.filter(item => item.id !== record.id);
+      void loadTopAttendance();
 
       renderAttendance();
 

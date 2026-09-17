@@ -299,15 +299,24 @@ function showSetupIfNeeded() {
 
 
 
-async function getStaffAccess(email) {
+async function getStaffAccess(email, optional = false) {
 
   const cleanEmail = normalizedEmail(email);
+  async function readRole(collectionName) {
+    try { return await getDoc(doc(db, collectionName, cleanEmail)); }
+    catch (error) {
+      // A denied optional role check grants no role. Member access is still
+      // checked independently by Firestore when reading the member record.
+      if (optional && String(error?.code || '').includes('permission-denied')) return { exists: () => false };
+      throw error;
+    }
+  }
 
 
 
   // Developer is checked first. Developer access itself is console-managed only.
 
-  const developerSnap = await getDoc(doc(db, 'developers', cleanEmail));
+  const developerSnap = await readRole('developers');
 
   if (developerSnap.exists() && developerSnap.data()?.enabled === true) {
 
@@ -317,7 +326,7 @@ async function getStaffAccess(email) {
 
 
 
-  const ownerSnap = await getDoc(doc(db, 'owners', cleanEmail));
+  const ownerSnap = await readRole('owners');
 
   if (ownerSnap.exists() && ownerSnap.data()?.enabled === true) {
 
@@ -337,7 +346,7 @@ async function getStaffAccess(email) {
 
   if (auth.currentUser?.emailVerified === true) {
 
-    const coachSnap = await getDoc(doc(db, 'members', cleanEmail));
+    const coachSnap = await readRole('members');
 
     if (coachSnap.exists()) {
 
@@ -483,7 +492,7 @@ async function openMemberForUser(user) {
 
     // These are one-time document checks only; no listeners or polling.
 
-    const staff = await getStaffAccess(user.email);
+    const staff = await getStaffAccess(user.email, true);
 
     if (staff) {
 
@@ -527,7 +536,7 @@ async function openMemberForUser(user) {
 
   } catch (error) {
 
-    flash(message, friendlyError(error), 'error');
+    flash(message, String(error?.code || '').includes('permission-denied') ? 'Your login succeeded, but your member profile could not be opened. Ask Red Road staff to check portal access for this email.' : friendlyError(error), 'error');
 
   }
 

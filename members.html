@@ -26,7 +26,7 @@
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
-</head>
+<style>#member-setup-form{gap:8px}#member-setup-form input{margin:4px 0 10px}#member-setup-form label{margin:0}#member-setup-verification .btn{margin-bottom:10px}#member-setup-close{margin-top:8px}</style></head>
 
 <body class="member-page"><noscript>&lt;p style="padding:16px;background:#241116;color:white"&gt;JavaScript is required for secure sign-in, check-in and waiver submission. Please enable it before completing a form.&lt;/p&gt;</noscript>
 
@@ -144,15 +144,24 @@
 
 </div>
 
-<dialog id="member-setup-dialog" aria-labelledby="member-setup-title" style="background:#111318;color:#fff;border:1px solid #633039;border-radius:14px;padding:24px;width:min(440px,calc(100% - 48px));box-sizing:border-box">
+<dialog id="member-setup-dialog" aria-labelledby="member-setup-title" style="background:#111318;color:#fff;border:1px solid #633039;border-radius:14px;padding:24px;width:min(440px,calc(100% - 32px));max-height:90dvh;overflow-y:auto;box-sizing:border-box">
 <h2 id="member-setup-title">Activate Your Account</h2>
-<p>Enter the email you want to use. We’ll send a link where you can choose your password.</p>
+<p>Enter your email and choose a password. We’ll send a verification email. Already on the roster? Use the email Red Road has on file.</p>
 <form id="member-setup-form" class="portal-form">
 <label for="member-setup-email">Your email address</label>
 <input id="member-setup-email" type="email" name="setup-email" autocomplete="email" required placeholder="you@example.com">
-<button id="member-setup-send" class="btn btn-red btn-full" type="submit">Send Setup Link</button>
-<button id="member-setup-close" class="btn btn-dark" type="button">Close</button>
-</form><p id="member-setup-message" role="status" aria-live="polite"></p>
+<label for="member-setup-password">Choose a password</label>
+<input id="member-setup-password" type="password" autocomplete="new-password" minlength="8" required>
+<label for="member-setup-confirm">Confirm your password</label>
+<input id="member-setup-confirm" type="password" autocomplete="new-password" minlength="8" required>
+<p class="portal-hint">Use at least 8 characters. Already have a login? Close this window and sign in.</p>
+<button id="member-setup-send" class="btn btn-red btn-full" type="submit">Create Account</button>
+</form>
+<div id="member-setup-verification" hidden>
+<button id="member-setup-recheck" class="btn btn-red btn-full" type="button">I’ve verified my email</button>
+<button id="member-setup-resend" class="btn btn-dark btn-full" type="button">Resend verification</button>
+</div>
+<button id="member-setup-close" class="btn btn-dark" type="button">Close</button><p id="member-setup-message" role="status" aria-live="polite"></p>
 </dialog>
 <p class="portal-hint" id="member-signin-hint">Use the email Red Road has on file. Already created a login? Sign in with your existing password. First time? Choose “Activate Account” above.</p>
 
@@ -326,7 +335,7 @@
 
 </main>
 
-<script src="portal.js?v=84" type="module">
+<script src="portal.js?v=85" type="module">
 
 </script>
 

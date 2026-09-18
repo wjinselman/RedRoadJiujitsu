@@ -1,1 +1,6 @@
-Upload owner.html to the website root, replacing the existing owner.html. This is based on the current live page (portal.js v84). No JavaScript, Firebase rules, member records, payment logic, or attendance logic changed. After deploying, reload the staff dashboard once to get the new page. Changes remove backdrop blur from statistic cards and give numbers a full-width block and a system font; the attendance leader keeps its compact type size.
+FREE SIGNUP FIX — keep Firebase on Spark. No billing upgrade or Firestore rule changes.
+Upload all three files in this ZIP to the website root: members.html, portal.js, email-setup.js.
+New signup: separate activation popup asks email, password and confirmation; creates Firebase login; sends verification email; after verification continues existing enrollment. Existing roster records are looked up rather than replaced. Check-in and enrollment already route to members.html?setup=1 and use this same popup.
+Existing passwords, member records, payments, attendance and permissions are unchanged. Previously sent email sign-in links remain supported by the existing activate.html path.
+Deploy, then reload members.html. The popup must show Choose a password and Create Account. Clint can use his existing roster email. If a login already exists, use Sign In / Forgot password instead.
+Tested with mocked Firebase success/failure cases, not by sending real emails or creating production users. Verify one real signup after deployment.

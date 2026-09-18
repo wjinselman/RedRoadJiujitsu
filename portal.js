@@ -2,7 +2,7 @@ import {loadTopAttendance,clearTopAttendance} from './top-attendance.js?v=2';
 import {toggleMemberPaid} from './quick-paid.js?v=1';
 let quickPaymentBusy = false;
 let ownerBillingLoading = false;
-import {setupEmailInvitation} from './email-setup.js?v=3';
+import {setupEmailInvitation,isAccountSetupOpen} from './email-setup.js?v=4';
 import {activePaymentAlerts} from './admin-alerts.js?v=1';
 
 import {profiles,billingReady,loadBillingProfiles,loadMyBilling,memberBilling,saveWithBilling,ensureNoCoveredMembers} from './billing-store.js?v=1';
@@ -518,11 +518,12 @@ async function openMemberForUser(user) {
 
     if (user.emailVerified !== true) {
 
-      await sendEmailVerification(user).catch(() => {});
+      let verificationSent = false;
+      try { await sendEmailVerification(user); verificationSent = true; } catch (_) {};
 
       await signOut(auth);
 
-      flash(message, 'Check your email and verify your address before opening the member portal. A verification email has been sent.', 'error');
+      flash(message, verificationSent ? 'A verification email has been sent. Open its link, then sign in again.' : 'Your login exists, but your email needs verification. The verification email could not be sent. Please try again later or contact Red Road staff.', 'error');
 
       return;
 
@@ -913,7 +914,7 @@ function setupMemberPage() {
 
   onAuthStateChanged(auth, async user => {
 
-    if (memberRestoreAttempted) return;
+    if (isAccountSetupOpen() || memberRestoreAttempted) return;
 
     memberRestoreAttempted = true;
 

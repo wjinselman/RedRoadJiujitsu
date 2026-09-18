@@ -54,6 +54,10 @@ if (trialMode) {
   document.querySelector('#waiver-storage-note').innerHTML = '<strong>No membership account:</strong> Your trial request and signed waiver will be securely saved for Red Road staff review. You will not create a password or member profile.';
   submitButton.textContent = 'Submit Free Trial & Waiver';
 } else if (enrollmentMode) {
+  document.querySelector('#waiver-intro').textContent = 'Review the complete liability waiver and sign below to complete your membership enrollment.';
+  const backLink = document.querySelector('#waiver-back-link');
+  backLink.href = 'enroll.html?continue=1';
+  backLink.textContent = 'Back to Member Information';
   submitButton.textContent = 'Sign Waiver & Complete Enrollment';
 } else {
   document.querySelector('#waiver-steps').hidden = true;

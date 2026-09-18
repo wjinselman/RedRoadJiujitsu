@@ -24,9 +24,9 @@
       <a href="index.html">Home</a><a href="${home}#programs">Programs</a>
       <a href="${home}#schedule">Schedule</a><a href="${home}#pricing">Pricing</a>
       <a href="${home}#coaches">Coaches</a><a href="story.html">Our Story</a>
-      <a href="${home}#location">Location</a><a href="waiver.html">Waiver</a>
-      <a href="members.html">Member Login</a><a href="enroll.html">Join Red Road</a>
-      <a class="mobile-nav-primary" href="waiver.html?trial=1">Try one class free <span aria-hidden="true">↗</span></a>
+      <a href="visit.html">Plan Your Visit</a><a href="waiver.html">Sign Waiver</a>
+      <a href="members.html">Member Login</a><a href="enroll.html">Join as a Member</a>
+      <a class="mobile-nav-primary" href="waiver.html?trial=1">Try a Free Class <span aria-hidden="true">↗</span></a>
     </nav><p class="mobile-nav-note">Lone Grove, Oklahoma · All levels welcome</p>`;
   header.append(panel);
   const backdrop = document.createElement('div');
@@ -85,19 +85,16 @@
   menuMedia.addEventListener('change', () => { if (!menuMedia.matches) close(); });
   addEventListener('pagehide', () => close());
   addEventListener('pageshow', () => close());
-  if (page === 'index.html' || page === 'story.html' || page.startsWith('jiu-jitsu-')) {
+  if (page === 'index.html' || page === 'story.html' || page === 'visit.html' || page.startsWith('jiu-jitsu-')) {
     const actionBar = document.createElement('nav');
     actionBar.className = 'mobile-action-bar';
     actionBar.setAttribute('aria-label', 'Quick actions');
     actionBar.innerHTML = `<a class="mobile-action-link" href="${home}#schedule">Schedule</a>
-      <a class="mobile-action-link mobile-action-primary" href="enroll.html">Sign Up Now</a>
-      <a class="mobile-action-link" href="members.html">Members</a>`;
+      <a class="mobile-action-link mobile-action-primary" href="waiver.html?trial=1">Free Trial</a>
+      <a class="mobile-action-link" href="members.html">Member Login</a>`;
     document.body.append(actionBar);
     document.body.classList.add('has-mobile-action-bar');
-    const signupButton = actionBar.querySelector('.mobile-action-primary');
-    import('./member-button.js?v=59')
-      .then(module => module.bindMemberButton(signupButton))
-      .catch(() => { /* Keep Sign Up Now if Auth cannot load. */ });
+
   }
   const updateCurrent = () => {
     document.querySelectorAll('.mobile-nav-links a, .mobile-action-link').forEach(link => {

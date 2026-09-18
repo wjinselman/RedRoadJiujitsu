@@ -1,0 +1,71 @@
+{
+  "hosting": {
+    "redirects": [
+      {
+        "source": "/jiu-jitsu-ardmore-ok.html",
+        "destination": "/visit.html",
+        "type": 301
+      },
+      {
+        "source": "/jiu-jitsu-davis-ok.html",
+        "destination": "/visit.html",
+        "type": 301
+      },
+      {
+        "source": "/jiu-jitsu-dickson-ok.html",
+        "destination": "/visit.html",
+        "type": 301
+      },
+      {
+        "source": "/jiu-jitsu-healdton-ok.html",
+        "destination": "/visit.html",
+        "type": 301
+      },
+      {
+        "source": "/jiu-jitsu-lone-grove-ok.html",
+        "destination": "/visit.html",
+        "type": 301
+      },
+      {
+        "source": "/jiu-jitsu-madill-ok.html",
+        "destination": "/visit.html",
+        "type": 301
+      },
+      {
+        "source": "/jiu-jitsu-marietta-ok.html",
+        "destination": "/visit.html",
+        "type": 301
+      },
+      {
+        "source": "/jiu-jitsu-pauls-valley-ok.html",
+        "destination": "/visit.html",
+        "type": 301
+      },
+      {
+        "source": "/jiu-jitsu-ringling-ok.html",
+        "destination": "/visit.html",
+        "type": 301
+      },
+      {
+        "source": "/jiu-jitsu-sulphur-ok.html",
+        "destination": "/visit.html",
+        "type": 301
+      },
+      {
+        "source": "/jiu-jitsu-thackerville-ok.html",
+        "destination": "/visit.html",
+        "type": 301
+      },
+      {
+        "source": "/jiu-jitsu-wilson-ok.html",
+        "destination": "/visit.html",
+        "type": 301
+      },
+      {
+        "source": "/jiu-jitsu-wynnewood-ok.html",
+        "destination": "/visit.html",
+        "type": 301
+      }
+    ]
+  }
+}

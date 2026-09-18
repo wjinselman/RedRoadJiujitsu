@@ -25,10 +25,13 @@ async function prepareEnrollment(user) {
     show('Your login is ready. Complete your member information and waiver to finish joining.');
     message.dataset.tone = 'ok';
   } else {
-    // All new-account entry points use the same email-first activation screen.
-    location.replace('members.html?setup=1');
+    // Explain membership setup before the visitor chooses to create a login.
+    form.hidden = true;
+    document.querySelector('#enrollment-loading').hidden = true;
+    document.querySelector('#enrollment-start').hidden = false;
     return;
   }
+  document.querySelector('#enrollment-start').hidden = true;
   setupReady = true; submitButton.disabled = false; form.hidden = false; document.querySelector('#enrollment-loading').hidden = true;
 }
 

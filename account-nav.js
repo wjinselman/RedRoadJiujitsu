@@ -1,5 +1,5 @@
 /* Authentication state only; no roster or waiver reads on public pages. */
-import { auth, firebaseConfigured, onAuthStateChanged } from './firebase-client.js?v=52';
+import { auth, firebaseConfigured, onAuthStateChanged } from './firebase-auth-client.js?v=67';
 
 export function bindAccountNavigation() {
   if (!firebaseConfigured || !auth) return;

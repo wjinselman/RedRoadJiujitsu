@@ -19,9 +19,9 @@ body{background:#07080a}
 .program-card .btn{width:100%;margin-top:8px}
 .program-card>span{display:block;color:#d6d8dd;font-size:10px;font-weight:950;letter-spacing:.14em;text-transform:uppercase;margin-bottom:10px}
 .program-card>strong{color:#fff;font-size:12px;letter-spacing:.08em;text-transform:uppercase}
-.program-kids{--program-image:url('assets/bullyproof-kids-new-gym.webp')}
+.program-kids{--program-image:url('assets/bullyproof-kids-new-gym-r67.webp')}
 .program-adults{--program-image:url('assets/action.jpg');--program-position:56% center}
-.program-service{--program-image:url('assets/coaches.webp')}
+.program-service{--program-image:url('assets/coaches-r67.webp')}
 
 /* Bullyproof section: current-gym training photo with the same cinematic treatment as the hero. */
 .home-page .bullyproof-section{
@@ -41,7 +41,7 @@ body{background:#07080a}
       rgba(7,8,10,.98) 93%,
       #07080a 100%),
     radial-gradient(ellipse at center,rgba(8,9,11,.24) 0%,rgba(8,9,11,.5) 66%,rgba(8,9,11,.88) 100%),
-    url('assets/bullyproof-training-background.webp') center 46% / cover no-repeat!important;
+    url('assets/bullyproof-training-background-r67.webp') center 46% / cover no-repeat!important;
 }
 .home-page .bullyproof-section::before{
   content:none!important;
@@ -63,7 +63,7 @@ body{background:#07080a}
   .home-page .bullyproof-section{
     background:
       linear-gradient(180deg,rgba(8,9,11,.62),rgba(8,9,11,.32) 44%,rgba(8,9,11,.8)),
-      url('assets/bullyproof-training-background.webp') center 48% / cover no-repeat!important;
+      url('assets/bullyproof-training-background-r67.webp') center 48% / cover no-repeat!important;
   }
 }
 
@@ -86,7 +86,7 @@ body{background:#07080a}
 
 .kiosk-page{min-height:100svh;margin:0;overflow-x:hidden;background:#07080a;color:#f5f5f2}
 .kiosk-page::before{content:"";position:fixed;inset:0;z-index:-2;background:radial-gradient(circle at 50% 34%,rgba(207,15,28,.17),transparent 32rem),#07080a}
-.kiosk-page::after{content:"";position:fixed;z-index:-1;width:min(82vw,820px);aspect-ratio:1;right:-20vw;bottom:-38vw;background:url('assets/red-road-master-crest.webp') center/contain no-repeat;opacity:.035;pointer-events:none}
+.kiosk-page::after{content:"";position:fixed;z-index:-1;width:min(82vw,820px);aspect-ratio:1;right:-20vw;bottom:-38vw;background:url('assets/red-road-master-crest-r67.webp') center/contain no-repeat;opacity:.035;pointer-events:none}
 .kiosk-shell{width:min(100%,1180px);min-height:100svh;margin:auto;padding:24px max(24px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(24px,env(safe-area-inset-left))}
 .kiosk-header{display:flex;align-items:center;justify-content:space-between;gap:24px;padding-bottom:20px;border-bottom:1px solid rgba(255,255,255,.11)}
 .kiosk-brand{display:flex;align-items:center;gap:14px}.kiosk-brand img{width:66px;height:66px;object-fit:contain}.kiosk-brand strong,.kiosk-brand span{display:block}.kiosk-brand strong{font-size:21px;text-transform:uppercase;letter-spacing:.045em}.kiosk-brand span{margin-top:3px;color:#999ea7;font-size:10px;font-weight:900;letter-spacing:.15em;text-transform:uppercase}
@@ -135,7 +135,7 @@ body{background:#07080a}
 .location-detail strong{display:block;color:#fff;margin-bottom:3px}
 
 .premium-cta{position:relative;overflow:hidden;border:1px solid rgba(226,12,27,.35)!important;background:radial-gradient(circle at 85% 30%,rgba(226,12,27,.22),transparent 25rem),linear-gradient(145deg,#111318,#08090b)!important}
-.premium-cta::after{content:"";position:absolute;width:420px;aspect-ratio:1;right:-90px;bottom:-180px;background:url('assets/red-road-master-crest.webp') center/contain no-repeat;opacity:.045;pointer-events:none}
+.premium-cta::after{content:"";position:absolute;width:420px;aspect-ratio:1;right:-90px;bottom:-180px;background:url('assets/red-road-master-crest-r67.webp') center/contain no-repeat;opacity:.045;pointer-events:none}
 
 .mobile-trial-bar{display:none;position:fixed;left:0;right:0;bottom:0;z-index:90;padding:10px max(12px,env(safe-area-inset-left)) calc(10px + env(safe-area-inset-bottom));background:rgba(7,8,10,.94);border-top:1px solid rgba(255,255,255,.11);backdrop-filter:blur(16px)}
 .mobile-trial-bar .btn{width:100%;min-height:52px}
@@ -177,7 +177,7 @@ body{background:#07080a}
   inset:0;
   z-index:0;
   pointer-events:none;
-  background:url('assets/bullyproof-training-background.webp') left 48% / 116% auto no-repeat;
+  background:url('assets/bullyproof-training-background-r67.webp') left 48% / 116% auto no-repeat;
   filter:brightness(.94) saturate(.8) contrast(1.06);
   opacity:.78;
 }
@@ -518,3 +518,8 @@ body{background:#07080a}
   .member-settings-panel{padding:18px 14px}
   .waiver-detail-grid{grid-template-columns:1fr}
 }
+
+/* Release 67: same crop and layout, smaller mobile hero download. */
+@media(max-width:700px){.hero-logo-mode .hero-action-photo{background-image:url('assets/hero-mobile-r67.webp')}}
+/* JS enables deferral only when IntersectionObserver is available. */
+.home-page.defer-program-photos .program-card:not(.photo-ready)::before{background-image:none}

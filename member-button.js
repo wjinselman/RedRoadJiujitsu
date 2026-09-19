@@ -1,5 +1,5 @@
 /* Only the bottom signup button follows Auth state; no database reads/writes. */
-import { auth, firebaseConfigured, onAuthStateChanged } from './firebase-client.js?v=52';
+import { auth, firebaseConfigured, onAuthStateChanged } from './firebase-auth-client.js?v=67';
 
 export function bindMemberButton(button) {
   if (!button || !firebaseConfigured || !auth) return;

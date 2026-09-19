@@ -1,0 +1,66 @@
+<!DOCTYPE html><html lang="en" class="portal-document rr-scroll-document"><head>
+<meta charset="utf-8"><meta content="width=device-width,initial-scale=1,viewport-fit=cover" name="viewport"><meta content="#08090b" name="theme-color"><meta content="noindex,nofollow" name="robots">
+<title>Class Check-In | Red Road BJJ</title>
+<link href="redroad-v25.css?v=67" rel="stylesheet"><link href="prod14.css?v=prod-37" rel="stylesheet"><link href="premium.css?v=67" rel="stylesheet"><link href="experience.css?v=67" rel="stylesheet"><link href="assets/favicon-64.png" rel="icon" sizes="64x64" type="image/png">
+<link rel="stylesheet" href="attendance-month.css?v=1">
+
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+</head><body class="member-page checkin-page">
+<main class="checkin-shell">
+<img class="checkin-logo" src="assets/red-road-master-crest-r67.webp" alt="Red Road BJJ" width="760" height="760">
+<p class="flash-message" id="checkin-hours" role="status">Check-in hours: Monday–Friday, Kids 5:45–7 PM; Adults 6:45–8 PM (Central Time). Sign-in is available at any time.</p>
+<section class="login-card" id="checkin-restoring" role="status" aria-live="polite"><h1>Class Check-In</h1><p>Looking for your saved sign-in…</p></section>
+<section class="login-card" id="checkin-login-view" hidden>
+<div class="kicker">Red Road BJJ</div><h1>Class Check-In</h1><p class="portal-muted">Sign in once on your own phone. Next time you scan, we’ll take you straight to your Check In button.</p>
+<form class="portal-form" id="checkin-login-form" method="post" data-service-form=""><div><label for="checkin-email">Email</label><input id="checkin-email" name="email" type="email" inputmode="email" autocomplete="email" required></div><div><label for="checkin-password">Password</label><input id="checkin-password" name="password" type="password" autocomplete="current-password" minlength="6" required></div><button class="btn btn-red btn-full" type="submit">Sign In</button></form>
+<div class="flash-message" id="checkin-login-message" role="status" aria-live="polite" hidden></div>
+<div id="checkin-verification" hidden style="margin-top:16px">
+<div style="display:flex;flex-wrap:wrap;gap:12px">
+<button class="btn btn-red" id="checkin-send-verification" type="button">Send verification email</button>
+<button class="btn btn-dark" id="checkin-recheck-verification" type="button">I’ve verified my email</button>
+</div>
+</div>
+<details id="checkin-guest-options" style="margin-top:24px;padding-top:20px;border-top:1px solid #34373d">
+<summary style="cursor:pointer;padding:12px 0">New here? Create an account</summary>
+<p class="portal-muted">New members enroll separately. A coach will activate your membership before class check-in is available.</p>
+<a class="btn btn-dark btn-full" href="members.html?setup=1">Create a Member Account</a>
+<p class="portal-hint">Already on the roster but need a login? <a href="members.html?setup=1">Set up your member login</a>.</p>
+<p class="portal-hint">Just visiting? <a href="waiver.html">Sign a waiver</a>.</p>
+</details>
+</section>
+<section class="login-card checkin-confirm" id="checkin-confirm-view" hidden>
+<div class="kicker">Welcome</div><h1 id="checkin-member-name">Member</h1><p class="portal-muted" id="checkin-class-name">Today’s class</p><div id="checkin-program-choice" hidden><label for="checkin-program">Choose your class</label><select id="checkin-program"><option value="">Select a class</option><option value="kids">Kids class</option><option value="adult">Adult class</option></select></div><button class="btn btn-red btn-full" id="checkin-confirm-button" type="button">Check In</button><div class="flash-message" id="checkin-message" role="status" aria-live="polite" hidden></div>
+<button id="checkin-reset-test" class="btn btn-dark btn-full" type="button" style="margin-top:16px" hidden>Reset my test check-in</button>
+<button class="text-action" id="checkin-switch-account" type="button" style="margin-top:16px">Not you? Switch account</button>
+<section class="attendance-panel" aria-labelledby="attendance-heading">
+<h2 id="attendance-heading">Your attendance this month</h2>
+<p id="attendance-status" role="status" aria-live="polite"></p>
+<div id="attendance-details" hidden>
+<p id="attendance-month-label"></p>
+<p class="attendance-summary"><strong id="attendance-count">0</strong><span>classes attended</span></p>
+<div class="attendance-calendar" id="attendance-calendar" role="group" aria-label="Monthly attendance calendar"></div>
+<p class="attendance-legend"><span aria-hidden="true"></span>Attended · Outline marks today</p>
+</div>
+<button id="attendance-retry" type="button" class="btn btn-dark" hidden>Reload attendance</button>
+</section>
+<a class="btn btn-dark btn-full checkin-home" href="/">Back to Home</a>
+
+</section>
+</main>
+<script>
+(() => {
+  const message = document.getElementById('checkin-login-message');
+  function warning(text) { document.getElementById('checkin-restoring').hidden = true; document.getElementById('checkin-login-view').hidden = false; message.textContent = text; message.dataset.tone = 'error'; message.hidden = false; }
+  document.getElementById('checkin-login-form').addEventListener('submit', event => {
+    if (window.redRoadCheckinReady) return;
+    event.preventDefault(); event.stopImmediatePropagation();
+    warning('Secure sign-in is still loading. Check your connection and refresh this page.');
+  }, true);
+  setTimeout(() => {
+    if (!window.redRoadCheckinReady) warning('Secure sign-in could not load. Check your connection and refresh. If it continues, send the Developer a screenshot of this message.');
+  }, 12000);
+})();
+</script>
+<script src="checkin.js?v=85" type="module"></script></body></html>

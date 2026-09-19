@@ -117,3 +117,12 @@
     addEventListener('resize', update, { passive: true }); update();
   }
 })();
+
+(() => {
+ if (!document.body.classList.contains('home-page') || !('IntersectionObserver' in window)) return;
+ document.body.classList.add('defer-program-photos');
+ const observer = new IntersectionObserver(entries => entries.forEach(entry => {
+   if (entry.isIntersecting) { entry.target.classList.add('photo-ready'); observer.unobserve(entry.target); }
+ }), {rootMargin:'500px 0px'});
+ document.querySelectorAll('.program-card').forEach(card => observer.observe(card));
+})();

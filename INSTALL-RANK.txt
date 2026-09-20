@@ -1,0 +1,50 @@
+RED ROAD - PENDING MEMBER RANK
+
+This ZIP contains only the eight changed website/database files and this guide.
+It has not been deployed and does not modify existing member records.
+
+INSTALL ORDER
+1. Back up the current website files and published Firestore rules.
+2. Publish firestore.rules in Firebase's Firestore Rules editor FIRST.
+   This is a database configuration file; uploading it to your website does
+   not publish the rules. If your live rules have changed since the supplied
+   source ZIP, merge these changes into those newer rules before publishing.
+3. Upload the other seven files together to the website root, replacing the
+   matching files and adding rank-model.js.
+4. Refresh open member/admin pages so they load the updated portal script.
+
+BEHAVIOR
+- New signups have official rank "Rank pending" and zero stripes.
+- Signup and member profile include an optional self-reported rank field.
+  This never changes the official belt or stripes.
+- The existing owner/admin editor assigns official rank and keeps the
+  assignment date, staff email, and change history.
+- Existing member belts and stripes are preserved. Previously defaulted
+  White Belt records must be corrected individually by an admin if needed.
+- Coaches retain their existing permissions; this adds no new staff access.
+- Cached older signup pages remain compatible during rollout and may still
+  submit White Belt until refreshed.
+
+CHECK AFTER INSTALL
+Use a test member to complete signup and waiver, open the member portal,
+save a self-reported rank, and confirm the official rank stays pending.
+Assign the test member's belt/stripes in the admin editor and reopen the
+member portal. Check an existing member still has their original rank.
+
+VALIDATION ON THE SUPPLIED SOURCE COPY
+- Four new automated rank-flow tests passed: member display, admin rank
+  assignment/history, signup plus waiver, and duplicate-member protection.
+- Five Firestore emulator test groups passed: signup access, invalid rank
+  rejection, legacy member/profile permissions, admin assignment/privacy,
+  and compatibility with the previous signup client.
+- Full UI suite: 39 passed, 7 failed. The unmodified source using the same
+  test harness: 35 passed, the same 7 failed. No additional failures.
+  Existing failures cover No-Gi exports, two coach/billing display checks,
+  page viewport checks, member check-in, optional-load wording, and trial
+  failure handling. These were not changed as part of the rank update.
+- The supplied rules contained a missing closing parenthesis and signup
+  rules inconsistent with the supplied client's active:true / missing-record
+  lookup. These were corrected and the revised rules compiled in the emulator.
+
+Local tests do not establish that the published site's rules/configuration
+match this source ZIP. Complete the installation check before general use.

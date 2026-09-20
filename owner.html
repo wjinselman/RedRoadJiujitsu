@@ -394,6 +394,11 @@
 <label for="owner-rank">Belt</label>
 
 <select id="owner-rank" name="rank">
+<option>Rank pending</option>
+<option>Grey / White Belt</option><option>Grey Belt</option><option>Grey / Black Belt</option>
+<option>Yellow / White Belt</option><option>Yellow Belt</option><option>Yellow / Black Belt</option>
+<option>Orange / White Belt</option><option>Orange Belt</option><option>Orange / Black Belt</option>
+<option>Green / White Belt</option><option>Green Belt</option><option>Green / Black Belt</option>
 
 <option>White Belt</option>
 
@@ -538,8 +543,14 @@
 <div>
 
 <label for="edit-member-rank">Belt</label>
+<p id="edit-rank-review" style="white-space:pre-line" class="portal-muted"></p>
 
 <select id="edit-member-rank" name="rank">
+<option>Rank pending</option>
+<option>Grey / White Belt</option><option>Grey Belt</option><option>Grey / Black Belt</option>
+<option>Yellow / White Belt</option><option>Yellow Belt</option><option>Yellow / Black Belt</option>
+<option>Orange / White Belt</option><option>Orange Belt</option><option>Orange / Black Belt</option>
+<option>Green / White Belt</option><option>Green Belt</option><option>Green / Black Belt</option>
 
 <option>White Belt</option>
 
@@ -902,7 +913,7 @@
 
 </main>
 
-<script src="portal.js?v=84" type="module">
+<script src="portal.js?v=86-rank" type="module">
 
 </script>
 
@@ -913,4 +924,3 @@
 
 
 <dialog id="attendance-tie-dialog" aria-labelledby="attendance-tie-heading" style="background:#111318;color:#fff;border:1px solid #53313a;border-radius:12px;padding:24px;width:min(420px,90vw);max-height:80vh;overflow:auto;box-sizing:border-box"><h2 id="attendance-tie-heading">Tied for Top Attendance</h2><p id="attendance-tie-summary"></p><ul id="attendance-tie-names" style="line-height:1.8;overflow-wrap:anywhere"></ul><button class="btn btn-dark" id="attendance-tie-close" type="button">Close</button></dialog></body></html>
-

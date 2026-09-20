@@ -1,3 +1,4 @@
+import {signupRank} from './rank-model.js?v=1';
 import {runTransaction} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
 import {
   firebaseConfigured,
@@ -213,8 +214,7 @@ form.addEventListener('submit', async event => {
       const member = {
         email,
         name: participant,
-        rank: 'White Belt',
-        stripes: 0,
+        ...signupRank(pending.selfReportedRank),
         plan: String(pending.program || 'Adult'),
         paid: false,
         paymentExempt: false,

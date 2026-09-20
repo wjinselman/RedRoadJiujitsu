@@ -233,7 +233,7 @@
 
 <strong id="member-rank">—</strong>
 
-<small>Current belt / rank</small>
+<small id="member-rank-note">Current belt / rank</small>
 
 </div>
 
@@ -298,6 +298,7 @@
 <p class="portal-muted">You can update contact details here. Membership, payment, rank and waiver status remain staff-controlled.</p>
 
 <form class="owner-form launch-owner-form" id="member-profile-form" method="post" data-service-form="">
+<div class="form-wide"><label for="profile-self-reported-rank">Self-reported belt / rank (optional)</label><input id="profile-self-reported-rank" name="selfReportedRank" maxlength="80" placeholder="For example: Blue belt, 2 stripes"><p class="portal-muted">Staff will review this. It does not change your official belt or stripes.</p></div>
 
 <div><label for="profile-phone">Phone</label><input id="profile-phone" maxlength="40" name="phone" type="tel"></div>
 
@@ -335,7 +336,7 @@
 
 </main>
 
-<script src="portal.js?v=85" type="module">
+<script src="portal.js?v=86-rank" type="module">
 
 </script>
 
@@ -346,4 +347,3 @@
 
 
 </body></html>
-

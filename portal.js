@@ -1,3 +1,4 @@
+import {PENDING_RANK, rankMetadata, assignRank} from './rank-model.js?v=1';
 import {loadTopAttendance,clearTopAttendance} from './top-attendance.js?v=2';
 import {toggleMemberPaid} from './quick-paid.js?v=1';
 let quickPaymentBusy = false;
@@ -193,7 +194,8 @@ const stripeCount = value => {
 
 const formatRank = member => {
 
-  const belt = String(member?.rank || 'White Belt');
+  const belt = String(member?.rank || PENDING_RANK);
+  if (belt === PENDING_RANK) return PENDING_RANK;
 
   const stripes = stripeCount(member?.stripes);
 
@@ -407,12 +409,17 @@ function renderMemberDashboard(member, userEmail) {
   $('#member-email-display').textContent = userEmail || member.email || '';
 
   $('#member-rank').textContent = formatRank(member);
+  const rankNote = $('#member-rank-note');
+  if (rankNote) rankNote.textContent = (member.rank || PENDING_RANK) === PENDING_RANK
+    ? `Staff will confirm your rank.${member.selfReportedRank ? ' Self-reported: ' + member.selfReportedRank : ''}`
+    : 'Current belt / rank';
 
   $('#member-plan').textContent = member.plan || '—';
 
   $('#member-joined').textContent = member.joinedAt || '—';
 
   $('#profile-phone').value = member.phone || '';
+  $('#profile-self-reported-rank').value = member.selfReportedRank || '';
 
   $('#profile-address').value = member.address || '';
 
@@ -823,6 +830,7 @@ function setupMemberPage() {
       ...currentMember,
 
       phone: clean(fd.get('phone'), 40),
+      selfReportedRank: clean(fd.get('selfReportedRank'), 80),
 
       address: clean(fd.get('address'), 240),
 
@@ -843,6 +851,7 @@ function setupMemberPage() {
       const profileUpdate = {
 
         phone: updated.phone,
+        selfReportedRank: updated.selfReportedRank,
 
         address: updated.address,
 
@@ -949,6 +958,9 @@ function memberPayloadFromForm(form, previous = null) {
   const email = normalizedEmail(fd.get('email') || previous?.email);
 
   const coachAccess = fd.get('coachAccess') === 'on';
+  const rank = String(fd.get('rank') || PENDING_RANK);
+  const stripes = rank === PENDING_RANK ? 0 : stripeCount(fd.get('stripes'));
+  const metadata = assignRank(previous, rank, stripes, normalizedEmail(auth.currentUser?.email));
 
   return {
 
@@ -956,9 +968,10 @@ function memberPayloadFromForm(form, previous = null) {
 
     name: String(fd.get('name') || '').trim(),
 
-    rank: String(fd.get('rank') || 'White Belt'),
+    rank,
+    ...metadata,
 
-    stripes: stripeCount(fd.get('stripes')),
+    stripes,
 
     plan: String(fd.get('plan') || 'Adult'),
 
@@ -1349,7 +1362,8 @@ async function saveMember(member, previous = null, intent = null) {
 
     name: String(member.name || '').trim(),
 
-    rank: String(member.rank || 'White Belt'),
+    rank: String(member.rank || PENDING_RANK),
+    ...rankMetadata(member),
 
     stripes: stripeCount(member.stripes),
 
@@ -1468,7 +1482,18 @@ function openEditMember(member) {
 
   $('#edit-member-plan').value = member.plan || 'Adult';
 
-  $('#edit-member-rank').value = member.rank || 'White Belt';
+  const rankSelect = $('#edit-member-rank');
+  const currentRank = member.rank || PENDING_RANK;
+  if (![...rankSelect.options].some(option => option.value === currentRank)) {
+    rankSelect.add(new Option(currentRank, currentRank));
+  }
+  rankSelect.value = currentRank;
+  const rankReview = $('#edit-rank-review');
+  if (rankReview) rankReview.textContent = [
+    member.selfReportedRank ? `Self-reported: ${member.selfReportedRank}.` : 'No self-reported rank.',
+    member.rankVerifiedBy ? `Last rank assignment: ${member.rankVerifiedBy} on ${member.rankVerifiedAt}.` : 'Select the confirmed belt and stripes to assign rank.',
+    ...(member.rankHistory || []).map(item => `${item.at}: ${item.from} (${item.fromStripes} stripes) → ${item.to} (${item.stripes} stripes), by ${item.by}.`)
+  ].join('\n');
 
   $('#edit-member-stripes').value = String(stripeCount(member.stripes));
 

@@ -9,11 +9,14 @@ INSTALL ORDER
    This is a database configuration file; uploading it to your website does
    not publish the rules. If your live rules have changed since the supplied
    source ZIP, merge these changes into those newer rules before publishing.
-3. Upload the other seven files together to the website root, replacing the
+3. Upload the other eight files together to the website root, replacing the
    matching files and adding rank-model.js.
 4. Refresh open member/admin pages so they load the updated portal script.
 
 BEHAVIOR
+- The main page has a direct "Join Now" button in the top navigation and
+  the first-screen action area. It opens the existing enrollment and waiver
+  flow for people ready to become members. The free-trial path remains there.
 - New signups have official rank "Rank pending" and zero stripes.
 - Signup and member profile include an optional self-reported rank field.
   This never changes the official belt or stripes.

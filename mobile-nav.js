@@ -95,7 +95,7 @@
     document.body.append(actionBar);
     document.body.classList.add('has-mobile-action-bar');
     const signupButton = actionBar.querySelector('.mobile-action-primary');
-    import('./member-button.js?v=67')
+    import('./member-button.js?v=68')
       .then(module => {
         module.bindMemberButton(signupButton);
         document.querySelectorAll('[data-member-action="trial"]').forEach(button => module.bindMemberButton(button, {

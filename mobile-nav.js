@@ -96,8 +96,13 @@
     document.body.classList.add('has-mobile-action-bar');
     const signupButton = actionBar.querySelector('.mobile-action-primary');
     import('./member-button.js?v=67')
-      .then(module => module.bindMemberButton(signupButton))
-      .catch(() => { /* Keep Sign Up Now if Auth cannot load. */ });
+      .then(module => {
+        module.bindMemberButton(signupButton);
+        document.querySelectorAll('[data-member-action="trial"]').forEach(button => module.bindMemberButton(button, {
+          signedOutLabel: 'Try One Class Free', signedOutHref: 'waiver.html?trial=1'
+        }));
+      })
+      .catch(() => { /* Keep the public actions if Auth cannot load. */ });
   }
   const updateCurrent = () => {
     document.querySelectorAll('.mobile-nav-links a, .mobile-action-link').forEach(link => {

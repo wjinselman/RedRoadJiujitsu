@@ -56,6 +56,7 @@ if (trialMode) {
   submitButton.textContent = 'Submit Free Trial & Waiver';
 } else if (enrollmentMode) {
   submitButton.textContent = 'Sign Waiver & Complete Enrollment';
+  document.querySelector('#waiver-storage-note').innerHTML = '<strong>One final step:</strong> Signing below creates your membership and saves your waiver together.';
 } else {
   document.querySelector('#waiver-steps').hidden = true;
 }
@@ -254,7 +255,8 @@ form.addEventListener('submit', async event => {
       receiptForDownload = record;
       success.hidden = false;
       delete success.dataset.tone;
-      success.innerHTML = `<strong>Signup and waiver complete.</strong><br>Your membership is active. Staff record payments separately. ${user.emailVerified ? 'Your email is already verified.' : verificationSent ? 'Check your email and verify your address.' : 'The verification email could not be sent. Sign in at Member Login to request another verification email.'} Then use <a class="waiver-inline-link" href="members.html">Member Login</a> to view your status.`;
+      success.innerHTML = `<strong>Signup and waiver complete.</strong><br>Your membership is active. Staff record payments separately. ${user.emailVerified ? 'Your email is already verified.' : verificationSent ? 'Check your email and verify your address.' : 'The verification email could not be sent. You can request another verification email from Member Login.'} Taking you to <a class="waiver-inline-link" href="members.html">Member Login</a>…`;
+      setTimeout(() => location.replace('members.html?enrolled=1'), 1600);
     } else {
       if (!firebaseConfigured || !auth || !db) throw new Error('Waiver storage is not connected. Nothing has been submitted. Ask Red Road staff for help.');
       let user = auth.currentUser;
@@ -277,7 +279,15 @@ form.addEventListener('submit', async event => {
     attachWaiverPrint(receiptForDownload,delivery);
     success.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
   } catch (error) {
-    showError(String(error?.code || '').includes('permission-denied') ? 'Your waiver was not saved. Ask Red Road staff to check the waiver-storage setup before trying again.' : String(error?.message || 'The waiver could not be saved.'));
+    const denied = String(error?.code || '').includes('permission-denied');
+    const message = enrollmentMode
+      ? (denied
+        ? 'Your enrollment was not completed and your waiver was not saved. Firebase rejected the signup rules. Publish the current Firestore rules from this update, then try again.'
+        : `Your enrollment was not completed and your waiver was not saved. ${String(error?.message || 'Return to enrollment and try again.')}`)
+      : (denied
+        ? 'Your waiver was not saved. Ask Red Road staff to check the waiver-storage setup before trying again.'
+        : String(error?.message || 'The waiver could not be saved.'));
+    showError(message);
   } finally {
     submitting = false;
     form.removeAttribute('aria-busy');

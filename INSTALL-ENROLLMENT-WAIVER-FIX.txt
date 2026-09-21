@@ -1,0 +1,25 @@
+RED ROAD - ENROLLMENT WAIVER FIX
+
+This patch fixes the misleading waiver message shown during first-time signup.
+
+WHAT CHANGED
+- The pre-submit notice now says the waiver WILL be saved after signing; it
+  no longer says it is already saved.
+- Enrollment failures now say that neither the membership nor waiver was
+  saved, and identify Firebase rules as the likely cause for a permission
+  denial.
+- A successful enrollment waits for the member and waiver transaction, shows
+  the confirmed success message, then automatically opens Member Login.
+
+INSTALL ORDER
+1. In Firebase Console > Firestore Database > Rules, replace/publish the
+   included firestore.rules FIRST. This is required for new "Rank pending"
+   signups and cannot be installed by uploading website files.
+2. Upload waiver.html and waiver-prod14.js to the website root, replacing the
+   matching files.
+3. Open a fresh private browser window and complete a test signup. It should
+   reach Member Login only after the saved confirmation appears.
+
+The supplied screenshot's bottom error is a Firebase permission denial. Until
+the included Firestore rules are published, the website update alone cannot
+complete that signup transaction.

@@ -92,6 +92,7 @@
   }
 }
 </style>
+<link rel="stylesheet" href="paid-date.css?v=1">
 </head>
 
 <body class="staff-page"><noscript>&lt;p style="padding:16px;background:#241116;color:white"&gt;JavaScript is required for secure sign-in, check-in and waiver submission. Please enable it before completing a form.&lt;/p&gt;</noscript>
@@ -917,7 +918,7 @@
 
 </main>
 
-<script src="portal.js?v=87-paid-date" type="module">
+<script src="portal.js?v=88-paid-date-calendar" type="module">
 
 </script>
 
@@ -927,4 +928,21 @@
 
 
 
-<dialog id="attendance-tie-dialog" aria-labelledby="attendance-tie-heading" style="background:#111318;color:#fff;border:1px solid #53313a;border-radius:12px;padding:24px;width:min(420px,90vw);max-height:80vh;overflow:auto;box-sizing:border-box"><h2 id="attendance-tie-heading">Tied for Top Attendance</h2><p id="attendance-tie-summary"></p><ul id="attendance-tie-names" style="line-height:1.8;overflow-wrap:anywhere"></ul><button class="btn btn-dark" id="attendance-tie-close" type="button">Close</button></dialog></body></html>
+<dialog id="attendance-tie-dialog" aria-labelledby="attendance-tie-heading" style="background:#111318;color:#fff;border:1px solid #53313a;border-radius:12px;padding:24px;width:min(420px,90vw);max-height:80vh;overflow:auto;box-sizing:border-box"><h2 id="attendance-tie-heading">Tied for Top Attendance</h2><p id="attendance-tie-summary"></p><ul id="attendance-tie-names" style="line-height:1.8;overflow-wrap:anywhere"></ul><button class="btn btn-dark" id="attendance-tie-close" type="button">Close</button></dialog>
+<dialog id="paid-date-dialog" aria-labelledby="paid-date-heading" aria-describedby="paid-date-help">
+  <h2 id="paid-date-heading">Set paid date</h2>
+  <p id="paid-date-member"></p>
+  <form id="paid-date-form">
+    <label for="paid-date-value">Paid on date</label>
+    <input id="paid-date-value" name="paidOn" type="date" required aria-describedby="paid-date-help paid-date-coverage">
+    <p id="paid-date-help">Select the day payment was received. Saving marks Paid for that calendar month; it becomes Past Due after month-end.</p>
+    <p id="paid-date-coverage" aria-live="polite"></p>
+    <p id="paid-date-recording">Uses the same payment recording as Edit. Saving a different paid date adds a payment to the monthly report.</p>
+    <p id="paid-date-message" role="status" aria-live="polite"></p>
+    <div class="paid-date-actions">
+      <button class="btn btn-dark" id="paid-date-cancel" type="button">Cancel</button>
+      <button class="btn btn-red" id="paid-date-save" type="submit">Save date</button>
+    </div>
+  </form>
+</dialog>
+</body></html>

@@ -1,6 +1,7 @@
 import {PENDING_RANK, rankMetadata, assignRank} from './rank-model.js?v=1';
 import {loadTopAttendance,clearTopAttendance} from './top-attendance.js?v=2';
 import {toggleMemberPaid} from './quick-paid.js?v=2';
+import {saveMemberPaidDate,createPaidDatePicker} from './paid-date.js?v=1';
 let quickPaymentBusy = false;
 let ownerBillingLoading = false;
 import {setupEmailInvitation,isAccountSetupOpen} from './email-setup.js?v=4';
@@ -1146,7 +1147,13 @@ function statusPills(member) {
 
   pills.push(`<span class="status-chip ${member.active ? 'active' : 'paused'}">${member.active ? 'Active' : 'Inactive'}</span>`);
 
-  pills.push(`<span class="status-chip ${!billingReady ? 'pending' : isPaymentCurrent(member) ? 'active' : 'past-due'}">${esc(billingReady ? billingText(member) : (ownerBillingLoading ? 'Loading payment status…' : 'Billing unavailable'))}</span>`);
+  const paymentClass = !billingReady ? 'pending' : isPaymentCurrent(member) ? 'active' : 'past-due';
+  const paymentLabel = esc(billingReady ? billingText(member) : (ownerBillingLoading ? 'Loading payment status…' : 'Billing unavailable'));
+  const canSetDate = ['owner','developer'].includes(ownerIdentity?.role) && !isPaymentExempt(member)
+    && member.archived !== true && profiles.get(member.email)?.category !== 'family-covered';
+  pills.push(canSetDate
+    ? `<button class="status-chip payment-date-chip ${paymentClass}" type="button" data-action="set-paid-date" ${!billingReady || quickPaymentBusy ? 'disabled' : ''} title="Click to set the Paid on date" aria-haspopup="dialog" aria-controls="paid-date-dialog" aria-label="${esc('Set paid date for '+(member.name || member.email)+'. '+(billingReady ? billingText(member) : 'Billing unavailable'))}">${paymentLabel}</button>`
+    : `<span class="status-chip ${paymentClass}">${paymentLabel}</span>`);
 
   if (member.coachAccess === true) pills.push('<span class="status-chip active">Coach</span>');
 
@@ -1201,7 +1208,7 @@ function renderOwnerList(coaches = false) {
       <div class="member-row-actions">
 
         ${canManage ? '<button class="btn btn-mini btn-dark" type="button" data-action="edit">Edit</button>' : ''}
-        ${canManage && !isPaymentExempt(member) && member.archived !== true && profiles.get(member.email)?.category !== 'family-covered' ? `<button class="btn btn-mini btn-dark" style="background:transparent;border-color:${isPaymentCurrent(member) ? '#28613f' : '#71313b'};color:${isPaymentCurrent(member) ? '#a9d8b6' : '#ffb1bb'};box-shadow:none" type="button" data-action="quick-paid" ${!billingReady || quickPaymentBusy ? 'disabled' : ''} title="${isPaymentCurrent(member) ? 'Click to mark unpaid.' : 'Click to mark paid. Use Edit to set a Paid on date for month-end expiry.'}" aria-label="${isPaymentCurrent(member) ? 'Paid. Click to mark unpaid.' : 'Unpaid. Click to mark paid.'}">${!billingReady ? (ownerBillingLoading ? 'Loading…' : 'Unavailable') : isPaymentCurrent(member) ? 'Paid' : 'Unpaid'}</button>` : ''}
+        ${canManage && !isPaymentExempt(member) && member.archived !== true && profiles.get(member.email)?.category !== 'family-covered' ? `<button class="btn btn-mini btn-dark" style="background:transparent;border-color:${isPaymentCurrent(member) ? '#28613f' : '#71313b'};color:${isPaymentCurrent(member) ? '#a9d8b6' : '#ffb1bb'};box-shadow:none" type="button" data-action="quick-paid" ${!billingReady || quickPaymentBusy ? 'disabled' : ''} title="${isPaymentCurrent(member) ? 'Click to mark unpaid.' : 'Click to mark paid. Click the payment/date badge above to set a Paid on date for month-end expiry.'}" aria-label="${isPaymentCurrent(member) ? 'Paid. Click to mark unpaid.' : 'Unpaid. Click to mark paid.'}">${!billingReady ? (ownerBillingLoading ? 'Loading…' : 'Unavailable') : isPaymentCurrent(member) ? 'Paid' : 'Unpaid'}</button>` : ''}
 
         ${member.waiverSigned ? '<button class="btn btn-mini btn-dark" type="button" data-action="view-waiver">Waiver</button>' : ''}
 
@@ -2085,6 +2092,30 @@ function setupOwnerPage() {
   const loginMessage = $('#owner-login-message');
 
   const ownerMessage = $('#owner-message');
+
+  const paidDatePicker = createPaidDatePicker({
+    restoreFocus: email => {
+      const row = [...document.querySelectorAll('#owner-member-list [data-member-email], #owner-coach-list [data-member-email]')]
+        .find(item => normalizedEmail(item.dataset.memberEmail) === normalizedEmail(email));
+      row?.querySelector('[data-action="set-paid-date"]')?.focus({preventScroll:true});
+    },
+    onSave: async ({email,paidOn,expectedRevision}) => {
+      if (!['owner','developer'].includes(ownerIdentity?.role)) throw Error('Owner or Developer access is required.');
+      if (quickPaymentBusy) throw Error('A payment is already saving. Please wait.');
+      const member = ownerMembers.find(item => normalizedEmail(item.email) === normalizedEmail(email));
+      if (!member) throw Error('This member is no longer in the roster. Cancel and refresh.');
+      quickPaymentBusy = true;
+      try {
+        const result = await saveMemberPaidDate(member,ownerIdentity.role,paidOn,expectedRevision);
+        Object.assign(member,result.member);
+        invalidateReport();
+        flash(ownerMessage,`${member.name || member.email}: Paid on date saved. Paid through ${result.profile.paidThrough}.`);
+      } finally {
+        quickPaymentBusy = false;
+        renderOwner();
+      }
+    }
+  });
 
   listenAsync($('#payment-alert-list'),'click',async event=>{
 
@@ -2992,6 +3023,16 @@ function setupOwnerPage() {
 
 
 
+    if (button.dataset.action === 'set-paid-date') {
+      if (!['owner','developer'].includes(ownerIdentity?.role) || quickPaymentBusy) return;
+      if (!billingReady) return flash(ownerMessage,'Payment details are unavailable. Refresh the roster first.','error');
+      if (member.archived === true || isPaymentExempt(member) || profiles.get(member.email)?.category === 'family-covered') return;
+      if (!paidDatePicker) return flash(ownerMessage,'Refresh this page to load the payment-date calendar.','error');
+      const profile = profiles.get(member.email);
+      paidDatePicker.open({email:member.email,memberName:member.name,currentDate:profile?.paidOn || '',expectedRevision:profile?.revision || 0,trigger:button});
+      return;
+    }
+
     if (button.dataset.action === 'quick-paid') {
       if (!['owner','developer'].includes(ownerIdentity?.role) || quickPaymentBusy) return;
       quickPaymentBusy = true;
@@ -3000,7 +3041,7 @@ function setupOwnerPage() {
         const result = await toggleMemberPaid(member,ownerIdentity.role);
         Object.assign(member,result.member);
         invalidateReport();
-        flash(ownerMessage,result.wantsPaid ? 'Marked paid. Use Edit to set the Paid on date for automatic month-end expiry.' : 'Marked unpaid.');
+        flash(ownerMessage,result.wantsPaid ? 'Marked paid. Click the payment/date badge to set the Paid on date for automatic month-end expiry.' : 'Marked unpaid.');
       } catch(error) { flash(ownerMessage,error.message || 'Could not update payment status. Refresh and try again.','error'); }
       finally { quickPaymentBusy=false;renderOwner(); }
       return;

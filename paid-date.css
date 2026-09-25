@@ -1,0 +1,38 @@
+/* Isolated roster shortcut styles; existing page scrolling/layout is untouched. */
+.staff-page button.status-chip.payment-date-chip{
+  font-family:inherit;font-weight:900;text-transform:uppercase;appearance:none;
+  min-height:0;min-width:0;margin:0;box-shadow:none;cursor:pointer;text-align:left;
+}
+.staff-page button.status-chip.payment-date-chip:not(:disabled):hover{
+  text-decoration:underline;text-underline-offset:3px;filter:brightness(1.2);
+}
+.staff-page button.status-chip.payment-date-chip:focus-visible{
+  outline:2px solid currentColor;outline-offset:3px;
+}
+.staff-page button.status-chip.payment-date-chip:disabled{cursor:wait;opacity:.65}
+#paid-date-dialog{
+  box-sizing:border-box;width:min(440px,calc(100vw - 32px));max-width:calc(100vw - 32px);
+  max-height:calc(100dvh - 32px);overflow:auto;overscroll-behavior:contain;
+  margin:auto;padding:24px;border:1px solid #50313a;border-radius:14px;
+  background:#111318;color:#f4f4f5;box-shadow:0 24px 80px #0009;color-scheme:dark;
+}
+#paid-date-dialog::backdrop{background:rgba(0,0,0,.72)}
+#paid-date-dialog h2{margin:0 0 6px;font-family:inherit;font-size:22px;line-height:1.25;letter-spacing:0}
+#paid-date-member{margin:0 0 20px;font-size:15px;font-weight:700;overflow-wrap:anywhere}
+#paid-date-form{display:grid;gap:12px;min-width:0}
+#paid-date-form label{font-size:13px;font-weight:700;letter-spacing:0;text-transform:none}
+#paid-date-value{
+  display:block;box-sizing:border-box;width:100%;min-width:0;min-height:48px;
+  padding:12px;border:1px solid #555a64;border-radius:8px;background:#090b0e;
+  color:#fff;font:inherit;font-size:16px;
+}
+#paid-date-value:focus-visible{outline:2px solid #d6293d;outline-offset:2px}
+#paid-date-help,#paid-date-recording{margin:0;font-size:13px;line-height:1.5;color:#b5bbc5}
+#paid-date-coverage{margin:0;padding:12px;background:#191d24;border:1px solid #303641;border-radius:8px;font-size:13px;line-height:1.5}
+#paid-date-message{margin:0;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+#paid-date-message:empty{display:none}
+#paid-date-message[data-error="true"]{color:#ffb1bb}
+.paid-date-actions{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:10px;margin-top:6px}
+#paid-date-dialog .paid-date-actions button{min-height:44px;padding:10px 16px;font-size:12px;cursor:pointer}
+#paid-date-dialog .paid-date-actions button:disabled{opacity:.55;cursor:wait}
+@media(max-width:480px){#paid-date-dialog{padding:20px}.paid-date-actions button{flex:1}}

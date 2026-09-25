@@ -1,7 +1,7 @@
-import {previousMonth,summarizeExpected,renderReport} from './billing-report.js?v=1';
-import {BILLING_CATEGORIES,money,gymDate,defaultCategory,exempt,summarizePayments,status} from './billing-model.js?v=1';
+import {previousMonth,summarizeExpected,renderReport} from './billing-report.js?v=2';
+import {BILLING_CATEGORIES,money,gymDate,defaultCategory,exempt,summarizePayments,status} from './billing-model.js?v=2';
 
-import {profiles,billingReady,memberBilling,paymentsForMonth,loadBillingProfiles} from './billing-store.js?v=1';
+import {profiles,billingReady,memberBilling,paymentsForMonth,loadBillingProfiles} from './billing-store.js?v=2';
 
 import {db,collection,query,limit,startAfter,getDocsFromServer} from './firebase-client.js?v=52';
 
@@ -30,6 +30,7 @@ export function fillBillingForm(form,member,roster){
   payer.value=profile?.payerEmail||'';
 
   form.elements.paid.checked=memberBilling(member).current;
+  form.elements.paidOn.value=profile?.paidOn||'';
 
   const hint=form.querySelector('[data-billing-help]');
 
@@ -38,6 +39,7 @@ export function fillBillingForm(form,member,roster){
     const covered=select.value==='family-covered';
 
     payer.closest('[data-family-payer]').hidden=!covered;
+    form.elements.paidOn.closest('.billing-paid-on').hidden=covered;
 
     payer.required=covered;select.disabled=!billingReady;payer.disabled=!billingReady||!covered;
 
@@ -61,9 +63,9 @@ export function fillBillingForm(form,member,roster){
 
       hint.textContent=!billingReady?'Billing unavailable. Refresh the roster before changing payments.':isExempt?'Dues exempt: no payment will be recorded.':
 
-        `${money(BILLING_CATEGORIES[select.value].cents)} per payment. Checking Paid and saving an unpaid account records one payment for one calendar month. `+
+        `${money(BILLING_CATEGORIES[select.value].cents)} per month. Paid / Unpaid is a manual status. Enter a Paid on date to cover that calendar month; status becomes Past Due after month-end. `+
 
-        (state.paidThrough?`Paid through ${state.paidThrough}; next due ${state.nextDue}.`:'Existing paid status without a date is preserved until you uncheck, save, then check and save.');
+        (state.paidThrough?`Currently paid through ${state.paidThrough}.`:state.current?'No paid date is set; the Paid status stays manual.':'No paid date is set.');
 
     }
 
@@ -74,6 +76,8 @@ export function fillBillingForm(form,member,roster){
   select.onchange=()=>{if(select.value!=='family-covered')form.elements.paid.checked=false;update();};
 
   payer.onchange=update;
+
+  form.elements.paidOn.onchange=update;
 
   form.elements.coachAccess.onchange=update;
 
@@ -89,7 +93,7 @@ export function billingIntent(form){
 
   if(!billingReady)throw Error('Billing unavailable. Publish the billing rules and refresh the roster before saving.');
 
-  return {category:form.elements.billingCategory.value,payerEmail:form.elements.familyPayer.value,wantsPaid:form.elements.paid.checked};
+  return {category:form.elements.billingCategory.value,payerEmail:form.elements.familyPayer.value,wantsPaid:form.elements.paid.checked,paidOn:form.elements.paidOn.value};
 
 }
 

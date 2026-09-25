@@ -1,6 +1,6 @@
 import {db,auth,doc,getDocFromServer,getDocsFromServer,collection,query,where,limit,startAfter,serverTimestamp} from './firebase-client.js?v=52';
 import {runTransaction} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
-import {status,planSave,gymDate} from './billing-model.js?v=1';
+import {status,planSave,gymDate} from './billing-model.js?v=2';
 export const profiles=new Map();
 export let billingReady=false;
 export async function loadBillingProfiles(){

@@ -10,10 +10,12 @@ export function gymDate(now = new Date()) {
 export function paymentPeriod(start) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(start)) throw Error('Invalid payment date.');
   const [y,m,d]=start.split('-').map(Number);
-  const next=new Date(Date.UTC(y,m,Math.min(d,new Date(Date.UTC(y,m+1,0)).getUTCDate())));
+  const selected=new Date(Date.UTC(y,m-1,d));
+  if(selected.toISOString().slice(0,10)!==start)throw Error('Choose a valid payment date.');
+  const next=new Date(Date.UTC(y,m,1));
   const nextDue=next.toISOString().slice(0,10);
-  next.setUTCDate(next.getUTCDate()-1);
-  return {periodStart:start,paidThrough:next.toISOString().slice(0,10),nextDue};
+  next.setUTCDate(0);
+  return {periodStart:`${start.slice(0,7)}-01`,paidThrough:next.toISOString().slice(0,10),nextDue};
 }
 export function defaultCategory(member) {
   const plan=String(member.plan||'').toLowerCase();
@@ -28,28 +30,35 @@ export function status(member, profile, payer, today=gymDate()) {
   if(!profile)return {current:member.paid===true,label:member.paid?'Paid · date not set':'Past Due',paidThrough:'',nextDue:''};
   const covered=profile.category==='family-covered';
   const effective=covered?(payer?.category==='family-payer'?payer:null):profile;
+  if(effective?.manualStatusOnly===true){
+    const current=effective.paid===true;
+    return {current,label:covered?(current?'Paid through family':'Family payment due'):(current?'Paid · date not set':'Past Due'),paidThrough:'',nextDue:''};
+  }
   const current=!!effective?.paid && (!effective.paidThrough || effective.paidThrough>=today);
   const dates={paidThrough:effective?.paidThrough||'',nextDue:effective?.nextDue||''};
   return {current,...dates,label:covered?(current?'Paid through family':'Family payment due'):(current?(dates.paidThrough?'Paid':'Paid · date not set'):'Past Due')};
 }
-export function planSave({member,oldMember,profile,payer,category,payerEmail,wantsPaid,today=gymDate()}) {
+export function planSave({member,oldMember,profile,payer,category,payerEmail,wantsPaid,paidOn='',today=gymDate()}) {
   if(!BILLING_CATEGORIES[category])throw Error('Choose a billing category.');
   const covered=category==='family-covered';
   if(covered && (!payerEmail || payerEmail===member.email || payer?.category!=='family-payer'))throw Error('Choose a different member saved as Family Plan — Payer.');
   const changed=(profile ? profile.category!==category || profile.payerEmail!==(covered?payerEmail:'') : !!oldMember && defaultCategory(oldMember)!==category);
   const wasCurrent=status(oldMember||{paid:false},profile,payer,today).current;
   if(changed && !covered && wantsPaid && wasCurrent && !exempt(member))throw Error('For a billing-category change, uncheck Paid and save first. Then mark Paid to record the new rate.');
-  const recordPayment=!covered && !exempt(member) && wantsPaid && !wasCurrent;
+  const recordPayment=!covered && !exempt(member) && wantsPaid && !!paidOn && paidOn!==profile?.paidOn;
   const next={category,payerEmail:covered?payerEmail:'',paid:covered?false:!!wantsPaid,
-    paidThrough:changed?'':profile?.paidThrough||'',nextDue:changed?'':profile?.nextDue||'',
+    paidOn:paidOn||'',paidThrough:'',nextDue:'',manualStatusOnly:!paidOn,
     sequence:profile?.sequence||0,revision:(profile?.revision||0)+1};
   let receipt=null;
-  if(recordPayment){
-    const period=paymentPeriod(today);
-    Object.assign(next,{paid:true,paidThrough:period.paidThrough,nextDue:period.nextDue,sequence:next.sequence+1});
-    receipt={payerEmail:member.email,payerName:member.name,category,amountCents:BILLING_CATEGORIES[category].cents,paidOn:today,...period,sequence:next.sequence};
+  if(paidOn){
+    const period=paymentPeriod(paidOn);
+    Object.assign(next,{paidThrough:period.paidThrough,nextDue:period.nextDue});
   }
-  if(covered){next.paid=false;next.paidThrough='';next.nextDue='';}
+  if(recordPayment){
+    next.sequence++;
+    receipt={payerEmail:member.email,payerName:member.name,category,amountCents:BILLING_CATEGORIES[category].cents,paidOn,...paymentPeriod(paidOn),sequence:next.sequence};
+  }
+  if(covered){next.paid=false;next.paidOn='';next.paidThrough='';next.nextDue='';next.manualStatusOnly=true;}
   return {profile:next,receipt};
 }
 export function summarizePayments(rows){

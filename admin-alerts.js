@@ -1,4 +1,4 @@
-import {status,BILLING_CATEGORIES,defaultCategory,gymDate} from './billing-model.js?v=1';
+import {status,BILLING_CATEGORIES,defaultCategory,gymDate} from './billing-model.js?v=2';
 
 export function activePaymentAlerts(members,profiles,today=gymDate()) {
   return members.filter(member=>member.active===true && member.archived!==true).flatMap(member=>{

@@ -390,6 +390,28 @@ service cloud.firestore {
       allow delete: if isManager();
     }
 
+    // Billing status and paid-on dates are managed by owners/developers only.
+    // Paid-on dates are stored separately from the member profile so they are
+    // not exposed to member accounts or the check-in kiosk.
+    match /billingProfiles/{memberEmail} {
+      allow get: if isManager();
+      allow list: if isManager()
+                  && request.query.limit != null
+                  && request.query.limit <= 250;
+      allow create, update: if isManager();
+      allow delete: if isManager();
+    }
+
+    // Payment entries are visible to managers and append-only from the app.
+    match /payments/{paymentId} {
+      allow get: if isManager();
+      allow list: if isManager()
+                  && request.query.limit != null
+                  && request.query.limit <= 250;
+      allow create: if isManager();
+      allow update, delete: if false;
+    }
+
     // Full signed records are append-only from the member flow. Members may read
     // their own record; staff can review it. Only managers may purge a waiver when
     // permanently removing the associated member.

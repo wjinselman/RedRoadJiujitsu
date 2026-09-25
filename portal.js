@@ -1,14 +1,15 @@
 import {PENDING_RANK, rankMetadata, assignRank} from './rank-model.js?v=1';
 import {loadTopAttendance,clearTopAttendance} from './top-attendance.js?v=2';
-import {toggleMemberPaid} from './quick-paid.js?v=1';
+import {toggleMemberPaid} from './quick-paid.js?v=2';
 let quickPaymentBusy = false;
 let ownerBillingLoading = false;
 import {setupEmailInvitation,isAccountSetupOpen} from './email-setup.js?v=4';
 import {activePaymentAlerts} from './admin-alerts.js?v=1';
+import {gymDate} from './billing-model.js?v=2';
 
-import {profiles,billingReady,loadBillingProfiles,loadMyBilling,memberBilling,saveWithBilling,ensureNoCoveredMembers} from './billing-store.js?v=1';
+import {profiles,billingReady,loadBillingProfiles,loadMyBilling,memberBilling,saveWithBilling,ensureNoCoveredMembers} from './billing-store.js?v=2';
 
-import {fillBillingForm,billingIntent,billingText,setupBillingReport,invalidateReport} from './billing-ui.js?v=2';
+import {fillBillingForm,billingIntent,billingText,setupBillingReport,invalidateReport} from './billing-ui.js?v=3';
 
 import { listenAsync, localDate } from './ui-utils.js?v=49';
 
@@ -1200,7 +1201,7 @@ function renderOwnerList(coaches = false) {
       <div class="member-row-actions">
 
         ${canManage ? '<button class="btn btn-mini btn-dark" type="button" data-action="edit">Edit</button>' : ''}
-        ${canManage && !isPaymentExempt(member) && member.archived !== true && profiles.get(member.email)?.category !== 'family-covered' ? `<button class="btn btn-mini btn-dark" style="background:transparent;border-color:${isPaymentCurrent(member) ? '#28613f' : '#71313b'};color:${isPaymentCurrent(member) ? '#a9d8b6' : '#ffb1bb'};box-shadow:none" type="button" data-action="quick-paid" ${!billingReady || quickPaymentBusy ? 'disabled' : ''} title="${isPaymentCurrent(member) ? 'Click to mark unpaid. Recorded payment history is retained.' : 'Click to mark paid.'}" aria-label="${isPaymentCurrent(member) ? 'Paid. Click to mark unpaid.' : 'Unpaid. Click to mark paid.'}">${!billingReady ? (ownerBillingLoading ? 'Loading…' : 'Unavailable') : isPaymentCurrent(member) ? 'Paid' : 'Unpaid'}</button>` : ''}
+        ${canManage && !isPaymentExempt(member) && member.archived !== true && profiles.get(member.email)?.category !== 'family-covered' ? `<button class="btn btn-mini btn-dark" style="background:transparent;border-color:${isPaymentCurrent(member) ? '#28613f' : '#71313b'};color:${isPaymentCurrent(member) ? '#a9d8b6' : '#ffb1bb'};box-shadow:none" type="button" data-action="quick-paid" ${!billingReady || quickPaymentBusy ? 'disabled' : ''} title="${isPaymentCurrent(member) ? 'Click to mark unpaid.' : 'Click to mark paid. Use Edit to set a Paid on date for month-end expiry.'}" aria-label="${isPaymentCurrent(member) ? 'Paid. Click to mark unpaid.' : 'Unpaid. Click to mark paid.'}">${!billingReady ? (ownerBillingLoading ? 'Loading…' : 'Unavailable') : isPaymentCurrent(member) ? 'Paid' : 'Unpaid'}</button>` : ''}
 
         ${member.waiverSigned ? '<button class="btn btn-mini btn-dark" type="button" data-action="view-waiver">Waiver</button>' : ''}
 
@@ -1272,6 +1273,8 @@ function renderPaymentAlerts() {
 
 function renderOwner() {
 
+  displayedBillingDate=gymDate();
+
   renderPaymentAlerts();
 
   renderOwnerStats();
@@ -1282,6 +1285,15 @@ function renderOwner() {
   renderWaiverLibrary();
 
 }
+
+let displayedBillingDate='';
+function refreshBillingStatusForDateChange() {
+  if (!document.querySelector('#owner-member-list') || !ownerIdentity) return;
+  const today=gymDate();
+  if (today!==displayedBillingDate) renderOwner();
+}
+setInterval(refreshBillingStatusForDateChange,60_000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshBillingStatusForDateChange();});
 
 
 
@@ -2988,7 +3000,7 @@ function setupOwnerPage() {
         const result = await toggleMemberPaid(member,ownerIdentity.role);
         Object.assign(member,result.member);
         invalidateReport();
-        flash(ownerMessage,result.wantsPaid ? (result.restoring ? 'Paid status restored for the existing period. No duplicate payment added.' : 'Payment recorded and paid-through date updated.') : 'Marked unpaid. Recorded payment history is retained.');
+        flash(ownerMessage,result.wantsPaid ? 'Marked paid. Use Edit to set the Paid on date for automatic month-end expiry.' : 'Marked unpaid.');
       } catch(error) { flash(ownerMessage,error.message || 'Could not update payment status. Refresh and try again.','error'); }
       finally { quickPaymentBusy=false;renderOwner(); }
       return;

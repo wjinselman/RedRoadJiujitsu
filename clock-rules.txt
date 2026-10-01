@@ -1,0 +1,25 @@
+✔ summer kids start (669.111814ms)
+✔ summer kids early (60.100357ms)
+✔ summer kids end (49.355467ms)
+✔ summer adult start (57.627078ms)
+✔ summer adult end (50.059089ms)
+✔ winter adult start (43.290529ms)
+✔ winter adult early (42.34628ms)
+✔ Tuesday no gi (45.361917ms)
+✔ Tuesday wrong class (46.933297ms)
+✔ Friday no gi (46.147807ms)
+✔ Saturday closed (42.818993ms)
+✔ wrong date (34.936579ms)
+✔ spring DST Monday (40.39555ms)
+✔ before spring DST Friday (34.201202ms)
+✔ fall DST Monday (42.29914ms)
+✔ before fall DST Friday (34.123134ms)
+✔ 2027 summer (37.916873ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1585.63998

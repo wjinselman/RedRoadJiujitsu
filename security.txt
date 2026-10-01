@@ -1,0 +1,155 @@
+✔ dev: bounded roster permitted (2225.051137ms)
+✔ owner: bounded roster permitted (57.97204ms)
+✔ coach: bounded roster permitted (47.555987ms)
+✔ member: roster listing denied (42.0395ms)
+✔ kiosk: roster listing denied (34.092138ms)
+✔ disabled: roster listing denied (36.841492ms)
+✔ anonymous roster denied (23.984349ms)
+✔ dev: unbounded roster denied (26.42572ms)
+✔ owner: unbounded roster denied (27.983939ms)
+✔ coach: unbounded roster denied (27.013928ms)
+✔ dev: unverified privileged read denied (19.287178ms)
+✔ owner: unverified privileged read denied (22.779197ms)
+✔ kiosk: unverified privileged read denied (19.212034ms)
+✔ member can read self (39.607538ms)
+✔ member cannot read another member (36.255438ms)
+✔ disabled member cannot read self (38.724747ms)
+[2026-10-01T02:04:49.417Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626aec error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L461:24 for 'update' @ L461, false for 'update' @ L624, false for 'update' @ L461, false for 'update' @ L624
+✔ member cannot grant coach access (50.462819ms)
+✔ member can edit contact field (34.349697ms)
+[2026-10-01T02:04:49.485Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626aee error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L402, false for 'create' @ L624, false for 'update' @ L402, false for 'update' @ L624
+✔ member cannot grant developer access (33.242726ms)
+[2026-10-01T02:04:49.516Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626aef error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L402, false for 'create' @ L624, false for 'update' @ L402, false for 'update' @ L624
+✔ developer records immutable to developer client (30.725867ms)
+[2026-10-01T02:04:49.544Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626af0 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L412:32 for 'create' @ L412, false for 'create' @ L624, evaluation error at L412:32 for 'update' @ L412, false for 'update' @ L624, false for 'create' @ L412, false for 'create' @ L624
+✔ owner cannot add another owner (27.692053ms)
+✔ developer can add schema-valid owner (30.009704ms)
+[2026-10-01T02:04:49.606Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626af2 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L454:24 for 'create' @ L454, false for 'create' @ L624, evaluation error at L461:24 for 'update' @ L461, false for 'update' @ L624, Property rank is undefined on object. for 'create' @ L454, false for 'create' @ L624
+✔ dev: malformed member rejected (32.365039ms)
+[2026-10-01T02:04:49.643Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626af3 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L454:24 for 'create' @ L454, false for 'create' @ L624, evaluation error at L461:24 for 'update' @ L461, false for 'update' @ L624, Property rank is undefined on object. for 'create' @ L454, false for 'create' @ L624
+✔ owner: malformed member rejected (37.070201ms)
+✔ member reads own billing (32.904877ms)
+✔ covered member reads linked payer billing (31.057097ms)
+✔ member cannot read unrelated billing (28.311774ms)
+✔ member cannot list billing (32.643624ms)
+[2026-10-01T02:04:49.798Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626af8 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L485:32 for 'create' @ L485, false for 'create' @ L624, evaluation error at L485:32 for 'update' @ L485, false for 'update' @ L624, false for 'update' @ L485, false for 'update' @ L624
+✔ member cannot write billing (29.509979ms)
+✔ owner valid billing write (31.422278ms)
+[2026-10-01T02:04:49.858Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626afa error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L485:32 for 'create' @ L485, false for 'create' @ L624, evaluation error at L485:32 for 'update' @ L485, false for 'update' @ L624, Property category is undefined on object. for 'create' @ L485, false for 'create' @ L624
+✔ owner malformed billing denied (28.714345ms)
+✔ owner can append payment (35.52939ms)
+[2026-10-01T02:04:49.918Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626afc error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L495:24 for 'create' @ L495, false for 'create' @ L624, false for 'update' @ L496, false for 'update' @ L624, false for 'update' @ L496, false for 'update' @ L624
+✔ owner cannot rewrite payment (23.581955ms)
+[2026-10-01T02:04:49.943Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626afd error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'delete' @ L496, false for 'delete' @ L624
+✔ owner cannot delete payment (24.785703ms)
+[2026-10-01T02:04:49.976Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626afe error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L495:24 for 'create' @ L495, false for 'create' @ L624, false for 'update' @ L496, false for 'update' @ L624, false for 'create' @ L495, false for 'create' @ L624
+✔ negative amount denied (33.621803ms)
+[2026-10-01T02:04:50.067Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626aff error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L592:24 for 'create' @ L592, false for 'create' @ L624, false for 'update' @ L618, false for 'update' @ L624, false for 'create' @ L592, false for 'create' @ L624
+✔ out-of-window future member attendance rejected (90.41098ms)
+[2026-10-01T02:04:50.103Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626b00 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L592:24 for 'create' @ L592, false for 'create' @ L624, false for 'update' @ L618, false for 'update' @ L624, false for 'create' @ L592, false for 'create' @ L624
+✔ duplicate member attendance rejected (36.013069ms)
+[2026-10-01T02:04:50.139Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626b01 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L592:24 for 'create' @ L592, false for 'create' @ L624, false for 'update' @ L618, false for 'update' @ L624, false for 'create' @ L592, false for 'create' @ L624
+✔ random duplicate attendance ID rejected (35.547511ms)
+[2026-10-01T02:04:50.168Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626b02 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L592:24 for 'create' @ L592, false for 'create' @ L624, false for 'update' @ L618, false for 'update' @ L624, false for 'create' @ L592, false for 'create' @ L624
+✔ another member attendance rejected (29.518457ms)
+[2026-10-01T02:04:50.202Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626b03 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L592:24 for 'create' @ L592, false for 'create' @ L624, false for 'update' @ L618, false for 'update' @ L624, false for 'create' @ L592, false for 'create' @ L624
+✔ disabled member attendance rejected (33.814735ms)
+[2026-10-01T02:04:50.240Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626b04 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L592:24 for 'create' @ L592, false for 'create' @ L624, false for 'update' @ L618, false for 'update' @ L624, false for 'create' @ L592, false for 'create' @ L624
+✔ out-of-window future developer test rejected (37.378386ms)
+[2026-10-01T02:04:50.279Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626b05 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L592:24 for 'create' @ L592, false for 'create' @ L624, false for 'update' @ L618, false for 'update' @ L624, false for 'create' @ L592, false for 'create' @ L624
+✔ member cannot forge developer test (38.92648ms)
+✔ own bounded attendance query permitted (38.376471ms)
+✔ all attendance query denied for member (37.025764ms)
+✔ own waiver readable (23.417561ms)
+✔ other waiver denied (36.760205ms)
+[2026-10-01T02:04:50.441Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626b0a error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L507:24 for 'create' @ L507, false for 'create' @ L624, false for 'update' @ L512, false for 'update' @ L624, false for 'update' @ L512, false for 'update' @ L624
+✔ waiver overwrite denied (26.170732ms)
+✔ self signup and waiver atomic commit (64.872232ms)
+✔ diagnostic report written by verified user (37.566715ms)
+[2026-10-01T02:04:50.581Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626b0d error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L390:24 for 'create' @ L390, false for 'create' @ L624, evaluation error at L391:24 for 'update' @ L391, false for 'update' @ L624, false for 'update' @ L391, false for 'update' @ L624
+✔ diagnostic write throttled by server (37.024012ms)
+[2026-10-01T02:04:50.614Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626b0e error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L390:24 for 'create' @ L390, false for 'create' @ L624, evaluation error at L391:24 for 'update' @ L391, false for 'update' @ L624, false for 'create' @ L390, false for 'create' @ L624
+✔ diagnostic other UID denied (32.95604ms)
+[2026-10-01T02:04:50.656Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626b0f error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L390:24 for 'create' @ L390, false for 'create' @ L624, evaluation error at L391:24 for 'update' @ L391, false for 'update' @ L624, false for 'create' @ L390, false for 'create' @ L624
+✔ diagnostic extra raw message rejected (42.772948ms)
+[2026-10-01T02:04:50.684Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626b10 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L390:24 for 'create' @ L390, false for 'create' @ L624, evaluation error at L391:24 for 'update' @ L391, false for 'update' @ L624, false for 'create' @ L390, false for 'create' @ L624
+✔ diagnostic unbounded slot denied (27.436329ms)
+✔ owner: error board denied (20.938103ms)
+✔ coach: error board denied (21.827294ms)
+✔ member: error board denied (23.363439ms)
+✔ kiosk: error board denied (26.771416ms)
+✔ developer error board readable (27.02595ms)
+✔ developer unbounded error query denied (27.846772ms)
+✔ developer can resolve report (20.304599ms)
+[2026-10-01T02:04:50.876Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626b18 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L391:24 for 'update' @ L391, false for 'update' @ L624, false for 'update' @ L391, false for 'update' @ L624
+✔ owner cannot resolve report (23.023847ms)
+[2026-10-01T02:04:50.902Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626b19 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L391:24 for 'update' @ L391, false for 'update' @ L624, false for 'update' @ L391, false for 'update' @ L624
+✔ developer cannot inject raw details through resolve (26.207737ms)
+✔ unverified user cannot read an existing own waiver (20.728327ms)
+[2026-10-01T02:04:50.961Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626b1b error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L454:24 for 'create' @ L454, false for 'create' @ L624, evaluation error at L461:24 for 'update' @ L461, false for 'update' @ L624, Service call error. Function: [getAfter], Argument: [path_value {
+  segments {
+    simple: "databases"
+  }
+  segments {
+    simple: "(default)"
+  }
+  segments {
+    simple: "documents"
+  }
+  segments {
+    simple: "waivers"
+  }
+  segments {
+    simple: "nowaiver@test.invalid"
+  }
+}
+]. for 'create' @ L454, false for 'create' @ L624
+✔ self signup cannot claim a waiver without saving one (37.5433ms)
+[2026-10-01T02:04:50.986Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626b1c error. Code: 7 Message: 7 PERMISSION_DENIED: 
+false for 'create' @ L454, false for 'create' @ L624, false for 'update' @ L461, false for 'update' @ L624
+✔ unverified self signup and waiver denied atomically (25.607378ms)
+(node:49) ExperimentalWarning: VM Modules is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ shipped payment function commits member, coverage and receipt against real rules (157.995156ms)
+✔ two competing shipped payment transactions create only one receipt (146.529757ms)
+✔ reopening and saving same date through shipped function produces no extra receipt (143.51212ms)
+[2026-10-01T02:04:51.469Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626b38 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L461:24 for 'update' @ L461, false for 'update' @ L624, evaluation error at L495:24 for 'create' @ L495, false for 'create' @ L624, false for 'update' @ L496, false for 'update' @ L624, false for 'update' @ L461, false for 'update' @ L624, false for 'update' @ L496, false for 'update' @ L624
+✔ real batch with forbidden receipt rewrite rolls back member change (42.665291ms)
+[2026-10-01T02:04:51.507Z]  @firebase/firestore: Firestore (12.19.0): GrpcConnection RPC 'Write' stream 0x8e626b39 error. Code: 7 Message: 7 PERMISSION_DENIED: 
+evaluation error at L454:24 for 'create' @ L454, false for 'create' @ L624, evaluation error at L461:24 for 'update' @ L461, false for 'update' @ L624, evaluation error at L507:24 for 'create' @ L507, false for 'create' @ L624, false for 'update' @ L512, false for 'update' @ L624, false for 'create' @ L507, false for 'create' @ L624, false for 'create' @ L454, false for 'create' @ L624
+✔ invalid enrollment relationship rolls back both member and waiver (49.494706ms)
+ℹ tests 70
+ℹ suites 0
+ℹ pass 70
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 5121.739047

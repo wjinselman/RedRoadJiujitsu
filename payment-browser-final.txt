@@ -1,0 +1,28 @@
+PASS module graph and page initialize without JavaScript errors
+PASS eligible paid, undated, unpaid, family-payer badges are clickable
+PASS exempt/covered badges remain read-only
+PASS dated badge opens calendar and preloads its own saved Paid on date
+PASS calendar requested immediately inside user gesture
+PASS full Edit screen remains closed
+PASS opening dialog causes no writes
+PASS coverage preview updates before save
+PASS Cancel saves nothing and restores badge focus
+PASS cancel preserves roster scroll position
+PASS DATE NOT SET opens an empty required date with no default payment
+PASS Save updates correct member badge without opening Edit or reloading roster
+PASS date save records one receipt and only changes paid/updatedAt on member
+PASS focus returns to replacement badge after roster re-render
+PASS saving same date again does not duplicate receipt
+PASS failed save stays in dialog with visible error and retry enabled
+PASS double-submit and Escape cannot interrupt pending save
+PASS successful retry closes dialog and updates unpaid member
+PASS separate original Paid/Unpaid toggle remains functional
+PASS family payer save refreshes covered-family status
+PASS original Edit form still opens with existing saved date
+PASS coach role has no date-edit buttons
+PASS developer role retains date-edit access
+PASS real Chromium native date picker opens without exception
+PASS mobile dialog fits viewport with accessible date and buttons
+PASS mobile viewport can save directly from member list
+PASS no JavaScript errors during all integration checks
+27 browser checks passed.

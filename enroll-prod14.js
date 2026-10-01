@@ -1,3 +1,5 @@
+import {enrollmentFlow} from './enrollment-flow.js?v=60';
+const flow = enrollmentFlow(location.search);
 import {childLogin} from './family-store.js?v=59';
 import { firebaseConfigured, auth, db, doc, getDocFromServer, onAuthStateChanged, createUserWithEmailAndPassword, signOut } from './firebase-client.js?v=54-member-nav';
 
@@ -10,6 +12,7 @@ const submitButton = form?.querySelector('button[type="submit"]');
 if (submitButton) submitButton.disabled = true;
 async function prepareEnrollment(user) {
   setupReady = false;
+  if (flow.family) { location.replace('family.html'); return; }
   resumeUser = user && !user.isAnonymous ? user : null;
   if (resumeUser) {
     if (resumeUser.emailVerified && await childLogin(resumeUser.email)) { location.replace('family.html'); return; }
@@ -28,7 +31,7 @@ async function prepareEnrollment(user) {
     message.dataset.tone = 'ok';
   } else {
     // All new-account entry points use the same email-first activation screen.
-    location.replace('members.html?setup=1');
+    location.replace(flow.setup);
     return;
   }
   setupReady = true; submitButton.disabled = false; form.hidden = false; document.querySelector('#enrollment-loading').hidden = true;
@@ -52,7 +55,8 @@ function friendlyError(error) {
 }
 
 if (form) {
-  if (firebaseConfigured) {
+  if (flow.family) { location.replace('family.html'); }
+  else if (firebaseConfigured) {
     let restored=false;
     onAuthStateChanged(auth, user => { if(restored)return;restored=true;prepareEnrollment(user).catch(()=>show('Could not check your member profile. Refresh to retry, or ask staff to check signup permissions.')); });
   }

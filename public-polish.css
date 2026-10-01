@@ -1,0 +1,6 @@
+/* Homepage-only polish; portal, billing, check-in and waiver layout are untouched. */
+@media (min-width:1101px) and (max-width:1500px){.home-page .scroll-rail{display:none!important}}
+.home-page .hero-copy .hero-actions{gap:10px;flex-wrap:wrap}
+.home-page .hero-copy .member-trial-note a{color:#fff;text-decoration:underline}
+.jeff-contact-actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}
+.jeff-copy-status{min-height:1.5em}

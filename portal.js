@@ -1,3 +1,4 @@
+import {enrollmentFlow} from './enrollment-flow.js?v=60';
 import {showFamilyAdmin} from './family-admin.js?v=59';
 import {childLogin,myChildren} from './family-store.js?v=59';
 import {showWeeklyEditor} from './weekly-updates.js?v=56';
@@ -7,7 +8,7 @@ import {toggleMemberPaid} from './quick-paid.js?v=54-member-nav';
 import {saveMemberPaidDate,createPaidDatePicker} from './paid-date.js?v=54-member-nav';
 let quickPaymentBusy = false;
 let ownerBillingLoading = false;
-import {setupEmailInvitation,isAccountSetupOpen} from './email-setup.js?v=59';
+import {setupEmailInvitation,isAccountSetupOpen} from './email-setup.js?v=60';
 import {activePaymentAlerts} from './admin-alerts.js?v=54-member-nav';
 import {gymDate} from './billing-model.js?v=54-member-nav';
 
@@ -551,7 +552,7 @@ async function openMemberForUser(user) {
 
     const childLink = await childLogin(user.email);
     if (!stillCurrent()) return;
-    if (childLink || new URLSearchParams(location.search).get('family') === '1') {
+    if (childLink || enrollmentFlow(location.search).family) {
       location.replace('family.html'); return;
     }
     const member = await getMemberRecord(user.email);
@@ -561,7 +562,7 @@ async function openMemberForUser(user) {
       const children = await myChildren(user);
       if (!stillCurrent()) return;
       if (children.length) { window.location.replace('family.html'); return; }
-      window.location.replace('enroll.html?continue=1');
+      window.location.replace(enrollmentFlow(location.search).next);
       return;
     }
 
@@ -953,7 +954,14 @@ function setupMemberPage() {
 
     memberRestoreAttempted = true;
 
-    if (user) await openMemberForUser(user);
+    // The global session reset has now run. Opening earlier lets the initial
+    // Firebase callback immediately close the setup dialog.
+    if (new URLSearchParams(location.search).get('setup') === '1'
+        && (!user || user.isAnonymous || !user.emailVerified)) {
+      $('#member-activate')?.click();
+      return;
+    }
+    if (user && !user.isAnonymous) await openMemberForUser(user);
 
   });
 
@@ -3388,11 +3396,15 @@ document.addEventListener('visibilitychange',()=>{
 });
 
 if (auth) {
-  let observedUid;
+  let observedUid, observedAnonymous = false;
   onAuthStateChanged(auth, user => {
     const next = user?.uid || null;
     if (next === observedUid) return;
-    observedUid = next; sessionGeneration++;
+    // Keep the verification step visible when this dialog creates a login.
+    // A switch away from an existing real account still clears every dialog.
+    const preserveSetup = isAccountSetupOpen() && (!observedUid || observedAnonymous)
+      && user && !user.isAnonymous;
+    observedUid = next; observedAnonymous = Boolean(user?.isAnonymous); sessionGeneration++;
     ownerIdentity = null; currentMember = null; staffAuthorization = null;
     ownerMembers=[];ownerAccess=[];kioskAccess=[];ownerAttendance=[];ownerTrials=[];standaloneWaivers=[];memberAttendance=[];
     ownerRosterLoaded=false;ownerTrialsLoaded=false;
@@ -3400,7 +3412,7 @@ if (auth) {
     for(const id of ['owner-app','member-dashboard','owner-waiver-panel','member-waiver-panel','edit-member-panel']){const el=$('#'+id);if(el)el.hidden=true;}
     for(const id of ['owner-member-list','owner-coach-list','owner-access-list','kiosk-access-list','trial-request-list','attendance-list','signed-waiver-list','owner-waiver-details','member-waiver-details','member-attendance-list'])$('#'+id)?.replaceChildren();
     for(const id of ['owner-login-view','member-login-view']){const el=$('#'+id);if(el)el.hidden=false;}
-    document.querySelectorAll('dialog[open]').forEach(dialog=>dialog.close());
+    document.querySelectorAll('dialog[open]').forEach(dialog=>{if(!(preserveSetup && dialog.id === 'member-setup-dialog'))dialog.close();});
     if(!next){ownerRestoreAttempted=false;memberRestoreAttempted=false;}
   });
 }

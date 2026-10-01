@@ -1,5 +1,7 @@
 import {auth,updatePassword,signOut,createUserWithEmailAndPassword,sendEmailVerification} from './firebase-client.js?v=54-member-nav';
 import {isSignInWithEmailLink,signInWithEmailLink} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js';
+import {enrollmentFlow} from './enrollment-flow.js?v=60';
+const flow = enrollmentFlow(location.search);
 const $=s=>document.querySelector(s);
 let accountSetupBusy=false;
 export function isAccountSetupOpen(){return accountSetupBusy || Boolean($('#member-setup-dialog')?.open);}
@@ -22,13 +24,18 @@ export function setupEmailInvitation(){
   const form=$('#member-setup-form'),email=$('#member-setup-email'),message=$('#member-setup-message'),button=$('#member-setup-send');
   const password=$('#member-setup-password'),confirm=$('#member-setup-confirm'),close=$('#member-setup-close');
   const actions=$('#member-setup-verification'),resend=$('#member-setup-resend'),recheck=$('#member-setup-recheck');
+  if (flow.family) {
+    $('#member-setup-title').textContent = 'Create Your Parent Account';
+    $('#member-setup-intro').textContent = 'Create one parent login to add your children and sign their waivers. Children do not need email addresses. You do not need to enroll yourself in an adult class. We’ll send a verification email. No payment is collected here.';
+    trigger.textContent = 'First Time? Create Parent Account';
+  }
   let user=null,lastSent=0;
   const busy=value=>{accountSetupBusy=value;button.disabled=value;close.disabled=value;resend.disabled=value;recheck.disabled=value;};
   const showVerification=()=>{form.hidden=true;actions.hidden=false;password.value='';confirm.value='';};
   const validSession=()=>user && auth.currentUser?.uid===user.uid;
   async function sendVerification(){
     if(!validSession())throw Error('Session changed');
-    await sendEmailVerification(user,{url:new URL(new URLSearchParams(window.location.search).get('family') === '1' ? 'members.html?family=1' : 'members.html',window.location.href).href});
+    await sendEmailVerification(user,{url:new URL(flow.member,window.location.href).href});
     lastSent=Date.now();
     message.textContent='Verification email sent to '+user.email+'. Check your inbox or Spam folder, open the link, then return here and select “I’ve verified my email.”';
   }
@@ -69,11 +76,11 @@ export function setupEmailInvitation(){
       await user.reload();await user.getIdToken(true);
       if(!validSession())throw Error('Session changed');
       if(!user.emailVerified){message.textContent='Your email is not verified yet. Open the verification link in your email, then try this button again.';return;}
-      window.location.assign(new URLSearchParams(location.search).get('family') === '1' ? 'family.html' : 'enroll.html?continue=1');
+      window.location.assign(flow.next);
     }catch(error){ window.RRDiagnostics?.report(error,'enrollment');message.textContent=errorText(error);}
     finally{busy(false);}
   });
-  if(new URLSearchParams(window.location.search).get('setup')==='1')trigger.click();
+  // Auto-open is handled by portal.js after the initial Auth session reset.
 }
 if($('#finish-setup-form')){
   const form=$('#finish-setup-form'),message=$('#setup-status'),submit=$('#finish-setup-submit');
@@ -97,7 +104,7 @@ if($('#finish-setup-form')){
       form.reset();form.hidden=true;
       message.textContent='Your email is verified and your password is saved. Continue to finish your member details and waiver. If you are already on the roster, we’ll open your member portal.';
       $('#setup-success').hidden=false;
-      window.location.assign(new URLSearchParams(location.search).get('family') === '1' ? 'family.html' : 'enroll.html?continue=1');
+      window.location.assign(flow.next);
     }catch(error){ window.RRDiagnostics?.report(error,'enrollment');message.textContent=errorText(error);}
     finally{busy=false;submit.disabled=false;}
   });

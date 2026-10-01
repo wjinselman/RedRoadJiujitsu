@@ -28,7 +28,36 @@
       <a href="members.html">Members</a><a data-gym-updates href="#">Updates</a><a class="mobile-nav-primary" href="members.html?setup=1">Set Up Member Account</a>
       <a href="waiver.html?trial=1">Trial Class Waiver</a>
     </nav><p class="mobile-nav-note">Lone Grove, Oklahoma · All levels welcome</p>`;
+  const signout = document.createElement('button');
+  signout.type = 'button';
+  signout.className = 'btn btn-dark';
+  signout.textContent = 'Sign Out';
+  signout.hidden = true;
+  signout.style.cssText = 'width:100%;margin-top:12px';
+  const signoutStatus = document.createElement('p');
+  signoutStatus.className = 'mobile-nav-note';
+  signoutStatus.setAttribute('role', 'status');
+  panel.append(signout, signoutStatus);
   header.append(panel);
+  import('./firebase-client.js?v=54-member-nav').then(api => {
+    if (!api.auth || !api.firebaseConfigured) return;
+    api.onAuthStateChanged(api.auth, user => {
+      signout.hidden = !user || user.isAnonymous === true;
+      signoutStatus.textContent = '';
+    });
+    signout.addEventListener('click', async () => {
+      if (signout.disabled) return;
+      signout.disabled = true;
+      signoutStatus.textContent = 'Signing out…';
+      try {
+        await api.signOut(api.auth);
+        location.assign('index.html');
+      } catch (_) {
+        signoutStatus.textContent = 'Could not sign out. Please try again.';
+        signout.disabled = false;
+      }
+    });
+  }).catch(() => {});
   const backdrop = document.createElement('div');
   backdrop.className = 'nav-backdrop';
   backdrop.hidden = true;
@@ -76,7 +105,7 @@
     if (panel.hidden) return;
     if (event.key === 'Escape') { event.preventDefault(); close(true); }
     if (event.key === 'Tab') {
-      const focusable = [toggle, ...panel.querySelectorAll('a')];
+      const focusable = [toggle, ...panel.querySelectorAll('a, button')].filter(el => !el.hidden && !el.disabled);
       const index = focusable.indexOf(document.activeElement);
       if (event.shiftKey && index <= 0) { event.preventDefault(); focusable.at(-1).focus(); }
       else if (!event.shiftKey && (index === focusable.length - 1 || index === -1)) { event.preventDefault(); toggle.focus(); }

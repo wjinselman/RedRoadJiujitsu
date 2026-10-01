@@ -1,8 +1,8 @@
 /* Red Road roster paid-date shortcut. No new collections or rules. */
-import {auth,db,doc,serverTimestamp} from './firebase-client.js?v=52';
+import {auth,db,doc,serverTimestamp} from './firebase-client.js?v=54-member-nav';
 import {runTransaction} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
-import {profiles,billingReady} from './billing-store.js?v=2';
-import {defaultCategory,exempt,gymDate,paymentPeriod,planSave} from './billing-model.js?v=2';
+import {profiles,billingReady} from './billing-store.js?v=54-member-nav';
+import {defaultCategory,exempt,gymDate,paymentPeriod,planSave} from './billing-model.js?v=54-member-nav';
 
 /** Record a date using Edit's existing billing model, without touching other member fields. */
 export async function saveMemberPaidDate(member,role,paidOn,expectedRevision=profiles.get(member?.email)?.revision||0){
@@ -40,7 +40,7 @@ export async function saveMemberPaidDate(member,role,paidOn,expectedRevision=pro
     return {profile:next,member:{...live,paid:true},receipt:planned.receipt};
   });
   // A failed transaction must never make the roster look successfully saved.
-  profiles.set(email,result.profile);
+  if(auth.currentUser?.email?.toLowerCase()===actor)profiles.set(email,result.profile);
   return result;
 }
 
@@ -65,7 +65,7 @@ export function createPaidDatePicker({onSave,restoreFocus=()=>{}}){
       coverage.textContent=`Paid through ${period.paidThrough} · Due ${period.nextDue}`;
       if(period.paidThrough<gymDate())coverage.textContent+=' — this month has ended, so the member will still show Past Due.';
       save.disabled=busy;
-    }catch(error){coverage.textContent=error.message;save.disabled=true;}
+    }catch(error){ window.RRDiagnostics?.report(error,'portal');coverage.textContent=error.message;save.disabled=true;}
   }
   function showCalendar(){
     // Keep this inside the user's click/keyboard gesture. Unsupported browsers
@@ -92,14 +92,14 @@ export function createPaidDatePicker({onSave,restoreFocus=()=>{}}){
   form.addEventListener('submit',async event=>{
     event.preventDefault();
     if(busy||!selection||!form.reportValidity())return;
-    try{paymentPeriod(date.value);}catch(error){message.textContent=error.message;message.dataset.error='true';return;}
+    try{paymentPeriod(date.value);}catch(error){ window.RRDiagnostics?.report(error,'portal');message.textContent=error.message;message.dataset.error='true';return;}
     const intent={email:selection.email,expectedRevision:selection.expectedRevision,paidOn:date.value};
     setBusy(true);message.removeAttribute('data-error');message.textContent='Saving payment date…';
     try{
       await onSave(intent);
       setBusy(false);
       dialog.close();
-    }catch(error){
+    }catch(error){ window.RRDiagnostics?.report(error,'portal');
       setBusy(false);
       message.textContent=error?.message||'Could not save the date. Please try again.';
       message.dataset.error='true';

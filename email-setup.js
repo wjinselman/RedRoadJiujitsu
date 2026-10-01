@@ -1,4 +1,4 @@
-import {auth,updatePassword,signOut,createUserWithEmailAndPassword,sendEmailVerification} from './firebase-client.js?v=52';
+import {auth,updatePassword,signOut,createUserWithEmailAndPassword,sendEmailVerification} from './firebase-client.js?v=54-member-nav';
 import {isSignInWithEmailLink,signInWithEmailLink} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js';
 const $=s=>document.querySelector(s);
 let accountSetupBusy=false;
@@ -51,15 +51,15 @@ export function setupEmailInvitation(){
       const result=await createUserWithEmailAndPassword(auth,email.value.trim().toLowerCase(),password.value);
       user=result.user;showVerification();
       try{await sendVerification();}
-      catch(error){message.textContent='Your login was created, but the verification email could not be sent. '+errorText(error)+' Use Resend verification below; do not create another account.';}
-    }catch(error){message.textContent=errorText(error);}
+      catch(error){ window.RRDiagnostics?.report(error,'enrollment');message.textContent='Your login was created, but the verification email could not be sent. '+errorText(error)+' Use Resend verification below; do not create another account.';}
+    }catch(error){ window.RRDiagnostics?.report(error,'enrollment');message.textContent=errorText(error);}
     finally{busy(false);}
   });
   resend.addEventListener('click',async()=>{
     if(accountSetupBusy)return;
     if(Date.now()-lastSent<60000){message.textContent='Please wait one minute before requesting another verification email. Check Spam too.';return;}
     busy(true);
-    try{await sendVerification();}catch(error){message.textContent=errorText(error);}
+    try{await sendVerification();}catch(error){ window.RRDiagnostics?.report(error,'enrollment');message.textContent=errorText(error);}
     finally{busy(false);}
   });
   recheck.addEventListener('click',async()=>{
@@ -70,7 +70,7 @@ export function setupEmailInvitation(){
       if(!validSession())throw Error('Session changed');
       if(!user.emailVerified){message.textContent='Your email is not verified yet. Open the verification link in your email, then try this button again.';return;}
       window.location.assign('enroll.html?continue=1');
-    }catch(error){message.textContent=errorText(error);}
+    }catch(error){ window.RRDiagnostics?.report(error,'enrollment');message.textContent=errorText(error);}
     finally{busy(false);}
   });
   if(new URLSearchParams(window.location.search).get('setup')==='1')trigger.click();
@@ -98,7 +98,7 @@ if($('#finish-setup-form')){
       message.textContent='Your email is verified and your password is saved. Continue to finish your member details and waiver. If you are already on the roster, we’ll open your member portal.';
       $('#setup-success').hidden=false;
       window.location.assign('enroll.html?continue=1');
-    }catch(error){message.textContent=errorText(error);}
+    }catch(error){ window.RRDiagnostics?.report(error,'enrollment');message.textContent=errorText(error);}
     finally{busy=false;submit.disabled=false;}
   });
 }

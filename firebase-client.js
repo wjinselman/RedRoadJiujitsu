@@ -54,7 +54,8 @@ if (firebaseConfigured) {
   auth = getAuth(app);
   db = getFirestore(app);
   // Auth session persistence only. This is not a Firestore read/write.
-  setPersistence(auth, browserLocalPersistence).catch(() => {});
+  setPersistence(auth, browserLocalPersistence).catch(error => window.RRDiagnostics?.report(error, 'auth-persistence'));
+  window.RRDiagnostics?.connect({auth,db,onAuthStateChanged,setDoc,doc,serverTimestamp,getDocsFromServer,collection,query,orderBy,limit});
 }
 
 export {

@@ -25,8 +25,8 @@
       <a href="${home}#schedule">Schedule</a><a href="${home}#pricing">Pricing</a>
       <a href="${home}#coaches">Coaches</a><a href="story.html">Our Story</a>
       <a href="${home}#location">Location</a><a href="waiver.html">Waiver</a>
-      <a href="members.html">Member Login</a><a href="enroll.html">Join Red Road</a>
-      <a class="mobile-nav-primary" href="waiver.html?trial=1">Try one class free <span aria-hidden="true">↗</span></a>
+      <a href="members.html">Member Sign In</a><a class="mobile-nav-primary" href="members.html?setup=1">Set Up Member Account</a>
+      <a href="waiver.html?trial=1">Trial Class Waiver</a>
     </nav><p class="mobile-nav-note">Lone Grove, Oklahoma · All levels welcome</p>`;
   header.append(panel);
   const backdrop = document.createElement('div');
@@ -90,16 +90,19 @@
     actionBar.className = 'mobile-action-bar';
     actionBar.setAttribute('aria-label', 'Quick actions');
     actionBar.innerHTML = `<a class="mobile-action-link" href="${home}#schedule">Schedule</a>
-      <a class="mobile-action-link mobile-action-primary" href="enroll.html">Sign Up Now</a>
-      <a class="mobile-action-link" href="members.html">Members</a>`;
+      <a class="mobile-action-link mobile-action-primary" href="members.html?setup=1">Set Up Account</a>
+      <a class="mobile-action-link" data-member-signin href="members.html">Sign In</a>`;
     document.body.append(actionBar);
     document.body.classList.add('has-mobile-action-bar');
     const signupButton = actionBar.querySelector('.mobile-action-primary');
-    import('./member-button.js?v=68')
+    import('./member-button.js?v=54-member-nav')
       .then(module => {
         module.bindMemberButton(signupButton);
-        document.querySelectorAll('[data-member-action="trial"]').forEach(button => module.bindMemberButton(button, {
-          signedOutLabel: 'Try One Class Free', signedOutHref: 'waiver.html?trial=1'
+        document.querySelectorAll('[data-member-signin]').forEach(button => module.bindMemberButton(button, {
+          signedOutLabel: button.textContent, signedOutHref: 'members.html', hideWhenSignedIn: true
+        }));
+        document.querySelectorAll('[data-member-action="setup"]').forEach(button => module.bindMemberButton(button, {
+          signedOutLabel: 'Set Up Member Account', signedOutHref: 'members.html?setup=1'
         }));
       })
       .catch(() => { /* Keep the public actions if Auth cannot load. */ });

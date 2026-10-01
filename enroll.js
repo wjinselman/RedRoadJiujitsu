@@ -1,11 +1,12 @@
+/* Retired prototype entry point. Current pages use the production module.
+   Fail closed for an old cached HTML page; never store credentials or signatures. */
 (() => {
- const form=document.querySelector('#enroll-form'); if(!form) return;
- const params=new URLSearchParams(location.search); if(params.get('program')==='kids') document.querySelector('#program').value='Kids';
- form.addEventListener('submit',e=>{
-   e.preventDefault(); if(!form.reportValidity()) return;
-   const fd=new FormData(form); const record=Object.fromEntries(fd.entries()); record.createdAt=new Date().toISOString();
-   localStorage.setItem('redroad:pendingEnrollment',JSON.stringify(record));
-   const q=new URLSearchParams({name:record.name||'',dob:record.dob||'',email:record.email||'',phone:record.phone||''});
-   location.href='waiver.html?'+q.toString();
- });
+  const form = document.getElementById('enroll-form');
+  if (!form) return;
+  form.addEventListener('submit', event => {
+    event.preventDefault(); event.stopImmediatePropagation();
+    let notice=document.getElementById('legacy-version-notice');
+    if(!notice){notice=document.createElement('p');notice.id='legacy-version-notice';notice.setAttribute('role','alert');form.prepend(notice);}
+    notice.textContent='This page version is outdated. Refresh the page before submitting. Nothing was saved.';
+  },true);
 })();

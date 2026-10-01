@@ -2,7 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() {
-      return request.auth != null && request.auth.token.email != null;
+      return request.auth != null && request.auth.token.email is string;
     }
 
     function authEmail() {
@@ -27,12 +27,14 @@ service cloud.firestore {
 
     function isDeveloper() {
       return signedIn()
+        && request.auth.token.email_verified == true
         && exists(developerPath())
         && get(developerPath()).data.enabled == true;
     }
 
     function isOwner() {
       return signedIn()
+        && request.auth.token.email_verified == true
         && exists(ownerPath())
         && get(ownerPath()).data.enabled == true;
     }
@@ -57,6 +59,7 @@ service cloud.firestore {
 
     function isKiosk() {
       return signedIn()
+        && request.auth.token.email_verified == true
         && exists(kioskPath())
         && get(kioskPath()).data.enabled == true;
     }
@@ -119,7 +122,7 @@ service cloud.firestore {
         && data.checkedInAt == request.time
         && data.checkedInBy is string
         && data.checkedInBy == authEmail()
-        && (data.source == 'kiosk' || data.source == 'member');
+        && data.source in ['kiosk', 'member', 'developer-test'];
     }
 
     function validMember(data, memberEmail) {
@@ -317,6 +320,81 @@ service cloud.firestore {
         && data.updatedAt == request.time;
     }
 
+    function validBilling(d) {
+      return d.keys().hasOnly(['category','payerEmail','paid','paidOn','paidThrough','nextDue','manualStatusOnly','sequence','revision','updatedAt','updatedBy'])
+        && d.category in ['adult','kids','service','family-payer','family-covered']
+        && d.payerEmail is string && d.payerEmail.size() <= 254
+        && d.paid is bool && d.manualStatusOnly is bool
+        && d.paidOn is string && d.paidOn.size() <= 10
+        && d.paidThrough is string && d.paidThrough.size() <= 10
+        && d.nextDue is string && d.nextDue.size() <= 10
+        && d.sequence is int && d.sequence >= 0
+        && d.revision is int && d.revision > 0
+        && d.updatedAt == request.time && d.updatedBy == authEmail();
+    }
+    function validPayment(d) {
+      return d.keys().hasOnly(['payerEmail','payerName','category','amountCents','paidOn','periodStart','paidThrough','nextDue','sequence','createdAt','recordedBy'])
+        && d.payerEmail is string && d.payerEmail.size() <= 254
+        && d.payerName is string && d.payerName.size() <= 120
+        && d.category in ['adult','kids','service','family-payer']
+        && d.amountCents is int && d.amountCents > 0 && d.amountCents <= 1000000
+        && d.paidOn is string && d.paidOn.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')
+        && d.periodStart is string && d.periodStart.size() == 10
+        && d.paidThrough is string && d.paidThrough.size() == 10
+        && d.nextDue is string && d.nextDue.size() == 10
+        && d.sequence is int && d.sequence > 0
+        && d.createdAt == request.time && d.recordedBy == authEmail();
+    }
+    // America/Chicago under current US daylight-saving rules (since 2007).
+    function chicagoTime(clock) {
+      let y = clock.year();
+      let marchSunday = 14 - timestamp.date(y,3,14).dayOfWeek() % 7;
+      let novemberSunday = 7 - timestamp.date(y,11,7).dayOfWeek() % 7;
+      let starts = timestamp.date(y,3,marchSunday) + duration.value(8,'h');
+      let ends = timestamp.date(y,11,novemberSunday) + duration.value(7,'h');
+      return clock - duration.value(clock >= starts && clock < ends ? 5 : 6,'h');
+    }
+    function padDate(n) { return n < 10 ? '0' + string(n) : string(n); }
+    function classWindow(d, clock) {
+      let local = chicagoTime(clock);
+      let date = string(local.year()) + '-' + padDate(local.month()) + '-' + padDate(local.day());
+      let minutes = local.hours()*60 + local.minutes();
+      let noGi = local.dayOfWeek() in [2,5];
+      let kids = d.className == (noGi ? 'Kids No-Gi' : 'Kids Jiu Jitsu');
+      let adult = d.className == (noGi ? 'Adult No-Gi' : 'Adult Jiu Jitsu');
+      return local.dayOfWeek() <= 5 && d.classDate == date
+        && ((kids && minutes >= 1065 && minutes < 1140) || (adult && minutes >= 1125 && minutes < 1200));
+    }
+    function attendanceKey(d, id) {
+      let keys = {'Kids Jiu Jitsu':'kids-jiu-jitsu','Kids No-Gi':'kids-no-gi','Adult Jiu Jitsu':'adult-jiu-jitsu','Adult No-Gi':'adult-no-gi'};
+      return d.className in keys && d.classDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')
+        && id == d.classDate + '_' + d.memberEmail + '_' + keys[d.className];
+    }
+    function validDiagnostic(d, id) {
+      return d.keys().hasOnly(['uid','slot','code','kind','operation','page','device','browser','version','line','count','status','updatedAt','file'])
+        && d.uid == request.auth.uid && d.slot in ['0','1','2','3','4','5','6','7','8','9']
+        && id == request.auth.uid + '_' + d.slot
+        && d.code in ['unknown','permission-denied','unavailable','deadline-exceeded','network-request-failed','failed-precondition','resource-exhausted','aborted','not-found','invalid-argument','unauthenticated','invalid-credential','too-many-requests','requires-recent-login','email-already-in-use','weak-password','conflict','validation','session-changed']
+        && d.kind in ['Error','TypeError','ReferenceError','SyntaxError','RangeError','URIError']
+        && d.operation in ['runtime','promise','resource','portal','kiosk','enrollment','waiver','billing-load','directory-load','trial-load','attendance-load','waiver-load','auth-persistence']
+        && d.page in ['owner.html','members.html','kiosk.html','enroll.html','waiver.html','index.html','visit.html','checkin.html','activate.html','public']
+        && d.device in ['iOS','Android','Desktop'] && d.browser in ['Edge','Chrome','Firefox','Safari','Other']
+        && d.get('file','') in ['', 'account-nav.js', 'admin-alerts.js', 'analytics.js', 'attendance-month.js', 'billing-model.js', 'billing-report.js', 'billing-store.js', 'billing-ui.js', 'checkin.js', 'class-schedule.js', 'dashboard-sections.js', 'diagnostics.js', 'email-setup.js', 'enroll-prod14.js', 'enroll.js', 'experience.js', 'firebase-auth-client.js', 'firebase-client.js', 'firebase-config.js', 'firebase-kiosk-client.js', 'kiosk.js', 'launch-config.js', 'member-button.js', 'mobile-nav.js', 'paid-date.js', 'portal.js', 'quick-paid.js', 'rank-model.js', 'top-attendance.js', 'ui-utils.js', 'waiver-pdf.js', 'waiver-prod14.js', 'waiver.js']
+        && d.version == '54-diagnostics' && d.line is int && d.line >= 0 && d.line <= 100000
+        && d.count is int && d.count > 0 && d.count <= 9999
+        && d.status == 'open' && d.updatedAt == request.time;
+    }
+    match /clientDiagnostics/{id} {
+      allow get: if isDeveloper();
+      allow list: if isDeveloper() && request.query.limit != null && request.query.limit <= 100;
+      allow create: if signedIn() && request.auth.token.email_verified == true && validDiagnostic(request.resource.data,id);
+      allow update: if (signedIn() && request.auth.token.email_verified == true && validDiagnostic(request.resource.data,id)
+          && request.time >= resource.data.updatedAt + duration.value(60,'s'))
+        || (isDeveloper() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+          && request.resource.data.status in ['open','resolved']);
+      allow delete: if isDeveloper();
+    }
+
     // ROOT ACCESS: developer records are console-managed only.
     // No browser/client code can create, update, list, or delete developer access.
     match /developers/{developerEmail} {
@@ -373,13 +451,14 @@ service cloud.firestore {
                   && request.query.limit != null
                   && request.query.limit <= 250;
       // Developers have full roster control. Owners retain schema-validated control.
-      allow create: if isDeveloper()
-                    || (isOwner() && validMember(request.resource.data, memberEmail))
+      allow create: if (isManager() && validMember(request.resource.data, memberEmail))
                     || (signedIn()
                         && authEmail() == memberEmail
-                        && validSelfSignup(request.resource.data, memberEmail));
-      allow update: if isDeveloper()
-                    || (isOwner() && validMember(request.resource.data, memberEmail))
+                        && request.auth.token.email_verified == true
+                        && validSelfSignup(request.resource.data, memberEmail)
+                        && getAfter(/databases/$(database)/documents/waivers/$(memberEmail)).data.signerUid == request.auth.uid
+                        && getAfter(/databases/$(database)/documents/waivers/$(memberEmail)).data.receiptId == request.resource.data.waiverReceiptId);
+      allow update: if (isManager() && validMember(request.resource.data, memberEmail))
                     || (signedIn()
                         && request.auth.token.email_verified == true
                         && authEmail() == memberEmail
@@ -394,11 +473,16 @@ service cloud.firestore {
     // Paid-on dates are stored separately from the member profile so they are
     // not exposed to member accounts or the check-in kiosk.
     match /billingProfiles/{memberEmail} {
-      allow get: if isManager();
+      allow get: if isManager() || (signedIn() && request.auth.token.email_verified == true
+        && exists(memberPath()) && get(memberPath()).data.enabled == true && get(memberPath()).data.archived != true
+        && (memberEmail == authEmail() || (
+          exists(/databases/$(database)/documents/billingProfiles/$(authEmail()))
+          && get(/databases/$(database)/documents/billingProfiles/$(authEmail())).data.category == 'family-covered'
+          && get(/databases/$(database)/documents/billingProfiles/$(authEmail())).data.payerEmail == memberEmail)));
       allow list: if isManager()
                   && request.query.limit != null
                   && request.query.limit <= 250;
-      allow create, update: if isManager();
+      allow create, update: if isManager() && validBilling(request.resource.data);
       allow delete: if isManager();
     }
 
@@ -408,7 +492,7 @@ service cloud.firestore {
       allow list: if isManager()
                   && request.query.limit != null
                   && request.query.limit <= 250;
-      allow create: if isManager();
+      allow create: if isManager() && validPayment(request.resource.data);
       allow update, delete: if false;
     }
 
@@ -416,11 +500,12 @@ service cloud.firestore {
     // their own record; staff can review it. Only managers may purge a waiver when
     // permanently removing the associated member.
     match /waivers/{waiverEmail} {
-      allow get: if (signedIn() && authEmail() == waiverEmail) || isStaff();
+      allow get: if (signedIn() && request.auth.token.email_verified == true && authEmail() == waiverEmail) || isStaff();
       allow list: if isStaff()
                   && request.query.limit != null
                   && request.query.limit <= 250;
       allow create: if signedIn()
+                    && request.auth.token.email_verified == true
                     && authEmail() == waiverEmail
                     && !exists(/databases/$(database)/documents/waivers/$(waiverEmail))
                     && validWaiver(request.resource.data, waiverEmail);
@@ -505,6 +590,7 @@ service cloud.firestore {
                       && request.query.limit != null
                       && request.query.limit <= 250);
       allow create: if isKiosk()
+                    && attendanceKey(request.resource.data, attendanceId)
                     && validAttendance(request.resource.data)
                     && request.resource.data.source == 'kiosk'
                     && exists(/databases/$(database)/documents/checkInDirectory/$(request.resource.data.memberEmail))
@@ -512,6 +598,8 @@ service cloud.firestore {
                     && !exists(/databases/$(database)/documents/attendance/$(attendanceId))
                   || (signedIn()
                     && request.auth.token.email_verified == true
+                    && attendanceKey(request.resource.data, attendanceId)
+                    && classWindow(request.resource.data,request.time)
                     && request.resource.data.source == 'member'
                     && request.resource.data.memberEmail == authEmail()
                     && request.resource.data.checkedInBy == authEmail()
@@ -520,7 +608,13 @@ service cloud.firestore {
                     && get(/databases/$(database)/documents/members/$(authEmail())).data.active == true
                     && get(/databases/$(database)/documents/members/$(authEmail())).data.enabled == true
                     && get(/databases/$(database)/documents/members/$(authEmail())).data.archived != true
-                    && !exists(/databases/$(database)/documents/attendance/$(attendanceId)));
+                    && !exists(/databases/$(database)/documents/attendance/$(attendanceId)))
+                  || (isDeveloper() && validAttendance(request.resource.data)
+                    && attendanceKey(request.resource.data, attendanceId)
+                    && classWindow(request.resource.data,request.time)
+                    && request.resource.data.source == 'developer-test'
+                    && request.resource.data.memberEmail == authEmail()
+                    && request.resource.data.memberName == 'Developer Test');
       allow update: if false;
       allow delete: if isStaff();
     }

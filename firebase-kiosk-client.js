@@ -3,6 +3,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js';
 import {
   getAuth,
+  sendEmailVerification,
   browserLocalPersistence,
   setPersistence,
   signInWithEmailAndPassword,
@@ -13,6 +14,8 @@ import {
 } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js';
 import {
   getFirestore,
+  getDocsFromServer,
+  orderBy,
   doc,
   getDoc,
   getDocs,
@@ -31,11 +34,12 @@ if (firebaseConfigured) {
   app = initializeApp(firebaseConfig, 'red-road-check-in-kiosk');
   auth = getAuth(app);
   db = getFirestore(app);
-  setPersistence(auth, browserLocalPersistence).catch(() => {});
+  setPersistence(auth, browserLocalPersistence).catch(error => window.RRDiagnostics?.report(error,'auth-persistence'));
+  window.RRDiagnostics?.connect({auth,db,onAuthStateChanged,setDoc,doc,serverTimestamp,getDocsFromServer,collection,query,orderBy,limit});
 }
 
 export {
-  firebaseConfigured, auth, db,
+  firebaseConfigured, auth, db, sendEmailVerification,
   signInWithEmailAndPassword, createUserWithEmailAndPassword,
   signOut, deleteUser, onAuthStateChanged,
   doc, getDoc, getDocs, setDoc, collection, query, limit, serverTimestamp

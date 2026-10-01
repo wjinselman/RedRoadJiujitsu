@@ -1,9 +1,9 @@
-import {previousMonth,summarizeExpected,renderReport} from './billing-report.js?v=2';
-import {BILLING_CATEGORIES,money,gymDate,defaultCategory,exempt,summarizePayments,status} from './billing-model.js?v=2';
+import {previousMonth,summarizeExpected,renderReport} from './billing-report.js?v=54-member-nav';
+import {BILLING_CATEGORIES,money,gymDate,defaultCategory,exempt,summarizePayments,status} from './billing-model.js?v=54-member-nav';
 
-import {profiles,billingReady,memberBilling,paymentsForMonth,loadBillingProfiles} from './billing-store.js?v=2';
+import {profiles,billingReady,memberBilling,paymentsForMonth,loadBillingProfiles} from './billing-store.js?v=54-member-nav';
 
-import {db,collection,query,limit,startAfter,getDocsFromServer} from './firebase-client.js?v=52';
+import {db,collection,query,limit,startAfter,getDocsFromServer} from './firebase-client.js?v=54-member-nav';
 
 const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -149,7 +149,7 @@ export function setupBillingReport(canManage){
       printMarkup='<h1>Red Road — Monthly Dues</h1>'+renderReport(data,true);
       message.textContent='Report ready. Expected dues are shown first.';
       document.querySelector('#billing-print').disabled=false;
-    }catch(error){if(version===reportVersion)message.textContent='Report could not load. '+(error.message||'Try again.');}
+    }catch(error){ window.RRDiagnostics?.report(error,'billing-load');if(version===reportVersion)message.textContent='Report could not load. '+(error.message||'Try again.');}
     finally{button.disabled=false;}
   };
   document.querySelector('#billing-print').onclick=()=>{

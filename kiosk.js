@@ -1,5 +1,4 @@
-import { currentClass, CLASS_HOURS, checkInNotice } from './class-schedule.js?v=2';
-import { listenAsync } from './ui-utils.js?v=49';
+import { listenAsync } from './ui-utils.js?v=54-member-nav';
 import { FEATURES } from './launch-config.js';
 import {
   firebaseConfigured,
@@ -10,6 +9,7 @@ import {
   signOut,
   deleteUser,
   onAuthStateChanged,
+  sendEmailVerification,
   doc,
   getDoc,
   getDocs,
@@ -18,7 +18,7 @@ import {
   query,
   limit,
   serverTimestamp
-} from './firebase-kiosk-client.js?v=49';
+} from './firebase-kiosk-client.js?v=54-member-nav';
 
 const $ = selector => document.querySelector(selector);
 const normalizedEmail = value => String(value || '').trim().toLowerCase();
@@ -43,6 +43,7 @@ function clearFlash(el) {
 }
 
 function friendlyError(error) {
+  window.RRDiagnostics?.report(error, 'kiosk');
   const code = String(error?.code || '');
   if (code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')) return 'Kiosk email or password is incorrect.';
   if (code.includes('email-already-in-use')) return 'This kiosk is already activated. Use Connect Kiosk.';
@@ -60,8 +61,8 @@ function localDateKey(date = new Date()) {
 
 function updateClock() {
   const now = new Date();
-  $('#kiosk-time').textContent = now.toLocaleTimeString([], { timeZone: 'America/Chicago', hour: 'numeric', minute: '2-digit' });
-  $('#kiosk-date').textContent = now.toLocaleDateString([], { timeZone: 'America/Chicago', weekday: 'long', month: 'long', day: 'numeric' });
+  $('#kiosk-time').textContent = now.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  $('#kiosk-date').textContent = now.toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
 }
 
 async function sha256(value) {
@@ -125,16 +126,7 @@ function selectMember(member) {
   $('#kiosk-search-step').hidden = true;
   $('#kiosk-pin-step').hidden = false;
   $('#kiosk-selected-name').textContent = member.displayName;
-  let chooser = document.getElementById('kiosk-class-choice');
-  if (!chooser) {
-    chooser = document.createElement('select'); chooser.id = 'kiosk-class-choice'; chooser.setAttribute('aria-label','Choose Kids or Adult class');
-    chooser.innerHTML = '<option value="">Select a class</option><option value="kids">Kids class</option><option value="adult">Adult class</option>';
-    $('#kiosk-class-label').after(chooser);
-    chooser.addEventListener('change', () => { if(selectedMember) { selectedMember.selectedProgram=chooser.value; $('#kiosk-class-label').textContent=checkInNotice(selectedMember); } });
-  }
-  chooser.value = ''; member.selectedProgram = '';
-  chooser.hidden = !String(member.plan||'').toLowerCase().includes('family');
-  $('#kiosk-class-label').textContent = checkInNotice(member);
+  $('#kiosk-class-label').textContent = classFor(member);
   $('#kiosk-pin').value = '';
   clearFlash($('#kiosk-message'));
   $('#kiosk-pin').focus();
@@ -163,6 +155,7 @@ function restartIdleTimer() {
 }
 
 async function authorizeKiosk(user) {
+  if (!user.emailVerified) { await sendEmailVerification(user); throw new Error('Verify the kiosk email using the link just sent, then sign in again.'); }
   const access = await getKioskAccess(user.email);
   if (!access) return false;
   kioskIdentity = { email: normalizedEmail(user.email), ...access };
@@ -191,15 +184,13 @@ async function checkIn(pin) {
       $('#kiosk-pin').focus();
       return;
     }
-    const slot = currentClass(selectedMember);
-    if (!slot) { flash($('#kiosk-message'), checkInNotice(selectedMember), 'error'); return; }
-    const className = slot.className;
-    const ref = doc(db, 'attendance', slot.classDate + '_' + normalizedEmail(selectedMember.memberEmail) + '_' + slot.classKey);
+    const className = classFor(selectedMember);
+    const ref = doc(db, 'attendance', attendanceId(selectedMember, className));
     const payload = {
       memberEmail: normalizedEmail(selectedMember.memberEmail),
       memberName: String(selectedMember.displayName || '').slice(0, 120),
       className,
-      classDate: slot.classDate,
+      classDate: localDateKey(),
       checkedInAt: serverTimestamp(),
       checkedInBy: kioskIdentity.email,
       source: 'kiosk'
@@ -212,6 +203,7 @@ async function checkIn(pin) {
     $('#kiosk-pin').value = '';
     resetTimer = setTimeout(resetKiosk, 4500);
   } catch (error) {
+    window.RRDiagnostics?.report(error,'kiosk');
     if (String(error?.code || '').includes('permission-denied')) {
       flash($('#kiosk-message'), 'Check-in could not be confirmed. You may already be checked in, or this device may need staff attention. Ask a coach to check today’s attendance.', 'error');
     } else {
@@ -324,4 +316,3 @@ async function setup() {
 
 setup();
 if (firebaseConfigured) document.querySelectorAll('form[data-service-form]').forEach(form => { form.dataset.serviceReady = 'true'; });
-

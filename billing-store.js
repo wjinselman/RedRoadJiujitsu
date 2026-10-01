@@ -1,13 +1,17 @@
-import {db,auth,doc,getDocFromServer,getDocsFromServer,collection,query,where,limit,startAfter,serverTimestamp} from './firebase-client.js?v=52';
+import {db,auth,doc,getDocFromServer,getDocsFromServer,collection,query,where,limit,startAfter,serverTimestamp,onAuthStateChanged} from './firebase-client.js?v=54-member-nav';
 import {runTransaction} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
-import {status,planSave,gymDate} from './billing-model.js?v=2';
+import {status,planSave,gymDate} from './billing-model.js?v=54-member-nav';
 export const profiles=new Map();
 export let billingReady=false;
+let billingGeneration=0;
+if(auth) onAuthStateChanged(auth,()=>{billingGeneration++;profiles.clear();billingReady=false;});
 export async function loadBillingProfiles(){
+  const generation=++billingGeneration;
   billingReady=false;profiles.clear();
   const result=new Map();let cursor;
   for(;;){
     const page=await getDocsFromServer(query(collection(db,'billingProfiles'),...(cursor?[startAfter(cursor)]:[]),limit(250)));
+    if(generation!==billingGeneration)return;
     page.docs.forEach(s=>result.set(s.id,s.data()));
     if(page.docs.length<250)break;
     cursor=page.docs.at(-1);
@@ -16,11 +20,14 @@ export async function loadBillingProfiles(){
   billingReady=true;
 }
 export async function loadMyBilling(email){
+  const generation=++billingGeneration;profiles.clear();
   const snap=await getDocFromServer(doc(db,'billingProfiles',email));
+  if(generation!==billingGeneration)return;
   if(!snap.exists()){profiles.delete(email);return;}
   const profile=snap.data();profiles.set(email,profile);
   if(profile.category==='family-covered' && profile.payerEmail){
     const payer=await getDocFromServer(doc(db,'billingProfiles',profile.payerEmail));
+    if(generation!==billingGeneration)return;
     if(payer.exists())profiles.set(profile.payerEmail,payer.data());else profiles.delete(profile.payerEmail);
   }
 }
@@ -29,9 +36,11 @@ export function memberBilling(member){
   return status(member,p,profiles.get(p?.payerEmail));
 }
 export async function ensureNoCoveredMembers(email){
-  const linked=[...profiles.entries()].filter(([,p])=>p.category==='family-covered'&&p.payerEmail===email);
-  for(const [child] of linked){
-    if((await getDocFromServer(doc(db,'members',child))).exists())throw Error('Reassign covered family members before changing or removing their payer.');
+  let cursor;
+  for (;;) {
+    const linked=await getDocsFromServer(query(collection(db,'billingProfiles'),where('category','==','family-covered'),where('payerEmail','==',email),...(cursor?[startAfter(cursor)]:[]),limit(250)));
+    for(const child of linked.docs)if((await getDocFromServer(doc(db,'members',child.id))).exists())throw Error('Reassign covered family members before changing or removing their payer.');
+    if(linked.docs.length<250)break;cursor=linked.docs.at(-1);
   }
 }
 export async function saveWithBilling(payload,previous,intent,directoryChange){
@@ -79,7 +88,7 @@ export async function saveWithBilling(payload,previous,intent,directoryChange){
     writtenProfile=newProfile;
     return planned.receipt;
   });
-  profiles.set(email,writtenProfile);
+  if(auth.currentUser?.email?.toLowerCase()===actor)profiles.set(email,writtenProfile);
   return result;
 }
 export async function paymentsForMonth(month){

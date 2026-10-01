@@ -1,4 +1,4 @@
-import { db, collection, query, where, limit, startAfter, getDocsFromServer } from './firebase-client.js?v=52';
+import { db, collection, query, where, limit, startAfter, getDocsFromServer } from './firebase-client.js?v=54-member-nav';
 import { documentId } from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
 
 export function monthInfo(now = new Date()) {

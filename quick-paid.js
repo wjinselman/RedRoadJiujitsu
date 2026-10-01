@@ -1,7 +1,7 @@
-import {auth,db,doc,serverTimestamp} from './firebase-client.js?v=52';
+import {auth,db,doc,serverTimestamp} from './firebase-client.js?v=54-member-nav';
 import {runTransaction} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
-import {profiles,billingReady,memberBilling} from './billing-store.js?v=2';
-import {defaultCategory,exempt} from './billing-model.js?v=2';
+import {profiles,billingReady,memberBilling} from './billing-store.js?v=54-member-nav';
+import {defaultCategory,exempt} from './billing-model.js?v=54-member-nav';
 export async function toggleMemberPaid(member,role){
   if(!['owner','developer'].includes(role))throw Error('Owner or Developer access is required.');
   if(!billingReady)throw Error('Refresh the roster before changing payment status.');
@@ -24,5 +24,5 @@ export async function toggleMemberPaid(member,role){
     tx.set(profileRef,next);
     return {profile:next,member:{...live,paid:wantsPaid},wantsPaid};
   });
-  profiles.set(email,result.profile);return result;
+  if(auth.currentUser?.email?.toLowerCase()===actor)profiles.set(email,result.profile);return result;
 }

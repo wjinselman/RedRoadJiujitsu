@@ -1,4 +1,4 @@
-import {auth,db,collection,query,where,limit,startAfter,getDocsFromServer} from './firebase-client.js?v=52';
+import {auth,db,collection,query,where,limit,startAfter,getDocsFromServer} from './firebase-client.js?v=54-member-nav';
 export function attendanceMonth(now=new Date()){
   const parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',year:'numeric',month:'2-digit'}).formatToParts(now).map(p=>[p.type,p.value]));
   const key=parts.year+'-'+parts.month;

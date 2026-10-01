@@ -1,4 +1,4 @@
-import { firebaseConfigured, auth, db, doc, getDocFromServer, onAuthStateChanged, createUserWithEmailAndPassword, signOut } from './firebase-client.js?v=52';
+import { firebaseConfigured, auth, db, doc, getDocFromServer, onAuthStateChanged, createUserWithEmailAndPassword, signOut } from './firebase-client.js?v=54-member-nav';
 
 const form = document.querySelector('#enroll-form');
 const message = document.querySelector('#enroll-success');
@@ -41,6 +41,7 @@ function show(text) {
 }
 
 function friendlyError(error) {
+  window.RRDiagnostics?.report(error, 'enrollment');
   const code = error?.code || '';
   if (code.includes('email-already-in-use')) return 'That email already has an account. Use Member Login, or reset the password there.';
   if (code.includes('weak-password')) return 'Use a password with at least 8 characters.';

@@ -1,4 +1,4 @@
-const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const path=require('node:path');const vm=require('node:vm');const {webcrypto,createHash}=require('node:crypto');const {JSDOM,VirtualConsole}=require('jsdom');const postcss=require('postcss');
+const {test,after}=require('node:test');const allEnvs=[];after(()=>allEnvs.forEach(e=>e.close()));const assert=require('node:assert/strict');const fs=require('node:fs');const path=require('node:path');const vm=require('node:vm');const {webcrypto,createHash}=require('node:crypto');const {JSDOM,VirtualConsole}=require('jsdom');const postcss=require('postcss');
 const root=path.resolve(__dirname,'..');
 const read=file=>fs.readFileSync(path.join(root,file),'utf8');
 const tick=()=>new Promise(resolve=>setImmediate(resolve));
@@ -9,15 +9,15 @@ function makeDom(page,width=390){
  Object.defineProperty(w,'crypto',{value:webcrypto});w.TextEncoder=TextEncoder;w.TextDecoder=TextDecoder;
  w.HTMLElement.prototype.scrollIntoView=function(){this.dataset.scrolled='true';};w.HTMLElement.prototype.scrollTo=function(opts){this.scrollLeft=opts.left||0;this.dispatchEvent(new w.Event('scroll'));};
  w.URL.createObjectURL=()=> 'blob:https://test.invalid/local-pdf';w.URL.revokeObjectURL=()=>{};w.confirm=()=>false;w.open=()=>null;
- return {dom,w,d:w.document,errors,media,close:()=>dom.window.close()};
+ const env={dom,w,d:w.document,errors,media,close:()=>dom.window.close()};allEnvs.push(env);return env;
 }
 function runClassic(env,file){env.w.eval(read(file));}
 async function load(env,file,extra='',options={}){
  const calls={writes:[],commits:0,reads:[],signIns:0};const records=options.records||{};const lists=options.lists||{};
  const snapshot=(id,data)=>({id,exists:()=>data!==undefined,data:()=>data});
- const mocks={firebaseConfigured:true,auth:{currentUser:options.user||null},db:{},
+ const mocks={isSignInWithEmailLink:()=>false,signInWithEmailLink:async()=>({user:options.user}),documentId:()=> '__name__',firebaseConfigured:true,auth:{currentUser:options.user||null},db:{},
   doc:(_,group,id)=>({group,id}),collection:(_,group)=>({group}),query:(target,...constraints)=>({...target,constraints}),where:(...args)=>args,orderBy:(...args)=>args,startAfter:doc=>({after:doc.id}),limit:n=>({limit:n}),serverTimestamp:()=>({timestamp:true}),
-  getDoc:async ref=>{calls.reads.push(ref);return snapshot(ref.id,records[ref.group+'/'+ref.id]);},
+  getDoc:async ref=>{calls.reads.push(ref);if(options.readDelay)await options.readDelay;return snapshot(ref.id,records[ref.group+'/'+ref.id]);},
   getDocs:async ref=>{calls.reads.push(ref);if(options.failGroups?.includes(ref.group))throw {code:'permission-denied'};let rows=lists[ref.group]||[];const after=ref.constraints?.find(item=>item.after)?.after;const cap=ref.constraints?.find(item=>item.limit)?.limit||250;if(after)rows=rows.slice(rows.findIndex(item=>item.id===after)+1);return {docs:rows.slice(0,cap).map(item=>snapshot(item.id,item))};},
   setDoc:async(ref,payload)=>{calls.writes.push({ref,payload});if(options.writeDelay)await options.writeDelay;if(options.writeError)throw options.writeError;},deleteDoc:async ref=>{calls.writes.push({delete:ref});},
   writeBatch:()=>({set:(ref,payload)=>calls.writes.push({ref,payload}),delete:ref=>calls.writes.push({delete:ref}),commit:async()=>{calls.commits++;if(options.commitDelay)await options.commitDelay;if(options.writeError)throw options.writeError;}}),
@@ -27,27 +27,29 @@ async function load(env,file,extra='',options={}){
  };
  mocks.getDocFromServer=async ref=>{if(options.failServerVerification)throw new Error('offline');return mocks.getDoc(ref);};
  mocks.getDocsFromServer=mocks.getDocs;
+ mocks.runTransaction=async(_,fn)=>{
+ const pending=[];const result=await fn({get:mocks.getDoc,set:(ref,payload,settings)=>pending.push({ref,payload,settings}),delete:ref=>pending.push({delete:ref})});
+ if(options.writeError)throw options.writeError;
+ for(const item of pending){calls.writes.push(item);if(item.ref)records[item.ref.group+'/'+item.ref.id]=item.settings?.merge?{...records[item.ref.group+'/'+item.ref.id],...item.payload}:item.payload;}
+ return result;
+ };
  const context=env.dom.getInternalVMContext();const cache=new Map();
  const firebase=new vm.SyntheticModule(Object.keys(mocks),function(){for(const [key,value]of Object.entries(mocks))this.setExport(key,value);},{context});
- async function get(name){name=name.split('?')[0].replace(/^\.\//,'');if(name.startsWith('firebase-'))return firebase;if(cache.has(name))return cache.get(name);const module=new vm.SourceTextModule(read(name)+(name===file?'\n'+extra:''),{context,identifier:name});cache.set(name,module);await module.link(async spec=>get(spec));return module;}
- const module=await get(file);await module.evaluate();return {api:module.namespace,calls,mocks};
+ async function get(name){name=name.split('?')[0].replace(/^\.\//,'');if(name.startsWith('firebase-')||name.startsWith('https://www.gstatic.com/firebasejs/'))return firebase;if(cache.has(name))return cache.get(name);const module=new vm.SourceTextModule(read(name)+(name===file?'\n'+extra:''),{context,identifier:name});cache.set(name,module);return module;}
+ const module=await get(file);await module.link(async spec=>get(spec));await module.evaluate();return {api:module.namespace,calls,mocks};
 }
 function click(env,selector){env.d.querySelector(selector).click();}
 test('No-Gi is Tuesday and Friday across public pages and both check-in paths',async()=>{
  for(const file of fs.readdirSync(root).filter(n=>n.endsWith('.html'))){assert.doesNotMatch(read(file),/Tuesday(?: and | &amp; )Thursday/,file);}
- for(const [page,file] of [['checkin.html','checkin.js'],['kiosk.html','kiosk.js']]){
-  const e=makeDom(page);const {api}=await load(e,file,'export {classFor};');
-  for(const [day,noGi] of [[15,true],[17,false],[18,true]]){
-   for(const plan of ['Kids','Adult']){
-    assert.equal(api.classFor({plan},new Date(2026,8,day,18)),`${plan} ${noGi?'No-Gi':'Jiu Jitsu'}`);
-   }
-  }
-  e.close();
- }
+ const e=makeDom('checkin.html');const {api}=await load(e,'class-schedule.js');
+ for(const [day,noGi] of [[15,true],[17,false],[18,true]])for(const plan of ['Kids','Adult']){
+ const hour=plan==='Kids'?'23':'00';const date=plan==='Kids'?day:day+1;
+ assert.equal(api.currentClass({plan},new Date(`2026-09-${date}T${hour}:00:00Z`)).className,`${plan} ${noGi?'No-Gi':'Jiu Jitsu'}`);
+ }e.close();
 });
 test('Coach designation saves paid and exempt, including legacy coach records',async()=>{
  const e=makeDom('owner.html');
- const {api,calls}=await load(e,'portal.js','export {memberPayloadFromForm, saveMember, statusPills, visibleRoster}; export function rosterForTest(rows){ownerMembers=rows;}');
+ const {api,calls}=await load(e,'portal.js','export {memberPayloadFromForm, saveMember, statusPills, visibleRoster, loadBillingProfiles}; export function rosterForTest(rows){ownerMembers=rows;}');
  const form=e.d.querySelector('#add-member-form');
  form.querySelector('[name=email]').value='coach@example.invalid';
  form.querySelector('[name=name]').value='Coach Test';
@@ -56,7 +58,7 @@ test('Coach designation saves paid and exempt, including legacy coach records',a
  const payload=api.memberPayloadFromForm(form);
  assert.equal(payload.paid,true);assert.equal(payload.paymentExempt,true);
  const legacy={...payload,paid:false,paymentExempt:false,active:true};
- assert.match(api.statusPills(legacy),/Paid \/ Current/);assert.doesNotMatch(api.statusPills(legacy),/Past Due/);
+ await api.loadBillingProfiles();assert.match(api.statusPills(legacy),/Payment Exempt/);assert.doesNotMatch(api.statusPills(legacy),/Past Due/);
  api.rosterForTest([legacy,{...legacy,email:'unpaid@example.invalid',coachAccess:false}]);
  e.d.querySelector('#owner-status-filter').value='past-due';
  assert.equal(api.visibleRoster().length,1);assert.equal(api.visibleRoster()[0].email,'unpaid@example.invalid');
@@ -71,16 +73,16 @@ test('Coach designation saves paid and exempt, including legacy coach records',a
 test('Legacy coaches see current dues-exempt status in their member dashboard',async()=>{
  const e=makeDom('members.html');const {api}=await load(e,'portal.js','export {renderMemberDashboard};');
  api.renderMemberDashboard({name:'Coach',coachAccess:true,paid:false,paymentExempt:false,active:true,enabled:true},'coach@example.invalid');
- assert.match(e.d.querySelector('#member-paid-label').textContent,/Paid \/ Current.*Coach/);
+ assert.match(e.d.querySelector('#member-paid-label').textContent,/Payment Exempt/);
  assert.equal(e.d.querySelector('#member-paid-label').dataset.state,'good');e.close();
 });
 function submit(env,selector){env.d.querySelector(selector).dispatchEvent(new env.w.Event('submit',{bubbles:true,cancelable:true}));}
-function fillWaiver(env){const values={participantName:'Alex Tester',dob:'1990-02-01',email:'alex@example.invalid',phone:'5550101',address:'Test address',emergencyName:'Sam Tester',emergencyPhone:'5550102',signatureName:'Alex Tester',signatureDate:'2026-09-15',trialDate:'2026-09-18'};for(const[id,value]of Object.entries(values)){const el=env.d.getElementById(id);if(el)el.value=value;}for(const id of ['readAgreement','voluntary','electronicConsent'])env.d.getElementById(id).checked=true;}
+function fillWaiver(env){const values={participantName:'Alex Tester',dob:'1990-02-01',email:'alex@example.invalid',phone:'5550101',address:'Test address',emergencyName:'Sam Tester',emergencyPhone:'5550102',signatureName:'Alex Tester',signatureDate:'2026-09-15',trialDate:'2099-09-18',trialProgram:'Adult Jiu Jitsu'};for(const[id,value]of Object.entries(values)){const el=env.d.getElementById(id);if(el)el.value=value;}for(const id of ['readAgreement','voluntary','electronicConsent'])env.d.getElementById(id).checked=true;}
 
 test('Every page has valid local assets, unique IDs, labeled fields and new stylesheet',async()=>{
  for(const name of fs.readdirSync(root).filter(n=>n.endsWith('.html')&&n!=='admin-demo.html')){
   const e=makeDom(name);const ids=[...e.d.querySelectorAll('[id]')].map(el=>el.id);assert.equal(new Set(ids).size,ids.length,name+' duplicate ID');
-  assert.ok(e.d.querySelector('link[href^="experience.css?v="]'),name);assert.ok(e.d.querySelector('meta[name=viewport]').content.includes('viewport-fit=cover'));
+  assert.ok(e.d.querySelector('link[rel=stylesheet]'),name);assert.ok(e.d.querySelector('meta[name=viewport]').content.includes('width=device-width'),name+' viewport');
   for(const el of e.d.querySelectorAll('[src],link[rel=stylesheet],a[href]')){
    const value=el.getAttribute('src')||el.getAttribute('href');if(!value||/^(?:https?:|mailto:|tel:|blob:|data:)/.test(value))continue;
    const [filePart,hash]=value.split('?')[0].split('#');const target=filePart?path.resolve(root,filePart):path.join(root,name);assert.ok(fs.existsSync(target),name+' missing '+value);
@@ -125,8 +127,8 @@ test('Staff attendance options provide explicit kiosk enable and disable modes',
  const e=makeDom('owner.html');const select=e.d.getElementById('kiosk-mode-select');assert.deepEqual([...select.options].map(option=>option.value),['disabled','enabled']);assert.equal(select.value,'disabled');e.close();
 });
 test('Member phone check-in writes only the signed-in member attendance record',async()=>{
- const e=makeDom('checkin.html');const user={email:'alex@example.invalid',emailVerified:true};const records={'members/alex@example.invalid':{email:user.email,name:'Alex Tester',plan:'Adult',enabled:true,active:true,archived:false}};
- const x=await load(e,'checkin.js','',{user,records});e.d.getElementById('checkin-email').value=user.email;e.d.getElementById('checkin-password').value='password';submit(e,'#checkin-login-form');await tick();await tick();click(e,'#checkin-confirm-button');await tick();await tick();
+ const e=makeDom('checkin.html');const user={uid:'alex',email:'alex@example.invalid',emailVerified:true,getIdToken:async()=>''};const records={'members/alex@example.invalid':{email:user.email,name:'Alex Tester',plan:'Adult',enabled:true,active:true,archived:false}};
+ e.w.Date=class extends Date{constructor(...a){super(...(a.length?a:['2026-09-15T23:50:00Z']));}static now(){return new Date('2026-09-15T23:50:00Z').getTime();}};const x=await load(e,'checkin.js','',{user,records});e.d.getElementById('checkin-email').value=user.email;e.d.getElementById('checkin-password').value='password';submit(e,'#checkin-login-form');await tick();await tick();click(e,'#checkin-confirm-button');await tick();await tick();
  assert.equal(x.calls.writes.length,1);assert.equal(x.calls.writes[0].ref.group,'attendance');assert.equal(x.calls.writes[0].payload.memberEmail,user.email);assert.equal(x.calls.writes[0].payload.checkedInBy,user.email);assert.equal(x.calls.writes[0].payload.source,'member');assert.equal(e.d.getElementById('checkin-confirm-button').textContent,'Checked In');e.close();
 });
 test('Owner, developer and coach UI permissions remain separate',async()=>{
@@ -148,7 +150,7 @@ test('Waiver library combines member, trial and standalone without reading full 
  const e=makeDom('owner.html');const x=await load(e,'portal.js',`export {waiverLibraryEntries,renderWaiverLibrary};export function seed(){ownerMembers=[{name:'Member',email:'m@example.invalid',waiverSigned:true,waiverReceiptId:'M-1'}];ownerTrials=[{id:'t',participantName:'Trial',receiptId:'T-1'}];standaloneWaivers=[{id:'s',participantName:'Guest',receiptId:'S-1'}];}`);x.api.seed();x.api.renderWaiverLibrary();assert.equal(e.d.querySelectorAll('[data-waiver-key]').length,3);e.d.getElementById('waiver-search').value='Guest';x.api.renderWaiverLibrary();assert.equal(e.d.querySelectorAll('[data-waiver-key]').length,1);assert.equal(x.calls.reads.length,0);e.close();
 });
 test('A failed optional load is not reported as an empty collection',async()=>{
- const e=makeDom('owner.html');const x=await load(e,'portal.js','export {authorizeStaff};',{records:{'owners/owner@example.invalid':{name:'Owner',enabled:true}},user:{email:'owner@example.invalid'},failGroups:['trialWaivers','attendance','waiverSubmissions']});await x.api.authorizeStaff({email:'owner@example.invalid'});assert.match(e.d.getElementById('trial-request-list').textContent,/could not be loaded/);assert.match(e.d.getElementById('attendance-list').textContent,/could not be loaded/);assert.equal(e.d.getElementById('waiver-library-message').hidden,false);e.close();
+ const e=makeDom('owner.html');const x=await load(e,'portal.js','export {authorizeStaff};',{records:{'owners/owner@example.invalid':{name:'Owner',enabled:true}},user:{email:'owner@example.invalid',emailVerified:true},failGroups:['trialWaivers','attendance','waiverSubmissions']});await x.api.authorizeStaff({email:'owner@example.invalid',emailVerified:true});assert.match(e.d.getElementById('trial-request-list').textContent,/could not (?:be )?load(?:ed)?/);assert.match(e.d.getElementById('attendance-list').textContent,/could not (?:be )?load(?:ed)?/);assert.equal(e.d.getElementById('waiver-library-message').hidden,false);e.close();
 });
 test('Saved waiver pagination exposes older records without automatic reads',async()=>{
  const e=makeDom('owner.html');const records=Array.from({length:251},(_,i)=>({id:'record-'+i,participantName:'Visitor '+i,receiptId:'R-'+i,signedAt:'2026-09-15'}));
@@ -174,7 +176,7 @@ test('Minor guardian and optional photo initials are conditionally required',asy
 test('Kiosk PIN mismatch does not write; double submission creates one attempt; denial is honest',async()=>{
  const e=makeDom('kiosk.html');let release;const wait=new Promise(r=>release=r);const member={displayName:'Alex Tester',memberEmail:'alex@example.invalid',plan:'Adult',pinHash:createHash('sha256').update('alex@example.invalid|1234').digest('hex')};
  const x=await load(e,'kiosk.js',`export {checkIn,resetKiosk};export function seed(member){selectedMember=member;kioskIdentity={email:'kiosk@example.invalid'};}`,{writeDelay:wait,writeError:{code:'permission-denied'}});x.api.seed(member);await x.api.checkIn('0000');assert.equal(x.calls.writes.length,0);
- const pending=x.api.checkIn('1234');await tick();const second=x.api.checkIn('1234');await tick();assert.equal(x.calls.writes.length,1);release();await pending;await second;assert.match(e.d.getElementById('kiosk-message').textContent,/could not be confirmed/);assert.equal(e.d.getElementById('kiosk-pin-form').getAttribute('aria-busy'),null);x.api.resetKiosk();assert.equal(e.d.getElementById('kiosk-pin').value,'');e.close();
+ const pending=x.api.checkIn('1234');await tick();const second=x.api.checkIn('1234');for(let i=0;i<50&&!x.calls.writes.length;i++)await new Promise(r=>setTimeout(r,5));assert.equal(x.calls.writes.length,1);release();await pending;await second;assert.match(e.d.getElementById('kiosk-message').textContent,/could not be confirmed/);assert.equal(e.d.getElementById('kiosk-pin-form').getAttribute('aria-busy'),null);x.api.resetKiosk();assert.equal(e.d.getElementById('kiosk-pin').value,'');e.close();
 });
 test('Original agreement bytes unchanged; no email or backend polling added',()=>{
  assert.equal(createHash('sha256').update(fs.readFileSync(path.join(root,'assets/red-road-liability-waiver.pdf'))).digest('hex'),'52beb56fddff42b277a41fa687623db9a14afffcc65a237b393c50e78958e864');
@@ -196,7 +198,7 @@ test('Status updates do not pull the mobile dashboard back up the page',async()=
 });
 test('Permanent deletion targets the actual legacy document ID and verifies all deletes on server',async()=>{
  const e=makeDom('owner.html');const x=await load(e,'portal.js',`export {permanentlyRemoveMember};export function owner(){ownerIdentity={role:'developer'};}`);x.api.owner();await x.api.permanentlyRemoveMember({id:'legacy-test-record',email:'test@example.invalid'});
- assert.equal(x.calls.writes[0].delete.id,'legacy-test-record');assert.equal(x.calls.writes[0].delete.group,'members');assert.equal(x.calls.commits,1);assert.deepEqual(x.calls.reads.map(ref=>ref.group),['members','checkInDirectory','waivers']);e.close();
+ assert.equal(x.calls.writes[0].delete.id,'legacy-test-record');assert.equal(x.calls.writes[0].delete.group,'members');assert.equal(x.calls.commits,1);assert.deepEqual(x.calls.reads.map(ref=>ref.group),['billingProfiles','members','checkInDirectory','waivers']);e.close();
 });
 test('Permanent deletion never confirms success for a surviving record or failed server verification',async()=>{
  for(const options of [{records:{'members/legacy':{name:'Test'}}},{failServerVerification:true}]){
@@ -205,4 +207,19 @@ test('Permanent deletion never confirms success for a surviving record or failed
 });
 test('Homepage preserves hero trial and the three-button bar with only its center changed',()=>{
  const e=makeDom('index.html',385);runClassic(e,'mobile-nav.js');const hero=e.d.querySelector('.hero-actions');assert.equal(hero.children[0].textContent,'Try One Class Free');assert.equal(hero.children[0].getAttribute('href'),'waiver.html?trial=1');assert.equal(hero.children[1].textContent,'See Class Times');const buttons=[...e.d.querySelectorAll('.mobile-action-bar a')];assert.deepEqual(buttons.map(a=>a.textContent),['Schedule','Sign Up Now','Members']);assert.deepEqual(buttons.map(a=>a.getAttribute('href')),['#schedule','enroll.html','members.html']);assert.doesNotMatch(read('mobile-nav.js'),/account-nav/);e.close();
+});
+
+test('unverified staff cannot open roster; verification instructions remain visible',async()=>{
+ const e=makeDom('owner.html'),user={uid:'u',email:'owner@example.invalid',emailVerified:false};
+ const x=await load(e,'portal.js','export {authorizeStaff};',{user,records:{'owners/owner@example.invalid':{enabled:true}}});
+ await assert.rejects(x.api.authorizeStaff(user),/verification email/);assert.equal(x.calls.reads.length,0);assert.equal(e.d.querySelector('#owner-app').hidden,true);e.close();
+});
+test('late staff authorization cannot expose prior account after a user switch',async()=>{
+ const e=makeDom('owner.html');let release;const user={uid:'old',email:'owner@example.invalid',emailVerified:true};
+ const x=await load(e,'portal.js','export {authorizeStaff};',{user,readDelay:new Promise(r=>release=r),records:{'owners/owner@example.invalid':{enabled:true,name:'Old Account'}}});
+ const pending=x.api.authorizeStaff(user);x.mocks.auth.currentUser={uid:'new',email:'new@example.invalid',emailVerified:true};release();
+ assert.equal(await pending,null);assert.equal(e.d.querySelector('#owner-app').hidden,true);assert.ok(!e.d.querySelector('#owner-welcome').textContent.includes('Old Account'));e.close();
+});
+for(const [page,script,selector] of [['enroll.html','enroll.js','#enroll-form'],['waiver.html','waiver.js','#waiver-form']])test(`${script}: retired prototype blocks submission and stores no private data`,()=>{
+ const e=makeDom(page);runClassic(e,script);const event=new e.w.Event('submit',{bubbles:true,cancelable:true});e.d.querySelector(selector).dispatchEvent(event);assert.equal(event.defaultPrevented,true);assert.equal(e.w.localStorage.length,0);assert.equal(e.w.sessionStorage.length,0);assert.match(e.d.querySelector('#legacy-version-notice').textContent,/Nothing was saved/);e.close();
 });

@@ -310,3 +310,11 @@ input,select,textarea{max-width:100%;min-width:0}
   .home-page .hero-crest-blend{width:120px!important}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto!important}*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Existing students: clear setup action with a quiet waiver alternative. */
+.home-page .hero-copy .member-setup-note{font-size:16px;line-height:1.5;max-width:540px}
+.home-page .hero-copy .member-trial-note{font-size:14px;line-height:1.5;margin-top:14px}
+.member-trial-note a{color:inherit;text-decoration:underline;text-underline-offset:3px}
+
+[data-member-signin][hidden]{display:none!important}
+.mobile-action-bar.member-signed-in{grid-template-columns:1fr 1.4fr}

@@ -1,15 +1,20 @@
 {
   "name": "red-road-jiujitsu",
-  "version": "67.0.0",
+  "version": "68.0.0",
   "private": true,
   "type": "module",
   "description": "Static Red Road site; npm dependencies are for isolated development checks only.",
   "scripts": {
-    "test": "node --experimental-vm-modules --test tests/ui.test.cjs",
-    "test:pdf": "node tests/pdf-check.cjs"
+    "test": "node --experimental-vm-modules --test tests/ui.test.cjs tests/paid-date.test.cjs tests/diagnostics.test.cjs tests/model-stress.test.cjs",
+    "test:pdf": "node tests/pdf-check.cjs",
+    "test:security": "node --experimental-vm-modules --test tests/security.test.cjs tests/clock-rules.test.cjs",
+    "test:browser": "node tests/browser-audit.cjs"
   },
   "devDependencies": {
     "jsdom": "30.0.1",
-    "postcss": "8.5.28"
+    "postcss": "8.5.28",
+    "firebase": "12.19.0",
+    "@firebase/rules-unit-testing": "5.0.2",
+    "playwright": "1.51.1"
   }
 }

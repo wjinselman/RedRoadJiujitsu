@@ -1,4 +1,4 @@
-import {BILLING_CATEGORIES,money,defaultCategory,exempt,summarizePayments} from './billing-model.js?v=2';
+import {BILLING_CATEGORIES,money,defaultCategory,exempt,summarizePayments} from './billing-model.js?v=54-member-nav';
 const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function previousMonth(month){
   if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(month))throw Error('Choose a valid report month.');

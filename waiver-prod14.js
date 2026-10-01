@@ -1,4 +1,4 @@
-import {signupRank} from './rank-model.js?v=1';
+import {signupRank} from './rank-model.js?v=54-member-nav';
 import {runTransaction} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
 import {
   firebaseConfigured,
@@ -10,9 +10,9 @@ import {
   serverTimestamp,
   sendEmailVerification,
   signOut
-} from './firebase-client.js?v=52';
-import { localDate } from './ui-utils.js?v=49';
-import { attachWaiverPrint } from './waiver-pdf.js?v=49';
+} from './firebase-client.js?v=54-member-nav';
+import { localDate } from './ui-utils.js?v=54-member-nav';
+import { attachWaiverPrint } from './waiver-pdf.js?v=54-member-nav';
 
 const form = document.querySelector('#waiver-form');
 if (!form) throw new Error('Waiver form not found.');
@@ -276,9 +276,11 @@ form.addEventListener('submit', async event => {
     const delivery=document.createElement('div');
     delivery.className='waiver-copy-delivery';
     success.after(delivery);
-    attachWaiverPrint(receiptForDownload,delivery);
+    try { attachWaiverPrint(receiptForDownload,delivery); }
+    catch(error) { window.RRDiagnostics?.report(error,'waiver'); delivery.textContent='Your waiver is saved. Printing is unavailable; use Download original record or ask staff for a copy.'; }
     success.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
-  } catch (error) {
+  } catch (error) { window.RRDiagnostics?.report(error,'waiver');
+    if (completed) { showError('Your waiver was saved, but the confirmation could not finish. Ask staff to confirm your receipt. Do not submit it again.'); return; }
     const denied = String(error?.code || '').includes('permission-denied');
     const message = enrollmentMode
       ? (denied

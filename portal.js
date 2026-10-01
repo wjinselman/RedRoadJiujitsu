@@ -1,20 +1,20 @@
-import {PENDING_RANK, rankMetadata, assignRank} from './rank-model.js?v=1';
-import {loadTopAttendance,clearTopAttendance} from './top-attendance.js?v=2';
-import {toggleMemberPaid} from './quick-paid.js?v=2';
-import {saveMemberPaidDate,createPaidDatePicker} from './paid-date.js?v=1';
+import {PENDING_RANK, rankMetadata, assignRank} from './rank-model.js?v=54-member-nav';
+import {loadTopAttendance,clearTopAttendance} from './top-attendance.js?v=54-member-nav';
+import {toggleMemberPaid} from './quick-paid.js?v=54-member-nav';
+import {saveMemberPaidDate,createPaidDatePicker} from './paid-date.js?v=54-member-nav';
 let quickPaymentBusy = false;
 let ownerBillingLoading = false;
-import {setupEmailInvitation,isAccountSetupOpen} from './email-setup.js?v=4';
-import {activePaymentAlerts} from './admin-alerts.js?v=1';
-import {gymDate} from './billing-model.js?v=2';
+import {setupEmailInvitation,isAccountSetupOpen} from './email-setup.js?v=54-member-nav';
+import {activePaymentAlerts} from './admin-alerts.js?v=54-member-nav';
+import {gymDate} from './billing-model.js?v=54-member-nav';
 
-import {profiles,billingReady,loadBillingProfiles,loadMyBilling,memberBilling,saveWithBilling,ensureNoCoveredMembers} from './billing-store.js?v=2';
+import {profiles,billingReady,loadBillingProfiles,loadMyBilling,memberBilling,saveWithBilling,ensureNoCoveredMembers} from './billing-store.js?v=54-member-nav';
 
-import {fillBillingForm,billingIntent,billingText,setupBillingReport,invalidateReport} from './billing-ui.js?v=3';
+import {fillBillingForm,billingIntent,billingText,setupBillingReport,invalidateReport} from './billing-ui.js?v=54-member-nav';
 
-import { listenAsync, localDate } from './ui-utils.js?v=49';
+import { listenAsync, localDate } from './ui-utils.js?v=54-member-nav';
 
-import { attachWaiverPrint } from './waiver-pdf.js?v=49';
+import { attachWaiverPrint } from './waiver-pdf.js?v=54-member-nav';
 
 import { FEATURES } from './launch-config.js';
 
@@ -100,7 +100,7 @@ import {
 
   writeBatch
 
-} from './firebase-client.js?v=52';
+} from './firebase-client.js?v=54-member-nav';
 
 
 
@@ -135,6 +135,7 @@ const waiverPages = {
 };
 
 let ownerIdentity = null;
+let sessionGeneration = 0;
 
 let currentMember = null;
 
@@ -262,6 +263,7 @@ async function loadAttendanceOptions() {
 
 
 function friendlyError(error) {
+  window.RRDiagnostics?.report(error, 'portal');
 
   const code = error?.code || '';
 
@@ -310,6 +312,7 @@ function showSetupIfNeeded() {
 async function getStaffAccess(email, optional = false) {
 
   const cleanEmail = normalizedEmail(email);
+  if (auth.currentUser?.emailVerified !== true) return null;
   async function readRole(collectionName) {
     try { return await getDoc(doc(db, collectionName, cleanEmail)); }
     catch (error) {
@@ -502,6 +505,8 @@ function renderMemberDashboard(member, userEmail) {
 
 
 async function openMemberForUser(user) {
+  const session = sessionGeneration;
+  const stillCurrent = () => session === sessionGeneration && auth.currentUser?.uid === user.uid;
 
   const message = $('#member-login-message');
 
@@ -514,6 +519,7 @@ async function openMemberForUser(user) {
     // These are one-time document checks only; no listeners or polling.
 
     const staff = await getStaffAccess(user.email, true);
+    if (!stillCurrent()) return;
 
     if (staff) {
 
@@ -541,6 +547,7 @@ async function openMemberForUser(user) {
 
 
     const member = await getMemberRecord(user.email);
+    if (!stillCurrent()) return;
 
     if (!member) {
       window.location.replace('enroll.html?continue=1');
@@ -549,6 +556,7 @@ async function openMemberForUser(user) {
 
     try { await loadMyBilling(member.email); } catch (_) { member._billingUnavailable = true; }
 
+    if (!stillCurrent()) return;
     renderMemberDashboard(member, user.email);
 
   } catch (error) {
@@ -616,6 +624,7 @@ async function loadWaiverRecord(email) {
 
 
 async function loadMemberAttendance(email) {
+  const session = sessionGeneration;
 
   const list = $('#member-attendance-list');
 
@@ -631,6 +640,7 @@ async function loadMemberAttendance(email) {
 
   ));
 
+  if(session !== sessionGeneration)return;
   memberAttendance = snap.docs.map(item => ({ id: item.id, ...item.data() }))
 
     .sort((a, b) => (b.checkedInAt?.toMillis?.() || 0) - (a.checkedInAt?.toMillis?.() || 0));
@@ -757,7 +767,7 @@ function setupMemberPage() {
 
     invalidateReport();
 
-    await signOut(auth).catch(() => {});
+    await signOut(auth);
 
     dashboard.hidden = true;
 
@@ -871,6 +881,7 @@ function setupMemberPage() {
 
       await setDoc(doc(db, 'members', normalizedEmail(currentMember.email)), profileUpdate, { merge: true });
 
+      if(editingSession!==sessionGeneration || currentMember!==editingMember)return;
       Object.assign(currentMember, updated);
 
       $('#member-profile-panel').hidden = true;
@@ -899,7 +910,9 @@ function setupMemberPage() {
 
     try {
 
+      const session=sessionGeneration;
       const record = await loadWaiverRecord(currentMember.email);
+      if(session!==sessionGeneration)return;
 
       if (!record) return flash(dashboardMessage, 'The signed waiver record could not be found.', 'error');
 
@@ -1313,9 +1326,9 @@ async function loadOwnerMembers(append = false) {
   const page = waiverPages.members;
 
   // Start independent reads together; optional kiosk data must not delay the roster.
-  const directoryRead = getDocs(query(collection(db, 'checkInDirectory'), limit(MAX_OWNER_MEMBERS))).catch(() => null);
+  const directoryRead = getDocs(query(collection(db, 'checkInDirectory'), limit(MAX_OWNER_MEMBERS))).catch(error => { window.RRDiagnostics?.report(error, 'directory-load'); return null; });
   ownerBillingLoading = true;
-  const billingRead = loadBillingProfiles().catch(() => {}).finally(() => { ownerBillingLoading = false; });
+  const billingRead = loadBillingProfiles().catch(error => window.RRDiagnostics?.report(error, 'billing-load')).finally(() => { ownerBillingLoading = false; });
   const loadingIdentity = ownerIdentity;
   const snap = await getDocsFromServer(query(collection(db, 'members'), ...(append && page.cursor ? [startAfter(page.cursor)] : []), limit(MAX_OWNER_MEMBERS)));
   if (!loadingIdentity || ownerIdentity !== loadingIdentity) return;
@@ -1587,6 +1600,7 @@ function renderOwnerAccess() {
 
 
 async function loadOwnerAccess() {
+  const session = sessionGeneration;
 
   if (ownerIdentity?.role !== 'developer') return;
 
@@ -1594,6 +1608,7 @@ async function loadOwnerAccess() {
 
   const snap = await getDocs(q);
 
+  if (session !== sessionGeneration) return;
   ownerAccess = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
   renderOwnerAccess();
@@ -1665,11 +1680,13 @@ function renderKioskAccess() {
 
 
 async function loadKioskAccess() {
+  const session = sessionGeneration;
 
   if (ownerIdentity?.role !== 'developer') return;
 
   const snap = await getDocs(query(collection(db, 'kiosks'), limit(50)));
 
+  if (session !== sessionGeneration) return;
   kioskAccess = snap.docs.map(item => ({ id: item.id, ...item.data() }));
 
   renderKioskAccess();
@@ -1741,10 +1758,12 @@ function renderAttendance() {
 
 
 async function loadAttendance() {
+  const session = sessionGeneration;
   void loadTopAttendance();
 
   const snap = await getDocs(query(collection(db, 'attendance'), orderBy('checkedInAt', 'desc'), limit(250)));
 
+  if (session !== sessionGeneration) return;
   ownerAttendance = snap.docs.map(item => ({ id: item.id, ...item.data() }));
 
   renderAttendance();
@@ -1812,11 +1831,13 @@ function renderTrialRequests() {
 
 
 async function loadTrialRequests(append = false) {
+  const session = sessionGeneration;
 
   const page = waiverPages.trials;
 
   const snap = await getDocs(query(collection(db, 'trialWaivers'), orderBy('createdAt', 'desc'), ...(append && page.cursor ? [startAfter(page.cursor)] : []), limit(250)));
 
+  if (session !== sessionGeneration) return;
   const records = snap.docs.map(item => ({ id: item.id, ...item.data() }));
 
   ownerTrials = append ? [...ownerTrials, ...records] : records;
@@ -1870,11 +1891,13 @@ function renderWaiverLibrary() {
 
 
 async function loadStandaloneWaivers(append = false) {
+  const session = sessionGeneration;
 
   const page = waiverPages.standalone;
 
   const snap=await getDocs(query(collection(db,'waiverSubmissions'),orderBy('createdAt','desc'),...(append && page.cursor ? [startAfter(page.cursor)] : []),limit(250)));
 
+  if (session !== sessionGeneration) return;
   const records=snap.docs.map(item=>({id:item.id,...item.data()}));
 
   standaloneWaivers=append ? [...standaloneWaivers,...records] : records;
@@ -1960,14 +1983,22 @@ function authorizeStaff(user) {
 
 
 async function authorizeStaffOnce(user) {
+  if (!user.emailVerified) {
+    try { await sendEmailVerification(user); }
+    catch(error) { throw new Error('Verify your staff email before opening the dashboard. The verification email could not be sent; use Member Sign In to resend it.'); }
+    throw new Error('A verification email was sent. Open its link, then sign out and sign back in to open the staff dashboard.');
+  }
+
 
   const access = await getStaffAccess(user.email);
+  if (auth.currentUser?.uid !== user.uid) return null;
 
   if (!access) return null;
 
   ownerIdentity = { email: normalizedEmail(user.email), ...access };
 
   const developer = access.role === 'developer';
+  window.RRDiagnostics?.showAdmin(developer);
 
   const coach = access.role === 'coach';
 
@@ -2017,17 +2048,17 @@ async function authorizeStaffOnce(user) {
   $('#owner-coach-list').textContent = 'Loading coaches…';
 
   const extraData = Promise.allSettled([
-    loadTrialRequests().catch(() => {
+    loadTrialRequests().catch(error => { window.RRDiagnostics?.report(error, 'trial-load');
       $('#trial-request-list').textContent = 'Trial requests could not load. Use Refresh Trials to retry.';
       $('#stat-trials').textContent = '—';
       $('#stat-trials-note').textContent = 'Not loaded';
     }),
-    loadAttendance().catch(() => {
+    loadAttendance().catch(error => { window.RRDiagnostics?.report(error, 'attendance-load');
       $('#attendance-list').textContent = 'Attendance could not load. Use Refresh Attendance to retry.';
       $('#attendance-today-count').textContent = '—';
       $('#attendance-last-time').textContent = '—';
     }),
-    loadStandaloneWaivers().catch(() => flash($('#waiver-library-message'),'Waivers could not load. Use Refresh Waivers to retry.','error')),
+    loadStandaloneWaivers().catch(error => (window.RRDiagnostics?.report(error, 'waiver-load'), flash($('#waiver-library-message'),'Waivers could not load. Use Refresh Waivers to retry.','error'))),
     (async () => {
       await loadAttendanceOptions().catch(() => { kioskModeEnabled = FEATURES.kioskAttendance === true; renderKioskMode(); });
       if (developer) await Promise.allSettled([loadOwnerAccess(), ...(kioskModeEnabled ? [loadKioskAccess()] : [])]);
@@ -2307,7 +2338,7 @@ function setupOwnerPage() {
 
     invalidateReport();
 
-    await signOut(auth).catch(() => {});
+    await signOut(auth);
 
     ownerMembers = [];
 
@@ -2859,7 +2890,9 @@ function setupOwnerPage() {
 
     try {
 
+      const session=sessionGeneration;
       const record=item.record||await loadWaiverRecord(item.email);
+      if(session!==sessionGeneration)return;
 
       if(!record)throw new Error('The signed record could not be found.');
 
@@ -3061,7 +3094,9 @@ function setupOwnerPage() {
 
       try {
 
+        const session=sessionGeneration;
         const record = await loadWaiverRecord(member.email);
+        if(session!==sessionGeneration)return;
 
         if (!record) return flash(ownerMessage, 'The signed waiver record could not be found.', 'error');
 
@@ -3167,7 +3202,7 @@ function setupOwnerPage() {
 
     try {
 
-      await saveMember(updated, member);
+      await setDoc(doc(db, 'members', member.id || member.email), {enabled:updated.enabled,updatedAt:serverTimestamp()}, {merge:true});
 
       Object.assign(member, updated);
 
@@ -3309,6 +3344,23 @@ document.addEventListener('visibilitychange',()=>{
 
 });
 
+if (auth) {
+  let observedUid;
+  onAuthStateChanged(auth, user => {
+    const next = user?.uid || null;
+    if (next === observedUid) return;
+    observedUid = next; sessionGeneration++;
+    ownerIdentity = null; currentMember = null; staffAuthorization = null;
+    ownerMembers=[];ownerAccess=[];kioskAccess=[];ownerAttendance=[];ownerTrials=[];standaloneWaivers=[];memberAttendance=[];
+    ownerRosterLoaded=false;ownerTrialsLoaded=false;
+    invalidateReport();clearTopAttendance();window.RRDiagnostics?.showAdmin(false);
+    for(const id of ['owner-app','member-dashboard','owner-waiver-panel','member-waiver-panel','edit-member-panel']){const el=$('#'+id);if(el)el.hidden=true;}
+    for(const id of ['owner-member-list','owner-coach-list','owner-access-list','kiosk-access-list','trial-request-list','attendance-list','signed-waiver-list','owner-waiver-details','member-waiver-details','member-attendance-list'])$('#'+id)?.replaceChildren();
+    for(const id of ['owner-login-view','member-login-view']){const el=$('#'+id);if(el)el.hidden=false;}
+    document.querySelectorAll('dialog[open]').forEach(dialog=>dialog.close());
+    if(!next){ownerRestoreAttempted=false;memberRestoreAttempted=false;}
+  });
+}
 setupMemberPage();
 
 setupOwnerPage();

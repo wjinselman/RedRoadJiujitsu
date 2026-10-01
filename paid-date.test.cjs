@@ -15,13 +15,13 @@ async function harness({member={...standard},profile=null,cached=profile,billing
  if(member)records.set('members/'+email,member);
  if(profile)records.set('billingProfiles/'+email,profile);
  const calls={transactions:0,writes:[]};
- const context=vm.createContext({console,Intl,Date,Map,Error});
+ const context=vm.createContext({console,Intl,Date,Map,Error,window:{}});
  const firebase={auth:{currentUser:actor?{email:actor}:null},db:{},doc:(_,group,id)=>group+'/'+id,serverTimestamp:()=>({timestamp:true})};
  function synthetic(values){return new vm.SyntheticModule(Object.keys(values),function(){for(const [k,v] of Object.entries(values))this.setExport(k,v);},{context});}
  const dependencies={
-  './firebase-client.js?v=52':synthetic(firebase),
-  './billing-store.js?v=2':synthetic({profiles,billingReady}),
-  './billing-model.js?v=2':new vm.SourceTextModule(read('billing-model.js'),{context}),
+  './firebase-client.js?v=54-hardening':synthetic(firebase),
+  './billing-store.js?v=54-hardening':synthetic({profiles,billingReady}),
+  './billing-model.js?v=54-hardening':new vm.SourceTextModule(read('billing-model.js'),{context}),
   'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js':synthetic({runTransaction:async(_,callback)=>{
    calls.transactions++;const pending=[];
    const result=await callback({get:async key=>({exists:()=>records.has(key),data:()=>records.get(key)}),set:(ref,data,options)=>pending.push({ref,data,options})});
@@ -33,7 +33,7 @@ async function harness({member={...standard},profile=null,cached=profile,billing
  const module=new vm.SourceTextModule(read('paid-date.js'),{context});
  await module.link(spec=>{assert.ok(dependencies[spec],spec);return dependencies[spec];});
  await module.evaluate();
- return {save:module.namespace.saveMemberPaidDate,model:dependencies['./billing-model.js?v=2'].namespace,profiles,records,calls,member};
+ return {save:module.namespace.saveMemberPaidDate,model:dependencies['./billing-model.js?v=54-hardening'].namespace,profiles,records,calls,member};
 }
 test('undated unpaid member: atomic dated payment, correct month-end, no unrelated field writes',async()=>{
  const h=await harness();const result=await h.save(h.member,'owner','2026-09-25');

@@ -94,7 +94,7 @@
       <button class="mobile-action-link" type="button" data-gym-updates>Updates</button>`;
     document.body.append(actionBar);
     document.body.classList.add('has-mobile-action-bar');
-    import('./member-button.js?v=54-member-nav').then(module => {
+    import('./member-button.js?v=57').then(module => {
       document.querySelectorAll('[data-member-action="setup"]').forEach(button => module.bindMemberButton(button, {
         signedOutLabel: 'Set Up Member Account', signedOutHref: 'members.html?setup=1'
       }));

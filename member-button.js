@@ -10,6 +10,10 @@ export function bindMemberButton(button, {
   return onAuthStateChanged(auth, user => {
     const signedIn = Boolean(user && !user.isAnonymous && user.email);
     button.hidden = hideWhenSignedIn && signedIn;
+    if (button.matches('[data-member-action="setup"]')) {
+      const note = button.closest('.hero-copy')?.querySelector('.member-setup-note');
+      if (note) note.hidden = signedIn;
+    }
     if (hideWhenSignedIn && button.closest('.mobile-action-bar')) {
       button.closest('.mobile-action-bar').classList.toggle('member-signed-in', signedIn);
     }

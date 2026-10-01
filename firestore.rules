@@ -106,7 +106,7 @@ service cloud.firestore {
     function validAttendance(data) {
       return data.keys().hasOnly([
           'memberEmail', 'memberName', 'className', 'classDate',
-          'checkedInAt', 'checkedInBy', 'source'
+          'checkedInAt', 'checkedInBy', 'source', 'childId'
         ])
         && data.memberEmail is string
         && data.memberEmail == data.memberEmail.lower()
@@ -122,7 +122,8 @@ service cloud.firestore {
         && data.checkedInAt == request.time
         && data.checkedInBy is string
         && data.checkedInBy == authEmail()
-        && data.source in ['kiosk', 'member', 'developer-test'];
+        && data.source in ['kiosk', 'member', 'developer-test', 'guardian']
+        && (data.source == 'guardian' ? (data.childId is string && data.childId.matches('child-[a-f0-9]{64}')) : !('childId' in data));
     }
 
     function validWaiverExemption(data) {
@@ -421,6 +422,100 @@ service cloud.firestore {
       allow delete: if isDeveloper();
     }
 
+    function verified() { return signedIn() && request.auth.token.email_verified == true; }
+    function childAccess(d) {
+      return verified() && (d.guardianUid == request.auth.uid || (d.loginEmail != '' && d.loginEmail == authEmail()));
+    }
+    function childReader(id) {
+      return exists(/databases/$(database)/documents/children/$(id))
+        && childAccess(get(/databases/$(database)/documents/children/$(id)).data);
+    }
+    function validFamilyPayer(email) {
+      return email != ''
+        && get(/databases/$(database)/documents/billingProfiles/$(email)).data.category == 'family-payer'
+        && get(/databases/$(database)/documents/members/$(email)).data.active == true
+        && get(/databases/$(database)/documents/members/$(email)).data.enabled == true
+        && get(/databases/$(database)/documents/members/$(email)).data.archived == false;
+    }
+    function validChild(d) {
+      return d.keys().hasOnly(['name','dob','guardianUid','guardianEmail','requestedLoginEmail','loginEmail','status','payerEmail','plan','rank','stripes','waiverReceiptId','createdAt','updatedAt','reviewedBy'])
+        && d.name is string && d.name.size() > 0 && d.name.size() <= 120
+        && d.dob is string && d.dob.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')
+        && d.guardianUid is string && d.guardianUid.size() > 0 && d.guardianUid.size() <= 128
+        && d.guardianEmail is string && d.guardianEmail.size() <= 254 && d.guardianEmail == d.guardianEmail.lower()
+        && d.requestedLoginEmail is string && d.requestedLoginEmail.size() <= 254
+        && d.requestedLoginEmail == d.requestedLoginEmail.lower()
+        && d.loginEmail is string && d.loginEmail.size() <= 254 && d.loginEmail == d.loginEmail.lower()
+        && d.status in ['pending','active','paused'] && d.plan == 'Kids'
+        && d.payerEmail is string && d.payerEmail.size() <= 254 && d.payerEmail == d.payerEmail.lower()
+        && d.rank is string && d.rank.size() > 0 && d.rank.size() <= 80
+        && d.stripes is int && d.stripes >= 0 && d.stripes <= 4
+        && d.waiverReceiptId is string && d.waiverReceiptId.size() > 0 && d.waiverReceiptId.size() <= 80
+        && d.createdAt is timestamp && d.updatedAt == request.time
+        && d.reviewedBy is string && d.reviewedBy.size() <= 254;
+    }
+    match /children/{id} {
+      allow get: if isStaff() || (verified() && (!exists(/databases/$(database)/documents/children/$(id)) || childAccess(resource.data)));
+      allow list: if request.query.limit != null && request.query.limit <= 250
+        && (isStaff() || (verified() && resource.data.guardianUid == request.auth.uid && request.query.limit <= 50));
+      allow create: if verified() && !exists(/databases/$(database)/documents/childLogins/$(authEmail()))
+        && id.matches('child-[a-f0-9]{64}') && validChild(request.resource.data)
+        && request.resource.data.guardianUid == request.auth.uid && request.resource.data.guardianEmail == authEmail()
+        && request.resource.data.status == 'pending' && request.resource.data.loginEmail == ''
+        && request.resource.data.payerEmail == '' && request.resource.data.reviewedBy == ''
+        && request.resource.data.rank == 'Rank pending' && request.resource.data.stripes == 0
+        && request.resource.data.createdAt == request.time
+        && getAfter(/databases/$(database)/documents/childWaivers/$(id)).data.receiptId == request.resource.data.waiverReceiptId
+        && getAfter(/databases/$(database)/documents/childWaivers/$(id)).data.signerUid == request.auth.uid;
+      allow update: if isManager() && validChild(request.resource.data)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','payerEmail','loginEmail','rank','stripes','reviewedBy','updatedAt'])
+        && request.resource.data.reviewedBy == authEmail()
+        && (request.resource.data.status != 'active' || validFamilyPayer(request.resource.data.payerEmail))
+        && (resource.data.loginEmail == '' || request.resource.data.loginEmail == resource.data.loginEmail)
+        && (request.resource.data.loginEmail == '' || (
+          request.resource.data.loginEmail != request.resource.data.guardianEmail
+          && !exists(/databases/$(database)/documents/members/$(request.resource.data.loginEmail))
+          && getAfter(/databases/$(database)/documents/childLogins/$(request.resource.data.loginEmail)).data.childId == id));
+      allow delete: if false;
+    }
+    match /childWaivers/{id} {
+      allow get: if isStaff() || childReader(id);
+      allow list, update, delete: if false;
+      allow create: if verified() && validWaiver(request.resource.data,authEmail())
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.minor == true
+        && request.resource.data.guardianName is string && request.resource.data.guardianName.size() > 0
+        && request.resource.data.guardianName.size() <= 160
+        && request.resource.data.electronicSignature.lower() == request.resource.data.guardianName.lower()
+        && request.resource.data.waiverVersion is string && request.resource.data.waiverVersion.size() <= 160
+        && request.resource.data.signedAt is string && request.resource.data.signedAt.size() <= 40
+        && request.resource.data.signatureDate is string && request.resource.data.signatureDate.size() == 10
+        && request.resource.data.phone is string && request.resource.data.phone.size() <= 40
+        && request.resource.data.address is string && request.resource.data.address.size() <= 240
+        && request.resource.data.emergencyName is string && request.resource.data.emergencyName.size() <= 160
+        && request.resource.data.emergencyPhone is string && request.resource.data.emergencyPhone.size() <= 40
+        && request.resource.data.relationship is string && request.resource.data.relationship.size() <= 80
+        && getAfter(/databases/$(database)/documents/children/$(id)).data.guardianUid == request.auth.uid
+        && getAfter(/databases/$(database)/documents/children/$(id)).data.name == request.resource.data.participantName
+        && getAfter(/databases/$(database)/documents/children/$(id)).data.dob == request.resource.data.dob
+        && getAfter(/databases/$(database)/documents/children/$(id)).data.waiverReceiptId == request.resource.data.receiptId;
+    }
+    match /childLogins/{email} {
+      allow get: if isManager() || (verified() && authEmail() == email);
+      allow list, delete: if false;
+      allow create, update: if isManager()
+        && request.resource.data.keys().hasOnly(['childId'])
+        && request.resource.data.childId is string
+        && (!exists(/databases/$(database)/documents/childLogins/$(email)) || resource.data.childId == request.resource.data.childId)
+        && getAfter(/databases/$(database)/documents/children/$(request.resource.data.childId)).data.loginEmail == email;
+    }
+    function childAttendance(d) {
+      let child = get(/databases/$(database)/documents/children/$(d.childId)).data;
+      return childAccess(child) && child.status == 'active' && validFamilyPayer(child.payerEmail)
+        && d.memberEmail == d.childId && d.memberName == child.name
+        && d.className in ['Kids Jiu Jitsu','Kids No-Gi'];
+    }
+
     // ROOT ACCESS: developer records are console-managed only.
     // No browser/client code can create, update, list, or delete developer access.
     match /developers/{developerEmail} {
@@ -477,10 +572,11 @@ service cloud.firestore {
                   && request.query.limit != null
                   && request.query.limit <= 250;
       // Developers have full roster control. Owners retain schema-validated control.
-      allow create: if (isManager() && validMember(request.resource.data, memberEmail) && validExemptionCreate(request.resource.data))
+      allow create: if (isManager() && !exists(/databases/$(database)/documents/childLogins/$(memberEmail)) && validMember(request.resource.data, memberEmail) && validExemptionCreate(request.resource.data))
                     || (signedIn()
                         && authEmail() == memberEmail
                         && request.auth.token.email_verified == true
+                        && !exists(/databases/$(database)/documents/childLogins/$(memberEmail))
                         && validSelfSignup(request.resource.data, memberEmail)
                         && getAfter(/databases/$(database)/documents/waivers/$(memberEmail)).data.signerUid == request.auth.uid
                         && getAfter(/databases/$(database)/documents/waivers/$(memberEmail)).data.receiptId == request.resource.data.waiverReceiptId);
@@ -607,15 +703,21 @@ service cloud.firestore {
     // duplicate check-ins. Members can only query their own recent history.
     match /attendance/{attendanceId} {
       allow get: if isStaff()
-                 || (signedIn() && resource.data.memberEmail == authEmail());
+                 || (signedIn() && resource.data.memberEmail == authEmail())
+                 || (attendanceId.split('_').size() == 3 && childReader(attendanceId.split('_')[1]));
       allow list: if (isStaff()
                       && request.query.limit != null
                       && request.query.limit <= 500)
                   || (signedIn()
-                      && resource.data.memberEmail == authEmail()
+                      && (resource.data.memberEmail == authEmail() || ('childId' in resource.data && childReader(resource.data.childId)))
                       && request.query.limit != null
                       && request.query.limit <= 250);
-      allow create: if isKiosk()
+      allow create: if (verified() && request.resource.data.source == 'guardian'
+                    && validAttendance(request.resource.data)
+                    && attendanceKey(request.resource.data,attendanceId)
+                    && classWindow(request.resource.data,request.time)
+                    && childAttendance(request.resource.data))
+                  || isKiosk()
                     && attendanceKey(request.resource.data, attendanceId)
                     && validAttendance(request.resource.data)
                     && request.resource.data.source == 'kiosk'

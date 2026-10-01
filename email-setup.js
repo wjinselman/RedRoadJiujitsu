@@ -28,7 +28,7 @@ export function setupEmailInvitation(){
   const validSession=()=>user && auth.currentUser?.uid===user.uid;
   async function sendVerification(){
     if(!validSession())throw Error('Session changed');
-    await sendEmailVerification(user,{url:new URL('members.html',window.location.href).href});
+    await sendEmailVerification(user,{url:new URL(new URLSearchParams(window.location.search).get('family') === '1' ? 'members.html?family=1' : 'members.html',window.location.href).href});
     lastSent=Date.now();
     message.textContent='Verification email sent to '+user.email+'. Check your inbox or Spam folder, open the link, then return here and select “I’ve verified my email.”';
   }
@@ -69,7 +69,7 @@ export function setupEmailInvitation(){
       await user.reload();await user.getIdToken(true);
       if(!validSession())throw Error('Session changed');
       if(!user.emailVerified){message.textContent='Your email is not verified yet. Open the verification link in your email, then try this button again.';return;}
-      window.location.assign('enroll.html?continue=1');
+      window.location.assign(new URLSearchParams(location.search).get('family') === '1' ? 'family.html' : 'enroll.html?continue=1');
     }catch(error){ window.RRDiagnostics?.report(error,'enrollment');message.textContent=errorText(error);}
     finally{busy(false);}
   });
@@ -97,7 +97,7 @@ if($('#finish-setup-form')){
       form.reset();form.hidden=true;
       message.textContent='Your email is verified and your password is saved. Continue to finish your member details and waiver. If you are already on the roster, we’ll open your member portal.';
       $('#setup-success').hidden=false;
-      window.location.assign('enroll.html?continue=1');
+      window.location.assign(new URLSearchParams(location.search).get('family') === '1' ? 'family.html' : 'enroll.html?continue=1');
     }catch(error){ window.RRDiagnostics?.report(error,'enrollment');message.textContent=errorText(error);}
     finally{busy=false;submit.disabled=false;}
   });

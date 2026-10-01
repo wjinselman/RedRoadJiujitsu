@@ -1,3 +1,4 @@
+import {childLogin} from './family-store.js?v=59';
 import { firebaseConfigured, auth, db, doc, getDocFromServer, onAuthStateChanged, createUserWithEmailAndPassword, signOut } from './firebase-client.js?v=54-member-nav';
 
 const form = document.querySelector('#enroll-form');
@@ -11,6 +12,7 @@ async function prepareEnrollment(user) {
   setupReady = false;
   resumeUser = user && !user.isAnonymous ? user : null;
   if (resumeUser) {
+    if (resumeUser.emailVerified && await childLogin(resumeUser.email)) { location.replace('family.html'); return; }
     const snap = await getDocFromServer(doc(db, 'members', normalizeEmail(user.email)));
     if (auth.currentUser?.uid !== user.uid) return;
     if (snap.exists()) { location.replace('members.html'); return; }

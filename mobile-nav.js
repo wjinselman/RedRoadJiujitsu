@@ -25,7 +25,7 @@
       <a href="${home}#schedule">Schedule</a><a href="${home}#pricing">Pricing</a>
       <a href="${home}#coaches">Coaches</a><a href="story.html">Our Story</a>
       <a href="${home}#location">Location</a><a href="waiver.html">Waiver</a>
-      <a href="members.html">Members</a><a data-gym-updates href="#">Updates</a><a class="mobile-nav-primary" href="members.html?setup=1">Set Up Member Account</a>
+      <a href="members.html">Members</a><a href="family.html">My Family / Add My Child</a><a href="index.html#contact">Contact Jeff</a><a data-gym-updates href="#">Updates</a><a class="mobile-nav-primary" href="members.html?setup=1">Set Up Member Account</a>
       <a href="waiver.html?trial=1">Trial Class Waiver</a>
     </nav><p class="mobile-nav-note">Lone Grove, Oklahoma · All levels welcome</p>`;
   const signout = document.createElement('button');

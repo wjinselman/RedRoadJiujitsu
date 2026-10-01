@@ -1,3 +1,4 @@
+import {saveChildAndWaiver} from './family-store.js?v=59';
 import {signupRank} from './rank-model.js?v=54-member-nav';
 import {runTransaction} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
 import {
@@ -33,17 +34,29 @@ const trialProgram = document.querySelector('#trialProgram');
 const trialDate = document.querySelector('#trialDate');
 const submitButton = document.querySelector('#waiver-submit');
 const params = new URLSearchParams(location.search);
-const enrollmentMode = params.get('enrollment') === '1';
-const trialMode = params.get('trial') === '1';
+const childMode = params.get('child') === '1';
+const enrollmentMode = !childMode && params.get('enrollment') === '1';
+const trialMode = !childMode && params.get('trial') === '1';
 let submitting = false;
 let completed = false;
 let receiptForDownload = null;
+let pendingChild = null;
+try { pendingChild = JSON.parse(sessionStorage.getItem('redroad:pendingChild') || 'null'); } catch (_) {}
 let pendingEnrollment = null;
 try { pendingEnrollment = JSON.parse(sessionStorage.getItem('redroad:pendingEnrollment') || 'null'); } catch (_) {}
 
 signatureDate.value = localDate();
 dob.max = localDate();
-if (trialMode) {
+if (childMode) {
+  submitButton.textContent = 'Save Child Profile & Signed Waiver';
+  document.querySelector('#waiver-kicker').textContent = 'My Family · Step 2';
+  document.querySelector('#waiver-title').textContent = 'Your Child’s Waiver';
+  document.querySelector('#waiver-intro').textContent = 'A parent or legal guardian signs for this child. Staff then confirm family coverage; no individual Kids charge is added.';
+  document.querySelector('#waiver-steps').hidden = true;
+  document.querySelector('#waiver-storage-note').textContent = 'Sign for one child at a time. Their waiver and profile save together.';
+  for (const [id,value] of [['participantName',pendingChild?.name],['dob',pendingChild?.dob]]) { document.getElementById(id).value=value||''; document.getElementById(id).readOnly=true; }
+  auth?.authStateReady().then(() => { document.querySelector('#email').value=auth.currentUser?.email||'';document.querySelector('#email').readOnly=true; }).catch(() => { submitButton.disabled=true; });
+} else if (trialMode) {
   trialFields.hidden = false;
   trialProgram.required = true;
   trialDate.required = true;
@@ -178,7 +191,16 @@ form.addEventListener('submit', async event => {
   submit.textContent = 'Saving Waiver…';
 
   try {
-    if (trialMode) {
+    if (childMode) {
+      if (!pendingChild) throw new Error('Return to My Family and add the child’s details first.');
+      await saveChildAndWaiver(pendingChild, record);
+      completed = true;
+      sessionStorage.removeItem('redroad:pendingChild');
+      receiptForDownload = record;
+      success.hidden = false; delete success.dataset.tone;
+      success.textContent = 'Your child’s profile and signed waiver are saved. Staff will confirm family coverage before check-in is enabled. No $90 child charge was added.';
+      const back=document.createElement('a');back.href='family.html';back.className='btn btn-red';back.textContent='Back to My Family / Add Another Child';success.append(document.createElement('br'),back);
+    } else if (trialMode) {
       if (!firebaseConfigured || !auth || !db) {
         throw new Error('Free-trial requests are not connected yet. Firebase configuration is required.');
       }

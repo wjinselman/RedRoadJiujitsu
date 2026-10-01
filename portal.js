@@ -1,3 +1,5 @@
+import {showFamilyAdmin} from './family-admin.js?v=59';
+import {childLogin,myChildren} from './family-store.js?v=59';
 import {showWeeklyEditor} from './weekly-updates.js?v=56';
 import {PENDING_RANK, rankMetadata, assignRank} from './rank-model.js?v=54-member-nav';
 import {loadTopAttendance,clearTopAttendance} from './top-attendance.js?v=54-member-nav';
@@ -5,13 +7,13 @@ import {toggleMemberPaid} from './quick-paid.js?v=54-member-nav';
 import {saveMemberPaidDate,createPaidDatePicker} from './paid-date.js?v=54-member-nav';
 let quickPaymentBusy = false;
 let ownerBillingLoading = false;
-import {setupEmailInvitation,isAccountSetupOpen} from './email-setup.js?v=54-member-nav';
+import {setupEmailInvitation,isAccountSetupOpen} from './email-setup.js?v=59';
 import {activePaymentAlerts} from './admin-alerts.js?v=54-member-nav';
 import {gymDate} from './billing-model.js?v=54-member-nav';
 
 import {profiles,billingReady,loadBillingProfiles,loadMyBilling,memberBilling,saveWithBilling,ensureNoCoveredMembers} from './billing-store.js?v=54-member-nav';
 
-import {fillBillingForm,billingIntent,billingText,setupBillingReport,invalidateReport} from './billing-ui.js?v=54-member-nav';
+import {fillBillingForm,billingIntent,billingText,setupBillingReport,invalidateReport} from './billing-ui.js?v=59';
 
 import { listenAsync, localDate } from './ui-utils.js?v=54-member-nav';
 
@@ -465,9 +467,9 @@ function renderMemberDashboard(member, userEmail) {
 
   paidLabel.dataset.state = paid ? 'good' : 'bad';
 
-  waiverLabel.textContent = isWaiverExempt(member) ? 'Exempt — Owner' : waiverSigned ? 'Signed' : 'Missing';
+  waiverLabel.textContent = member.plan === 'Parent / Payer' ? 'Non-training parent' : isWaiverExempt(member) ? 'Exempt — Owner' : waiverSigned ? 'Signed' : 'Missing';
 
-  waiverLabel.dataset.state = (waiverSigned || isWaiverExempt(member)) ? 'good' : 'bad';
+  waiverLabel.dataset.state = (waiverSigned || waiverNotRequired(member)) ? 'good' : 'bad';
 
   const waiverButton = $('#member-view-waiver');
 
@@ -547,10 +549,18 @@ async function openMemberForUser(user) {
 
 
 
+    const childLink = await childLogin(user.email);
+    if (!stillCurrent()) return;
+    if (childLink || new URLSearchParams(location.search).get('family') === '1') {
+      location.replace('family.html'); return;
+    }
     const member = await getMemberRecord(user.email);
     if (!stillCurrent()) return;
 
     if (!member) {
+      const children = await myChildren(user);
+      if (!stillCurrent()) return;
+      if (children.length) { window.location.replace('family.html'); return; }
       window.location.replace('enroll.html?continue=1');
       return;
     }
@@ -967,6 +977,7 @@ function isPaymentCurrent(member) {
 
 
 
+function waiverNotRequired(member) { return member?.plan === 'Parent / Payer' || isWaiverExempt(member); }
 function isWaiverExempt(member) {
   return member?.waiverExemption?.exempt === true;
 }
@@ -1080,7 +1091,7 @@ function visibleRoster() {
 
       if (status === 'past-due' && !(member.active === true && !isPaymentCurrent(member) && member.archived !== true)) return false;
 
-      if (status === 'missing-waiver' && !(member.waiverSigned !== true && !isWaiverExempt(member) && member.archived !== true)) return false;
+      if (status === 'missing-waiver' && !(member.waiverSigned !== true && !waiverNotRequired(member) && member.archived !== true)) return false;
 
       if (status === 'inactive' && !(member.active !== true && member.archived !== true)) return false;
 
@@ -1120,7 +1131,7 @@ function renderOwnerStats() {
 
   const pastDue = billable.filter(m => !isPaymentCurrent(m));
 
-  const requiredWaivers = roster.filter(m => !isWaiverExempt(m));
+  const requiredWaivers = roster.filter(m => !waiverNotRequired(m));
   const exemptWaivers = roster.length - requiredWaivers.length;
   const waivers = requiredWaivers.filter(m => m.waiverSigned === true);
 
@@ -1192,7 +1203,7 @@ function statusPills(member) {
 
   pills.push(`<span class="status-chip ${member.enabled ? 'active' : 'paused'}">${member.enabled ? 'Portal On' : 'Portal Off'}</span>`);
 
-  pills.push(`<span class="status-chip ${member.waiverSigned || isWaiverExempt(member) ? 'active' : 'past-due'}">${isWaiverExempt(member) ? 'Exempt — Owner' : member.waiverSigned ? 'Waiver Signed' : 'Waiver Missing'}</span>`);
+  pills.push(`<span class="status-chip ${member.waiverSigned || waiverNotRequired(member) ? 'active' : 'past-due'}">${member.plan === 'Parent / Payer' ? 'Non-training parent' : isWaiverExempt(member) ? 'Exempt — Owner' : member.waiverSigned ? 'Waiver Signed' : 'Waiver Missing'}</span>`);
 
   if (kioskModeEnabled) pills.push(`<span class="status-chip ${member.kioskReady ? 'active' : 'paused'}">${member.kioskReady ? 'Kiosk Ready' : member.kioskReady === false ? 'Set Check-In PIN' : 'Check PIN Setup'}</span>`);
 
@@ -1963,7 +1974,7 @@ function exportRosterCsv() {
 
     member.name, member.email, member.phone, member.plan, member.rank, member.stripes,
 
-    member.active ? 'Yes' : 'No', isPaymentCurrent(member) ? 'Yes' : 'No', isPaymentExempt(member) ? 'Yes' : 'No', member.coachAccess ? 'Yes' : 'No', isWaiverExempt(member) ? 'Exempt — Owner' : member.waiverSigned ? 'Yes' : 'No',
+    member.active ? 'Yes' : 'No', isPaymentCurrent(member) ? 'Yes' : 'No', isPaymentExempt(member) ? 'Yes' : 'No', member.coachAccess ? 'Yes' : 'No', member.plan === 'Parent / Payer' ? 'Non-training parent' : isWaiverExempt(member) ? 'Exempt — Owner' : member.waiverSigned ? 'Yes' : 'No',
 
     member.guardianName, member.householdEmail, member.emergencyName, member.emergencyPhone,
 
@@ -2029,6 +2040,7 @@ async function authorizeStaffOnce(user) {
   const developer = access.role === 'developer';
   window.RRDiagnostics?.showAdmin(developer);
   showWeeklyEditor(ownerIdentity).catch(() => {});
+  showFamilyAdmin(ownerIdentity).catch(() => {});
   if ($('#staff-updates-link')) $('#staff-updates-link').hidden = !['owner','developer'].includes(access.role);
 
   const coach = access.role === 'coach';
@@ -3384,7 +3396,7 @@ if (auth) {
     ownerIdentity = null; currentMember = null; staffAuthorization = null;
     ownerMembers=[];ownerAccess=[];kioskAccess=[];ownerAttendance=[];ownerTrials=[];standaloneWaivers=[];memberAttendance=[];
     ownerRosterLoaded=false;ownerTrialsLoaded=false;
-    invalidateReport();clearTopAttendance();window.RRDiagnostics?.showAdmin(false);showWeeklyEditor(null);
+    invalidateReport();clearTopAttendance();window.RRDiagnostics?.showAdmin(false);showWeeklyEditor(null);showFamilyAdmin(null);
     for(const id of ['owner-app','member-dashboard','owner-waiver-panel','member-waiver-panel','edit-member-panel']){const el=$('#'+id);if(el)el.hidden=true;}
     for(const id of ['owner-member-list','owner-coach-list','owner-access-list','kiosk-access-list','trial-request-list','attendance-list','signed-waiver-list','owner-waiver-details','member-waiver-details','member-attendance-list'])$('#'+id)?.replaceChildren();
     for(const id of ['owner-login-view','member-login-view']){const el=$('#'+id);if(el)el.hidden=false;}

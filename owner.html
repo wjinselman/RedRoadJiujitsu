@@ -23,7 +23,7 @@
 
 <link rel="stylesheet" href="premium.css?v=54-member-nav">
 
-<script src="mobile-nav.js?v=58" defer=""></script><meta name="referrer" content="no-referrer"><link rel="stylesheet" href="experience.css?v=56"><script src="experience.js?v=54-member-nav" defer=""></script><link rel="stylesheet" href="dashboard-sections.css?v=54-member-nav"><script src="dashboard-sections.js?v=54-member-nav" defer></script><link rel="stylesheet" href="billing.css?v=54-member-nav"><style>
+<script src="mobile-nav.js?v=59" defer=""></script><meta name="referrer" content="no-referrer"><link rel="stylesheet" href="experience.css?v=56"><script src="experience.js?v=54-member-nav" defer=""></script><link rel="stylesheet" href="dashboard-sections.css?v=54-member-nav"><script src="dashboard-sections.js?v=54-member-nav" defer></script><link rel="stylesheet" href="billing.css?v=54-member-nav"><style>
 .owner-percentage-grid>.dash-stat{box-sizing:border-box;height:146px;min-width:0}
 .owner-percentage-grid>.top-attendance-stat{display:flex;flex-direction:column;gap:8px;overflow:hidden}
 #stat-top-attendance-label{font-size:13px;line-height:18px;flex:none}
@@ -95,7 +95,7 @@
 </style>
 <link rel="stylesheet" href="paid-date.css?v=54-member-nav">
 <link rel="stylesheet" href="diagnostics.css?v=54-member-nav">
-</head>
+<link rel="stylesheet" href="family.css?v=59"></head>
 
 <body class="staff-page"><noscript>&lt;p style="padding:16px;background:#241116;color:white"&gt;JavaScript is required for secure sign-in, check-in and waiver submission. Please enable it before completing a form.&lt;/p&gt;</noscript>
 
@@ -312,7 +312,7 @@
 </div>
 
 <div class="dash-stat top-attendance-stat" aria-live="polite"><span id="stat-top-attendance-label">Top Attendance · This Month</span><strong id="stat-top-attendance-name">—</strong><small id="stat-top-attendance-note">Loading this month…</small><button type="button" id="attendance-tie-details" class="text-action" hidden>View tied members</button></div>
-</div><nav class="staff-section-nav" aria-label="Dashboard sections"><a href="#staff-members">Members</a><a href="#staff-coaches">Coaches</a><a href="#staff-trials">Trials</a><a href="#staff-attendance">Attendance</a><a href="#staff-waivers">Waivers</a><a href="#staff-payment-alerts" id="staff-alerts-link" hidden>Payment Alerts</a><a href="#staff-billing" id="staff-billing-link" hidden>Payments</a><a href="#staff-settings">Settings</a><a href="#weekly-editor" id="staff-updates-link" hidden>Updates</a><a href="developer.html#diagnostics-card" id="staff-diagnostics-link" hidden>Errors</a><a href="developer.html" id="staff-developer-link" hidden="">Developer</a></nav><div class="flash-message owner-message-slot" hidden="" id="owner-message">
+</div><nav class="staff-section-nav" aria-label="Dashboard sections"><a href="#staff-members">Members</a><a href="#staff-family" id="staff-family-link" hidden>Families</a><a href="#staff-coaches">Coaches</a><a href="#staff-trials">Trials</a><a href="#staff-attendance">Attendance</a><a href="#staff-waivers">Waivers</a><a href="#staff-payment-alerts" id="staff-alerts-link" hidden>Payment Alerts</a><a href="#staff-billing" id="staff-billing-link" hidden>Payments</a><a href="#staff-settings">Settings</a><a href="#weekly-editor" id="staff-updates-link" hidden>Updates</a><a href="developer.html#diagnostics-card" id="staff-diagnostics-link" hidden>Errors</a><a href="developer.html" id="staff-developer-link" hidden="">Developer</a></nav><div class="flash-message owner-message-slot" hidden="" id="owner-message">
 
 </div><div class="dash-card owner-card" id="staff-members">
 
@@ -340,7 +340,7 @@
 
 <label class="owner-filter"><span>Status</span><select id="owner-status-filter"><option value="all">All Statuses</option><option value="pending">Pending Approval</option><option value="active">Active</option><option value="past-due">Past Due</option><option value="missing-waiver">Missing Waiver</option><option value="inactive">Inactive</option><option value="archived">Archived</option></select></label>
 
-<label class="owner-filter"><span>Program</span><select id="owner-plan-filter"><option value="all">All Programs</option><option>Adult</option><option>Kids</option><option value="service">Military / First Responder</option><option value="Family">Family (choose Adult or Kids for classes)</option><option>Coach</option></select></label>
+<label class="owner-filter"><span>Program</span><select id="owner-plan-filter"><option value="all">All Programs</option><option>Adult</option><option>Kids</option><option>Parent / Payer</option><option value="service">Military / First Responder</option><option value="Family">Family (choose Adult or Kids for classes)</option><option>Coach</option></select></label>
 
 <button class="btn btn-dark" id="owner-export" type="button">Export CSV</button>
 
@@ -380,7 +380,7 @@
 
 <option>Adult</option>
 
-<option>Kids</option>
+<option>Kids</option><option>Parent / Payer</option>
 
 <option>Military / First Responder</option>
 
@@ -533,7 +533,7 @@
 
 <option>Adult</option>
 
-<option>Kids</option>
+<option>Kids</option><option>Parent / Payer</option>
 
 <option>Military / First Responder</option>
 
@@ -751,7 +751,7 @@
 
 
 
-<section id="weekly-editor" class="dash-card owner-card" hidden><div class="kicker">Member Communication</div><h2>Weekly Gym Update</h2><p class="portal-muted">One public message for class changes, events or gym news. Visitors open it using Updates.</p><form class="portal-form"><label for="weekly-editor-title">Title</label><input id="weekly-editor-title" name="title" maxlength="120" required><label for="weekly-editor-body">Message</label><textarea id="weekly-editor-body" name="body" rows="6" maxlength="4000" required></textarea><label><input name="published" type="checkbox"> Publish this update</label><button class="btn btn-red" type="submit">Save Update</button></form><p role="status"></p></section><div class="dash-card owner-card security-card" id="staff-settings">
+<section id="staff-family" class="dash-card owner-card" hidden></section><section id="weekly-editor" class="dash-card owner-card" hidden><div class="kicker">Member Communication</div><h2>Weekly Gym Update</h2><p class="portal-muted">One public message for class changes, events or gym news. Visitors open it using Updates.</p><form class="portal-form"><label for="weekly-editor-title">Title</label><input id="weekly-editor-title" name="title" maxlength="120" required><label for="weekly-editor-body">Message</label><textarea id="weekly-editor-body" name="body" rows="6" maxlength="4000" required></textarea><label><input name="published" type="checkbox"> Publish this update</label><button class="btn btn-red" type="submit">Save Update</button></form><p role="status"></p></section><div class="dash-card owner-card security-card" id="staff-settings">
 
 <div class="member-settings-panel">
 
@@ -923,7 +923,7 @@
 
 </main>
 
-<script src="portal.js?v=56" type="module">
+<script src="portal.js?v=59" type="module">
 
 </script>
 

@@ -1,3 +1,4 @@
+import {childLogin,myChildren} from './family-store.js?v=59';
 import { monthInfo, fetchMonth, renderMonth } from './attendance-month.js?v=54-member-nav';
 import { listenAsync } from './ui-utils.js?v=54-member-nav';
 import { currentClass, CLASS_HOURS, checkInNotice } from './class-schedule.js?v=54-member-nav';
@@ -75,6 +76,9 @@ async function openCheckIn(user) {
   if (user.emailVerified !== true) return flash($('#checkin-login-message'), 'You are signed in. Verify your email to continue: send the email below, open its verification link, then select “I’ve verified my email.”', 'error');
   try {
   const email = emailKey(user.email);
+  const child = await withTimeout(childLogin(email));
+  if (attempt !== generation || auth.currentUser?.uid !== user.uid) return;
+  if (child) { location.replace('family.html'); return; }
   // Member and developer access are independent. Start both immediately.
   // A missing/denied member record must not block an authorized developer test.
   const memberRead = withTimeout(getDoc(doc(db, 'members', email))).then(value => ({value}), error => ({error}));
@@ -87,6 +91,11 @@ async function openCheckIn(user) {
     if (memberResult.error) throw memberResult.error;
     const snap = memberResult.value;
     if (attempt !== generation) return;
+    if (!snap.exists()) {
+      const children = await withTimeout(myChildren(user));
+      if (attempt !== generation || auth.currentUser?.uid !== user.uid) return;
+      if (children.length) { location.replace('family.html'); return; }
+    }
     if (!snap.exists()) return flash($('#checkin-login-message'), 'No member record was found. Use “New here? Create an account” below or ask a coach.', 'error');
     record = { ...snap.data(), email };
     if (record.enabled !== true || record.active !== true || record.archived === true) return flash($('#checkin-login-message'), 'Your membership must be active. Ask a coach for help.', 'error');

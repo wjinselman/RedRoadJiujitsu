@@ -11,7 +11,7 @@ let reportVersion=0,printMarkup='';
 
 export function fillBillingForm(form,member,roster){
 
-  const profile=profiles.get(member.email),category=profile?.category||defaultCategory(member);
+  const profile=profiles.get(member.email),category=profile?.category||(member.plan==='Parent / Payer'?'family-payer':defaultCategory(member));
 
   const select=form.elements.billingCategory,payer=form.elements.familyPayer;
 
@@ -83,7 +83,7 @@ export function fillBillingForm(form,member,roster){
 
   form.elements.paymentExempt.onchange=update;
 
-  if(!member.email)form.elements.plan.onchange=()=>{select.value=defaultCategory({plan:form.elements.plan.value});update();};
+  if(!member.email)form.elements.plan.onchange=()=>{select.value=form.elements.plan.value==='Parent / Payer'?'family-payer':defaultCategory({plan:form.elements.plan.value});update();};
 
   update();
 

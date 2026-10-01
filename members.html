@@ -27,7 +27,15 @@
 <link rel="preconnect" href="https://www.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://identitytoolkit.googleapis.com" crossorigin>
 <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
-<style>#member-setup-form{gap:8px}#member-setup-form input{margin:4px 0 10px}#member-setup-form label{margin:0}#member-setup-verification .btn{margin-bottom:10px}#member-setup-close{margin-top:8px}</style></head>
+<style>#member-setup-form{gap:8px}#member-setup-form input{margin:4px 0 10px}#member-setup-form label{margin:0}#member-setup-verification .btn{margin-bottom:10px}#member-setup-close{margin-top:8px}</style><style id="member-compact-header">
+/* Keep account access close to the top on desktop and phones. */
+.member-page .portal-hero.compact{padding:24px 0 18px!important;text-align:left!important}
+.member-page .portal-hero.compact .kicker{margin-bottom:8px;justify-content:flex-start}
+.member-page .portal-hero.compact .portal-title{font-size:clamp(26px,4vw,42px)!important;line-height:1.08!important;max-width:none;margin:0 0 10px!important}
+.member-page .portal-hero.compact p{font-size:15px!important;line-height:1.5!important;margin:0}
+.member-page .portal-section{padding-top:18px!important}
+@media(max-width:600px){.member-page .portal-hero.compact{padding:18px 0 12px!important}.member-page .portal-section{padding-top:10px!important}}
+</style></head>
 
 <body class="member-page"><noscript>&lt;p style="padding:16px;background:#241116;color:white"&gt;JavaScript is required for secure sign-in, check-in and waiver submission. Please enable it before completing a form.&lt;/p&gt;</noscript>
 
@@ -165,7 +173,7 @@
 </div>
 <button id="member-setup-close" class="btn btn-dark" type="button">Close</button><p id="member-setup-message" role="status" aria-live="polite"></p>
 </dialog>
-<p class="portal-hint" id="member-signin-hint">Use the email Red Road has on file. Already created a login? Sign in with your existing password. First time? Choose “Set Up Member Account” above.</p>
+<p class="portal-hint" id="member-signin-hint">Already have a login? Sign in with your existing email and password. First time? Use the account setup button above. Parents can create one login for their children.</p>
 
 <p class="portal-hint">New to Red Road? <a class="waiver-inline-link" href="waiver.html?trial=1">Try one class free without an account</a>, <a class="waiver-inline-link" href="enroll.html">set up your member account</a>, or <a class="waiver-inline-link" href="waiver.html">view/sign the waiver</a>.</p>
 

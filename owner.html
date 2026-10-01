@@ -95,7 +95,7 @@
 </style>
 <link rel="stylesheet" href="paid-date.css?v=54-member-nav">
 <link rel="stylesheet" href="diagnostics.css?v=54-member-nav">
-<link rel="stylesheet" href="family.css?v=59"></head>
+<link rel="stylesheet" href="family.css?v=59"><link rel="stylesheet" href="owner-glance.css?v=61"><script src="owner-glance.js?v=61" defer></script></head>
 
 <body class="staff-page"><noscript>&lt;p style="padding:16px;background:#241116;color:white"&gt;JavaScript is required for secure sign-in, check-in and waiver submission. Please enable it before completing a form.&lt;/p&gt;</noscript>
 
@@ -239,7 +239,7 @@
 
 <p class="flash-message" id="dashboard-load-status" role="status" hidden></p>
 
-<div class="dash-grid owner-stats owner-percentage-grid">
+<section class="gym-glance" aria-labelledby="gym-glance-title"><div class="gym-glance-head"><div><div class="kicker">School overview</div><h2 id="gym-glance-title">At a glance</h2></div><button type="button" class="btn btn-red" id="quick-edit-update" hidden>Edit Member Update</button></div><p class="gym-glance-scope">Based on loaded records. Payment coverage includes family coverage; it is not cash collected. Today’s check-ins use the latest 250 attendance records.</p><div class="gym-glance-grid"><article class="gym-glance-card" data-glance-card="active"><span>Active accounts</span><strong id="glance-active">—</strong><small>Current active roster</small></article><article class="gym-glance-card" data-glance-card="paid"><span>Payment coverage</span><strong id="glance-paid">—</strong><small>Active, non-exempt accounts</small></article><article class="gym-glance-card" data-glance-card="due"><span>Payment attention</span><strong id="glance-due">—</strong><small>Unpaid active accounts, not separate bills</small></article><article class="gym-glance-card" data-glance-card="pending"><span>Awaiting activation</span><strong id="glance-pending">—</strong><small>Signed waiver; membership inactive</small></article><article class="gym-glance-card" data-glance-card="trials"><span>New trials</span><strong id="glance-trials">—</strong><small>Unexpired requests awaiting review</small></article><article class="gym-glance-card" data-glance-card="today"><span>Check-ins today</span><strong id="glance-today">—</strong><small>Recorded check-ins, not unique people</small></article></div><p class="gym-glance-scope" id="glance-load-note" role="status">Loading overview…</p></section><details class="gym-glance-details"><summary>More details · roster, waivers &amp; attendance leaders</summary><div class="dash-grid owner-stats owner-percentage-grid">
 
 <div class="dash-stat">
 
@@ -312,7 +312,7 @@
 </div>
 
 <div class="dash-stat top-attendance-stat" aria-live="polite"><span id="stat-top-attendance-label">Top Attendance · This Month</span><strong id="stat-top-attendance-name">—</strong><small id="stat-top-attendance-note">Loading this month…</small><button type="button" id="attendance-tie-details" class="text-action" hidden>View tied members</button></div>
-</div><nav class="staff-section-nav" aria-label="Dashboard sections"><a href="#staff-members">Members</a><a href="#staff-family" id="staff-family-link" hidden>Families</a><a href="#staff-coaches">Coaches</a><a href="#staff-trials">Trials</a><a href="#staff-attendance">Attendance</a><a href="#staff-waivers">Waivers</a><a href="#staff-payment-alerts" id="staff-alerts-link" hidden>Payment Alerts</a><a href="#staff-billing" id="staff-billing-link" hidden>Payments</a><a href="#staff-settings">Settings</a><a href="#weekly-editor" id="staff-updates-link" hidden>Updates</a><a href="developer.html#diagnostics-card" id="staff-diagnostics-link" hidden>Errors</a><a href="developer.html" id="staff-developer-link" hidden="">Developer</a></nav><div class="flash-message owner-message-slot" hidden="" id="owner-message">
+</div></details><nav class="staff-section-nav" aria-label="Dashboard sections"><a href="#staff-members">Members</a><a href="#staff-family" id="staff-family-link" hidden>Families</a><a href="#staff-coaches">Coaches</a><a href="#staff-trials">Trials</a><a href="#staff-attendance">Attendance</a><a href="#staff-waivers">Waivers</a><a href="#staff-payment-alerts" id="staff-alerts-link" hidden>Payment Alerts</a><a href="#staff-billing" id="staff-billing-link" hidden>Payments</a><a href="#staff-settings">Settings</a><a href="#weekly-editor" id="staff-updates-link" hidden>Updates</a><a href="developer.html#diagnostics-card" id="staff-diagnostics-link" hidden>Errors</a><a href="developer.html" id="staff-developer-link" hidden="">Developer</a></nav><div class="flash-message owner-message-slot" hidden="" id="owner-message">
 
 </div><div class="dash-card owner-card" id="staff-members">
 
@@ -751,7 +751,7 @@
 
 
 
-<section id="staff-family" class="dash-card owner-card" hidden></section><section id="weekly-editor" class="dash-card owner-card" hidden><div class="kicker">Member Communication</div><h2>Weekly Gym Update</h2><p class="portal-muted">One public message for class changes, events or gym news. Visitors open it using Updates.</p><form class="portal-form"><label for="weekly-editor-title">Title</label><input id="weekly-editor-title" name="title" maxlength="120" required><label for="weekly-editor-body">Message</label><textarea id="weekly-editor-body" name="body" rows="6" maxlength="4000" required></textarea><label><input name="published" type="checkbox"> Publish this update</label><button class="btn btn-red" type="submit">Save Update</button></form><p role="status"></p></section><div class="dash-card owner-card security-card" id="staff-settings">
+<section id="staff-family" class="dash-card owner-card" hidden></section><section id="weekly-editor" class="dash-card owner-card" hidden><div class="kicker">Member Communication</div><h2>Member Update</h2><p class="portal-muted">Add or edit the weekly or monthly message here. Use the title for the week or month. Published updates are public and available through Updates; saving replaces the previous message.</p><form class="portal-form"><label for="weekly-editor-title">Title</label><input id="weekly-editor-title" name="title" maxlength="120" required><label for="weekly-editor-body">Message</label><textarea id="weekly-editor-body" name="body" rows="6" maxlength="4000" required></textarea><label><input name="published" type="checkbox"> Publish this update</label><button class="btn btn-red" type="submit">Save Update</button></form><p role="status"></p></section><div class="dash-card owner-card security-card" id="staff-settings">
 
 <div class="member-settings-panel">
 

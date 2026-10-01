@@ -1,0 +1,18 @@
+.staff-page .gym-glance{margin:20px 0;color:#f5f6f8}
+.staff-page .gym-glance-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.staff-page .gym-glance-head h2{margin:5px 0;font-size:28px;line-height:1.2}
+.staff-page .gym-glance-head button{color:#fff;-webkit-text-fill-color:#fff;min-height:44px}
+.staff-page .gym-glance-head button[hidden]{display:none!important}
+.staff-page .gym-glance-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.staff-page .gym-glance-card{padding:20px;min-width:0;background:#111318;border:1px solid #30343d;border-top:3px solid #bd2638;border-radius:12px;display:flex;flex-direction:column;gap:10px}
+.staff-page .gym-glance-card>span{font-size:14px;font-weight:650;color:#e5e7ec;line-height:1.4}
+.staff-page .gym-glance-card>strong{font:800 38px/1.15 Arial,Helvetica,sans-serif;font-variant-numeric:tabular-nums;color:#fff;overflow-wrap:anywhere}
+.staff-page .gym-glance-card>small,.staff-page .gym-glance-scope{font-size:12px;line-height:1.5;color:#b5bbc7}
+.staff-page .gym-glance-card>small{margin-top:auto}
+.staff-page .gym-glance-card[data-attention="true"]{border-color:#a36a36;background:#1c1713}
+.staff-page .gym-glance-details{margin:16px 0}
+.staff-page .gym-glance-details>summary{cursor:pointer;padding:14px;border:1px solid #30343d;border-radius:8px;color:#e5e7ec;font-size:14px;line-height:1.5}
+.staff-page .gym-glance-details>summary:focus-visible{outline:2px solid #e44759;outline-offset:3px}
+.staff-page .gym-glance-details .owner-stats{margin-top:12px}
+@media(max-width:700px){.staff-page .gym-glance-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.staff-page .gym-glance-card{padding:15px}.staff-page .gym-glance-card>strong{font-size:32px}.staff-page .gym-glance-head button{width:100%}}
+@media(max-width:340px){.staff-page .gym-glance-grid{grid-template-columns:1fr}}

@@ -125,6 +125,30 @@ service cloud.firestore {
         && data.source in ['kiosk', 'member', 'developer-test'];
     }
 
+    function validWaiverExemption(data) {
+      return !('waiverExemption' in data) || (
+        data.waiverExemption is map
+        && data.waiverExemption.keys().hasAll(['exempt', 'reason', 'updatedBy', 'updatedAt'])
+        && data.waiverExemption.keys().hasOnly(['exempt', 'reason', 'updatedBy', 'updatedAt'])
+        && data.waiverExemption.exempt is bool
+        && data.waiverExemption.reason == 'Owner'
+        && data.waiverExemption.updatedBy is string
+        && data.waiverExemption.updatedBy.size() <= 254
+        && data.waiverExemption.updatedAt is timestamp
+      );
+    }
+    function exemptionAuditIsCurrent(data) {
+      return data.waiverExemption.updatedBy == authEmail()
+        && data.waiverExemption.updatedAt == request.time;
+    }
+    function validExemptionCreate(data) {
+      return !('waiverExemption' in data) || exemptionAuditIsCurrent(data);
+    }
+    function validExemptionUpdate(data) {
+      return !data.diff(resource.data).affectedKeys().hasAny(['waiverExemption'])
+        || (('waiverExemption' in data) && exemptionAuditIsCurrent(data));
+    }
+
     function validMember(data, memberEmail) {
       return data.keys().hasOnly([
           'email', 'name', 'rank', 'stripes', 'plan', 'paid', 'paymentExempt',
@@ -133,8 +157,9 @@ service cloud.firestore {
           'waiverReceiptId', 'phone', 'address', 'emergencyName',
           'emergencyPhone', 'guardianName', 'householdEmail',
           'createdAt', 'updatedAt', 'selfReportedRank', 'rankVerifiedBy',
-          'rankVerifiedAt', 'rankHistory'
+          'rankVerifiedAt', 'rankHistory', 'waiverExemption'
         ])
+        && validWaiverExemption(data)
         && data.email is string
         && data.email.lower() == memberEmail
         && data.name is string
@@ -209,6 +234,7 @@ service cloud.firestore {
 
     function validSelfSignup(data, memberEmail) {
       return validMember(data, memberEmail)
+        && !('waiverExemption' in data)
         // Accept the previous client during rollout; new clients use pending.
         && data.rank in ['Rank pending', 'White Belt']
         && data.get('rankVerifiedBy', '') == ''
@@ -451,14 +477,14 @@ service cloud.firestore {
                   && request.query.limit != null
                   && request.query.limit <= 250;
       // Developers have full roster control. Owners retain schema-validated control.
-      allow create: if (isManager() && validMember(request.resource.data, memberEmail))
+      allow create: if (isManager() && validMember(request.resource.data, memberEmail) && validExemptionCreate(request.resource.data))
                     || (signedIn()
                         && authEmail() == memberEmail
                         && request.auth.token.email_verified == true
                         && validSelfSignup(request.resource.data, memberEmail)
                         && getAfter(/databases/$(database)/documents/waivers/$(memberEmail)).data.signerUid == request.auth.uid
                         && getAfter(/databases/$(database)/documents/waivers/$(memberEmail)).data.receiptId == request.resource.data.waiverReceiptId);
-      allow update: if (isManager() && validMember(request.resource.data, memberEmail))
+      allow update: if (isManager() && validMember(request.resource.data, memberEmail) && validExemptionUpdate(request.resource.data))
                     || (signedIn()
                         && request.auth.token.email_verified == true
                         && authEmail() == memberEmail

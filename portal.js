@@ -464,9 +464,9 @@ function renderMemberDashboard(member, userEmail) {
 
   paidLabel.dataset.state = paid ? 'good' : 'bad';
 
-  waiverLabel.textContent = waiverSigned ? 'Signed' : 'Missing';
+  waiverLabel.textContent = isWaiverExempt(member) ? 'Exempt — Owner' : waiverSigned ? 'Signed' : 'Missing';
 
-  waiverLabel.dataset.state = waiverSigned ? 'good' : 'bad';
+  waiverLabel.dataset.state = (waiverSigned || isWaiverExempt(member)) ? 'good' : 'bad';
 
   const waiverButton = $('#member-view-waiver');
 
@@ -966,6 +966,21 @@ function isPaymentCurrent(member) {
 
 
 
+function isWaiverExempt(member) {
+  return member?.waiverExemption?.exempt === true;
+}
+
+function waiverExemptionFromForm(form, previous) {
+  const checkbox = form.querySelector('[name="waiverExempt"]');
+  if (!checkbox || checkbox.checked === isWaiverExempt(previous)) {
+    return previous?.waiverExemption ? { waiverExemption: previous.waiverExemption } : {};
+  }
+  return { waiverExemption: {
+    exempt: checkbox.checked, reason: 'Owner',
+    updatedBy: normalizedEmail(auth.currentUser?.email), updatedAt: serverTimestamp()
+  } };
+}
+
 function memberPayloadFromForm(form, previous = null) {
 
   const fd = new FormData(form);
@@ -1003,6 +1018,8 @@ function memberPayloadFromForm(form, previous = null) {
     archived: previous?.archived === true,
 
     joinedAt: String(fd.get('joinedAt') || previous?.joinedAt || todayIso()),
+
+    ...waiverExemptionFromForm(form, previous),
 
     waiverSigned: previous?.waiverSigned === true,
 
@@ -1062,7 +1079,7 @@ function visibleRoster() {
 
       if (status === 'past-due' && !(member.active === true && !isPaymentCurrent(member) && member.archived !== true)) return false;
 
-      if (status === 'missing-waiver' && !(member.waiverSigned !== true && member.archived !== true)) return false;
+      if (status === 'missing-waiver' && !(member.waiverSigned !== true && !isWaiverExempt(member) && member.archived !== true)) return false;
 
       if (status === 'inactive' && !(member.active !== true && member.archived !== true)) return false;
 
@@ -1102,7 +1119,9 @@ function renderOwnerStats() {
 
   const pastDue = billable.filter(m => !isPaymentCurrent(m));
 
-  const waivers = roster.filter(m => m.waiverSigned === true);
+  const requiredWaivers = roster.filter(m => !isWaiverExempt(m));
+  const exemptWaivers = roster.length - requiredWaivers.length;
+  const waivers = requiredWaivers.filter(m => m.waiverSigned === true);
 
   const pending = roster.filter(m => m.waiverSigned === true && m.active !== true);
 
@@ -1128,7 +1147,7 @@ function renderOwnerStats() {
 
   $('#stat-past-due').textContent = String(pastDue.length);
 
-  $('#stat-waiver-percent').textContent = `${total ? Math.round((waivers.length / total) * 100) : 0}%`;
+  $('#stat-waiver-percent').textContent = requiredWaivers.length ? `${Math.round((waivers.length / requiredWaivers.length) * 100)}%` : (exemptWaivers ? 'N/A' : '0%');
 
   if (!billingReady) { $('#stat-paid-percent').textContent = '—'; $('#stat-paid-count').textContent = (ownerBillingLoading ? 'Loading payment status…' : 'Billing unavailable'); $('#stat-past-due').textContent = '—'; }
 
@@ -1140,7 +1159,7 @@ function renderOwnerStats() {
 
   }
 
-  $('#stat-waiver-count').textContent = ownerRosterLoaded ? `${waivers.length} signed` : 'Roster not loaded';
+  $('#stat-waiver-count').textContent = ownerRosterLoaded ? `${waivers.length} of ${requiredWaivers.length} required signed${exemptWaivers ? ` · ${exemptWaivers} exempt` : ''}` : 'Roster not loaded';
 
   const newTrials = ownerTrials.filter(trial => trial.status === 'new' && (!trial.trialExpiresOn || trial.trialExpiresOn >= todayIso())).length;
 
@@ -1172,7 +1191,7 @@ function statusPills(member) {
 
   pills.push(`<span class="status-chip ${member.enabled ? 'active' : 'paused'}">${member.enabled ? 'Portal On' : 'Portal Off'}</span>`);
 
-  pills.push(`<span class="status-chip ${member.waiverSigned ? 'active' : 'past-due'}">${member.waiverSigned ? 'Waiver Signed' : 'Waiver Missing'}</span>`);
+  pills.push(`<span class="status-chip ${member.waiverSigned || isWaiverExempt(member) ? 'active' : 'past-due'}">${isWaiverExempt(member) ? 'Exempt — Owner' : member.waiverSigned ? 'Waiver Signed' : 'Waiver Missing'}</span>`);
 
   if (kioskModeEnabled) pills.push(`<span class="status-chip ${member.kioskReady ? 'active' : 'paused'}">${member.kioskReady ? 'Kiosk Ready' : member.kioskReady === false ? 'Set Check-In PIN' : 'Check PIN Setup'}</span>`);
 
@@ -1415,6 +1434,8 @@ async function saveMember(member, previous = null, intent = null) {
 
     joinedAt: String(member.joinedAt || previous?.joinedAt || todayIso()),
 
+    ...(member.waiverExemption ? { waiverExemption: member.waiverExemption } : {}),
+
     waiverSigned: member.waiverSigned === true,
 
     waiverSignedAt: String(member.waiverSignedAt || previous?.waiverSignedAt || ''),
@@ -1546,6 +1567,13 @@ function openEditMember(member) {
   $('#edit-member-paid').checked = member.coachAccess === true || member.paid === true;
 
   $('#edit-member-payment-exempt').checked = isPaymentExempt(member);
+  $('#edit-member-waiver-exempt').checked = isWaiverExempt(member);
+  $('#edit-member-waiver-exempt').disabled = !['owner', 'developer'].includes(ownerIdentity?.role);
+  const exemption = member.waiverExemption;
+  const changedAt = exemption?.updatedAt?.toDate?.();
+  $('#waiver-exemption-audit').textContent = exemption
+    ? `${exemption.exempt ? 'Granted' : 'Removed'} by ${exemption.updatedBy || 'staff'}${changedAt ? ' · ' + changedAt.toLocaleString() : ''}` : '';
+
 
   $('#edit-member-coach-access').checked = member.coachAccess === true;
 
@@ -1934,7 +1962,7 @@ function exportRosterCsv() {
 
     member.name, member.email, member.phone, member.plan, member.rank, member.stripes,
 
-    member.active ? 'Yes' : 'No', isPaymentCurrent(member) ? 'Yes' : 'No', isPaymentExempt(member) ? 'Yes' : 'No', member.coachAccess ? 'Yes' : 'No', member.waiverSigned ? 'Yes' : 'No',
+    member.active ? 'Yes' : 'No', isPaymentCurrent(member) ? 'Yes' : 'No', isPaymentExempt(member) ? 'Yes' : 'No', member.coachAccess ? 'Yes' : 'No', isWaiverExempt(member) ? 'Exempt — Owner' : member.waiverSigned ? 'Yes' : 'No',
 
     member.guardianName, member.householdEmail, member.emergencyName, member.emergencyPhone,
 

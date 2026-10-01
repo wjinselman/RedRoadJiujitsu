@@ -1,3 +1,4 @@
+import {showWeeklyEditor} from './weekly-updates.js?v=56';
 import {PENDING_RANK, rankMetadata, assignRank} from './rank-model.js?v=54-member-nav';
 import {loadTopAttendance,clearTopAttendance} from './top-attendance.js?v=54-member-nav';
 import {toggleMemberPaid} from './quick-paid.js?v=54-member-nav';
@@ -2027,6 +2028,8 @@ async function authorizeStaffOnce(user) {
 
   const developer = access.role === 'developer';
   window.RRDiagnostics?.showAdmin(developer);
+  showWeeklyEditor(ownerIdentity).catch(() => {});
+  if ($('#staff-updates-link')) $('#staff-updates-link').hidden = !['owner','developer'].includes(access.role);
 
   const coach = access.role === 'coach';
 
@@ -3381,7 +3384,7 @@ if (auth) {
     ownerIdentity = null; currentMember = null; staffAuthorization = null;
     ownerMembers=[];ownerAccess=[];kioskAccess=[];ownerAttendance=[];ownerTrials=[];standaloneWaivers=[];memberAttendance=[];
     ownerRosterLoaded=false;ownerTrialsLoaded=false;
-    invalidateReport();clearTopAttendance();window.RRDiagnostics?.showAdmin(false);
+    invalidateReport();clearTopAttendance();window.RRDiagnostics?.showAdmin(false);showWeeklyEditor(null);
     for(const id of ['owner-app','member-dashboard','owner-waiver-panel','member-waiver-panel','edit-member-panel']){const el=$('#'+id);if(el)el.hidden=true;}
     for(const id of ['owner-member-list','owner-coach-list','owner-access-list','kiosk-access-list','trial-request-list','attendance-list','signed-waiver-list','owner-waiver-details','member-waiver-details','member-attendance-list'])$('#'+id)?.replaceChildren();
     for(const id of ['owner-login-view','member-login-view']){const el=$('#'+id);if(el)el.hidden=false;}

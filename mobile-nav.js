@@ -25,7 +25,7 @@
       <a href="${home}#schedule">Schedule</a><a href="${home}#pricing">Pricing</a>
       <a href="${home}#coaches">Coaches</a><a href="story.html">Our Story</a>
       <a href="${home}#location">Location</a><a href="waiver.html">Waiver</a>
-      <a href="members.html">Member Sign In</a><a class="mobile-nav-primary" href="members.html?setup=1">Set Up Member Account</a>
+      <a href="members.html">Members</a><a data-gym-updates href="#">Updates</a><a class="mobile-nav-primary" href="members.html?setup=1">Set Up Member Account</a>
       <a href="waiver.html?trial=1">Trial Class Waiver</a>
     </nav><p class="mobile-nav-note">Lone Grove, Oklahoma · All levels welcome</p>`;
   header.append(panel);
@@ -90,25 +90,27 @@
     actionBar.className = 'mobile-action-bar';
     actionBar.setAttribute('aria-label', 'Quick actions');
     actionBar.innerHTML = `<a class="mobile-action-link" href="${home}#schedule">Schedule</a>
-      <a class="mobile-action-link mobile-action-primary" href="members.html?setup=1">Set Up Account</a>
-      <a class="mobile-action-link" data-member-signin href="members.html">Sign In</a>`;
+      <a class="mobile-action-link mobile-action-primary" href="members.html">Members</a>
+      <button class="mobile-action-link" type="button" data-gym-updates>Updates</button>`;
     document.body.append(actionBar);
     document.body.classList.add('has-mobile-action-bar');
-    const signupButton = actionBar.querySelector('.mobile-action-primary');
-    import('./member-button.js?v=54-member-nav')
-      .then(module => {
-        module.bindMemberButton(signupButton);
-        document.querySelectorAll('[data-member-signin]').forEach(button => module.bindMemberButton(button, {
-          signedOutLabel: button.textContent, signedOutHref: 'members.html', hideWhenSignedIn: true
-        }));
-        document.querySelectorAll('[data-member-action="setup"]').forEach(button => module.bindMemberButton(button, {
-          signedOutLabel: 'Set Up Member Account', signedOutHref: 'members.html?setup=1'
-        }));
-      })
-      .catch(() => { /* Keep the public actions if Auth cannot load. */ });
+    import('./member-button.js?v=54-member-nav').then(module => {
+      document.querySelectorAll('[data-member-action="setup"]').forEach(button => module.bindMemberButton(button, {
+        signedOutLabel: 'Set Up Member Account', signedOutHref: 'members.html?setup=1'
+      }));
+      document.querySelectorAll('[data-member-signin]').forEach(button => module.bindMemberButton(button, {
+        signedOutLabel: 'Members', signedOutHref: 'members.html', hideWhenSignedIn: true
+      }));
+    }).catch(() => {});
   }
+  import('./weekly-updates.js?v=56').catch(() => {
+    document.querySelectorAll('[data-gym-updates]').forEach(button => button.addEventListener('click', event => {
+      event.preventDefault(); alert('Updates could not load. Please refresh and try again.');
+    }));
+  });
+
   const updateCurrent = () => {
-    document.querySelectorAll('.mobile-nav-links a, .mobile-action-link').forEach(link => {
+    document.querySelectorAll('.mobile-nav-links a, .mobile-action-link[href]').forEach(link => {
       const target = new URL(link.href, location.href);
       const current = target.pathname === location.pathname && target.hash === location.hash && target.search === location.search;
       link.classList.toggle('is-active', current);

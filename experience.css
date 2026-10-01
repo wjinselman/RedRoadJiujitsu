@@ -318,3 +318,7 @@ input,select,textarea{max-width:100%;min-width:0}
 
 [data-member-signin][hidden]{display:none!important}
 .mobile-action-bar.member-signed-in{grid-template-columns:1fr 1.4fr}
+
+.weekly-update-dialog{background:#131626;color:#eef2ff;border:1px solid #4d536b;border-radius:14px;padding:24px;width:min(520px,calc(100% - 32px));max-height:85dvh;overflow:auto;box-sizing:border-box}.weekly-update-dialog::backdrop{background:#000b}.weekly-update-dialog h2{font-size:25px;line-height:1.2}.weekly-update-dialog p{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6}.weekly-update-dialog #weekly-stamp{font-size:12px;color:#aab3ce}.mobile-action-bar button.mobile-action-link{font-family:inherit;color:inherit;cursor:pointer;background:#161923;border:1px solid #383d50;border-radius:8px}
+/* Keep first-visit consent above the gym's mobile navigation. */
+@media(max-width:700px){body.has-mobile-action-bar #rr-cookie-notice{bottom:calc(84px + env(safe-area-inset-bottom));max-height:calc(100dvh - 110px - env(safe-area-inset-bottom))}}

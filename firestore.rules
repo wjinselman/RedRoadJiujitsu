@@ -403,10 +403,10 @@ service cloud.firestore {
         && d.code in ['unknown','permission-denied','unavailable','deadline-exceeded','network-request-failed','failed-precondition','resource-exhausted','aborted','not-found','invalid-argument','unauthenticated','invalid-credential','too-many-requests','requires-recent-login','email-already-in-use','weak-password','conflict','validation','session-changed']
         && d.kind in ['Error','TypeError','ReferenceError','SyntaxError','RangeError','URIError']
         && d.operation in ['runtime','promise','resource','portal','kiosk','enrollment','waiver','billing-load','directory-load','trial-load','attendance-load','waiver-load','auth-persistence']
-        && d.page in ['owner.html','members.html','kiosk.html','enroll.html','waiver.html','index.html','visit.html','checkin.html','activate.html','public']
+        && d.page in ['owner.html','members.html','kiosk.html','enroll.html','waiver.html','index.html','visit.html','checkin.html','activate.html','developer.html','public']
         && d.device in ['iOS','Android','Desktop'] && d.browser in ['Edge','Chrome','Firefox','Safari','Other']
-        && d.get('file','') in ['', 'account-nav.js', 'admin-alerts.js', 'analytics.js', 'attendance-month.js', 'billing-model.js', 'billing-report.js', 'billing-store.js', 'billing-ui.js', 'checkin.js', 'class-schedule.js', 'dashboard-sections.js', 'diagnostics.js', 'email-setup.js', 'enroll-prod14.js', 'enroll.js', 'experience.js', 'firebase-auth-client.js', 'firebase-client.js', 'firebase-config.js', 'firebase-kiosk-client.js', 'kiosk.js', 'launch-config.js', 'member-button.js', 'mobile-nav.js', 'paid-date.js', 'portal.js', 'quick-paid.js', 'rank-model.js', 'top-attendance.js', 'ui-utils.js', 'waiver-pdf.js', 'waiver-prod14.js', 'waiver.js']
-        && d.version == '54-diagnostics' && d.line is int && d.line >= 0 && d.line <= 100000
+        && d.get('file','') in ['', 'developer.js', 'dev-metrics.js', 'weekly-updates.js', 'account-nav.js', 'admin-alerts.js', 'analytics.js', 'attendance-month.js', 'billing-model.js', 'billing-report.js', 'billing-store.js', 'billing-ui.js', 'checkin.js', 'class-schedule.js', 'dashboard-sections.js', 'diagnostics.js', 'email-setup.js', 'enroll-prod14.js', 'enroll.js', 'experience.js', 'firebase-auth-client.js', 'firebase-client.js', 'firebase-config.js', 'firebase-kiosk-client.js', 'kiosk.js', 'launch-config.js', 'member-button.js', 'mobile-nav.js', 'paid-date.js', 'portal.js', 'quick-paid.js', 'rank-model.js', 'top-attendance.js', 'ui-utils.js', 'waiver-pdf.js', 'waiver-prod14.js', 'waiver.js']
+        && d.version in ['54-diagnostics','56-dev-console'] && d.line is int && d.line >= 0 && d.line <= 100000
         && d.count is int && d.count > 0 && d.count <= 9999
         && d.status == 'open' && d.updatedAt == request.time;
     }
@@ -643,6 +643,39 @@ service cloud.firestore {
                     && request.resource.data.memberName == 'Developer Test');
       allow update: if false;
       allow delete: if isStaff();
+    }
+
+    match /publicContent/weeklyUpdate {
+      allow get: if isManager() || resource.data.published == true;
+      allow list: if false;
+      allow create, update: if isManager()
+        && request.resource.data.keys().hasOnly(['title','body','published','updatedAt'])
+        && request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 120
+        && request.resource.data.body is string && request.resource.data.body.size() > 0 && request.resource.data.body.size() <= 4000
+        && request.resource.data.published is bool
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if isManager();
+    }
+    match /developerOperations/current {
+      allow get: if isDeveloper();
+      allow create, update: if isDeveloper()
+        && request.resource.data.keys().hasOnly(['backupDate','restoreDate','domainDate','note','updatedBy','updatedAt'])
+        && request.resource.data.backupDate is string && request.resource.data.backupDate.size() <= 10
+        && request.resource.data.restoreDate is string && request.resource.data.restoreDate.size() <= 10
+        && request.resource.data.domainDate is string && request.resource.data.domainDate.size() <= 10
+        && request.resource.data.note is string && request.resource.data.note.size() <= 300
+        && request.resource.data.updatedBy == authEmail() && request.resource.data.updatedAt == request.time;
+      allow list, delete: if false;
+    }
+    match /developerReleases/{id} {
+      allow get: if isDeveloper();
+      allow list: if isDeveloper() && request.query.limit != null && request.query.limit <= 30;
+      allow create: if isDeveloper()
+        && request.resource.data.keys().hasOnly(['build','note','createdBy','createdAt'])
+        && request.resource.data.build is string && request.resource.data.build.size() > 0 && request.resource.data.build.size() <= 80
+        && request.resource.data.note is string && request.resource.data.note.size() > 0 && request.resource.data.note.size() <= 300
+        && request.resource.data.createdBy == authEmail() && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
     }
 
     // Explicit deny-by-default for anything not listed above.

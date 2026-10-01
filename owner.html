@@ -1,5 +1,5 @@
 <!DOCTYPE html><html lang="en" class="portal-document rr-scroll-document"><head>
-<script src="diagnostics.js?v=54-member-nav"></script>
+<script src="diagnostics.js?v=56"></script>
 
 <meta charset="utf-8">
 
@@ -23,7 +23,7 @@
 
 <link rel="stylesheet" href="premium.css?v=54-member-nav">
 
-<script src="mobile-nav.js?v=54-member-nav" defer=""></script><meta name="referrer" content="no-referrer"><link rel="stylesheet" href="experience.css?v=54-member-nav"><script src="experience.js?v=54-member-nav" defer=""></script><link rel="stylesheet" href="dashboard-sections.css?v=54-member-nav"><script src="dashboard-sections.js?v=54-member-nav" defer></script><link rel="stylesheet" href="billing.css?v=54-member-nav"><style>
+<script src="mobile-nav.js?v=56" defer=""></script><meta name="referrer" content="no-referrer"><link rel="stylesheet" href="experience.css?v=56"><script src="experience.js?v=54-member-nav" defer=""></script><link rel="stylesheet" href="dashboard-sections.css?v=54-member-nav"><script src="dashboard-sections.js?v=54-member-nav" defer></script><link rel="stylesheet" href="billing.css?v=54-member-nav"><style>
 .owner-percentage-grid>.dash-stat{box-sizing:border-box;height:146px;min-width:0}
 .owner-percentage-grid>.top-attendance-stat{display:flex;flex-direction:column;gap:8px;overflow:hidden}
 #stat-top-attendance-label{font-size:13px;line-height:18px;flex:none}
@@ -312,7 +312,7 @@
 </div>
 
 <div class="dash-stat top-attendance-stat" aria-live="polite"><span id="stat-top-attendance-label">Top Attendance · This Month</span><strong id="stat-top-attendance-name">—</strong><small id="stat-top-attendance-note">Loading this month…</small><button type="button" id="attendance-tie-details" class="text-action" hidden>View tied members</button></div>
-</div><nav class="staff-section-nav" aria-label="Dashboard sections"><a href="#staff-members">Members</a><a href="#staff-coaches">Coaches</a><a href="#staff-trials">Trials</a><a href="#staff-attendance">Attendance</a><a href="#staff-waivers">Waivers</a><a href="#staff-payment-alerts" id="staff-alerts-link" hidden>Payment Alerts</a><a href="#staff-billing" id="staff-billing-link" hidden>Payments</a><a href="#staff-settings">Settings</a><a href="#diagnostics-card" id="staff-diagnostics-link" hidden>Errors</a><a href="#developer-access-card" id="staff-developer-link" hidden="">Developer</a></nav><div class="flash-message owner-message-slot" hidden="" id="owner-message">
+</div><nav class="staff-section-nav" aria-label="Dashboard sections"><a href="#staff-members">Members</a><a href="#staff-coaches">Coaches</a><a href="#staff-trials">Trials</a><a href="#staff-attendance">Attendance</a><a href="#staff-waivers">Waivers</a><a href="#staff-payment-alerts" id="staff-alerts-link" hidden>Payment Alerts</a><a href="#staff-billing" id="staff-billing-link" hidden>Payments</a><a href="#staff-settings">Settings</a><a href="#weekly-editor" id="staff-updates-link" hidden>Updates</a><a href="developer.html#diagnostics-card" id="staff-diagnostics-link" hidden>Errors</a><a href="developer.html" id="staff-developer-link" hidden="">Developer</a></nav><div class="flash-message owner-message-slot" hidden="" id="owner-message">
 
 </div><div class="dash-card owner-card" id="staff-members">
 
@@ -751,7 +751,7 @@
 
 
 
-<div class="dash-card owner-card security-card" id="staff-settings">
+<section id="weekly-editor" class="dash-card owner-card" hidden><div class="kicker">Member Communication</div><h2>Weekly Gym Update</h2><p class="portal-muted">One public message for class changes, events or gym news. Visitors open it using Updates.</p><form class="portal-form"><label for="weekly-editor-title">Title</label><input id="weekly-editor-title" name="title" maxlength="120" required><label for="weekly-editor-body">Message</label><textarea id="weekly-editor-body" name="body" rows="6" maxlength="4000" required></textarea><label><input name="published" type="checkbox"> Publish this update</label><button class="btn btn-red" type="submit">Save Update</button></form><p role="status"></p></section><div class="dash-card owner-card security-card" id="staff-settings">
 
 <div class="member-settings-panel">
 
@@ -821,7 +821,7 @@
 
 </div>
 
-</div><section class="dash-card owner-card" id="diagnostics-card" hidden aria-labelledby="diagnostics-title"><h2 id="diagnostics-title">Site Errors</h2><p id="diagnostics-count">Reports not loaded</p><p>Private developer diagnostics. Up to 10 recent error slots per signed-in account; similar errors may share a slot. Counts cover the current page session. Signed-out errors stay in device memory.</p><div class="diagnostics-tools"><button id="diagnostics-refresh" type="button">Refresh errors</button><button id="diagnostics-export" type="button">Export details</button><label><input type="checkbox" id="diagnostics-resolved">Include resolved</label></div><p id="diagnostics-status" role="status"></p><div id="diagnostics-list"></div></section><div class="dash-card owner-card developer-only" hidden="" id="developer-access-card">
+</div><div class="dash-card owner-card developer-only" hidden="" id="developer-access-card">
 
 <div class="owner-member-head">
 
@@ -923,7 +923,7 @@
 
 </main>
 
-<script src="portal.js?v=55-waiver-exemption" type="module">
+<script src="portal.js?v=56" type="module">
 
 </script>
 

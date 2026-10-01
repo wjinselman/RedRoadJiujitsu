@@ -2,12 +2,12 @@
 (() => {
   'use strict';
   if (window.RRDiagnostics) return;
-  const VERSION = '54-diagnostics';
+  const VERSION = '56-dev-console';
   const knownCodes = new Set(['permission-denied','unavailable','deadline-exceeded','network-request-failed','failed-precondition','resource-exhausted','aborted','not-found','invalid-argument','unauthenticated','invalid-credential','too-many-requests','requires-recent-login','email-already-in-use','weak-password','conflict','validation','session-changed']);
   const kinds = new Set(['Error','TypeError','ReferenceError','SyntaxError','RangeError','URIError']);
   const operations = new Set(['runtime','promise','resource','portal','kiosk','enrollment','waiver','billing-load','directory-load','trial-load','attendance-load','waiver-load','auth-persistence']);
-  const pages = new Set(['owner.html','members.html','kiosk.html','enroll.html','waiver.html','index.html','visit.html','checkin.html','activate.html']);
-  const files = new Set(["account-nav.js", "admin-alerts.js", "analytics.js", "attendance-month.js", "billing-model.js", "billing-report.js", "billing-store.js", "billing-ui.js", "checkin.js", "class-schedule.js", "dashboard-sections.js", "diagnostics.js", "email-setup.js", "enroll-prod14.js", "enroll.js", "experience.js", "firebase-auth-client.js", "firebase-client.js", "firebase-config.js", "firebase-kiosk-client.js", "kiosk.js", "launch-config.js", "member-button.js", "mobile-nav.js", "paid-date.js", "portal.js", "quick-paid.js", "rank-model.js", "top-attendance.js", "ui-utils.js", "waiver-pdf.js", "waiver-prod14.js", "waiver.js"]);
+  const pages = new Set(['owner.html','members.html','kiosk.html','enroll.html','waiver.html','index.html','visit.html','checkin.html','activate.html','developer.html']);
+  const files = new Set(["developer.js", "dev-metrics.js", "weekly-updates.js", "account-nav.js", "admin-alerts.js", "analytics.js", "attendance-month.js", "billing-model.js", "billing-report.js", "billing-store.js", "billing-ui.js", "checkin.js", "class-schedule.js", "dashboard-sections.js", "diagnostics.js", "email-setup.js", "enroll-prod14.js", "enroll.js", "experience.js", "firebase-auth-client.js", "firebase-client.js", "firebase-config.js", "firebase-kiosk-client.js", "kiosk.js", "launch-config.js", "member-button.js", "mobile-nav.js", "paid-date.js", "portal.js", "quick-paid.js", "rank-model.js", "top-attendance.js", "ui-utils.js", "waiver-pdf.js", "waiver-prod14.js", "waiver.js"]);
   let local = [], uid = null, sdk = null, admin = false, generation = 0, busy = false;
   let attempts = 0, lastAttempt = new Map(), cloudRows = [];
   const pageName = location.pathname.split('/').pop() || 'index.html';

@@ -4,3 +4,14 @@
 .home-page .hero-copy .member-trial-note a{color:#fff;text-decoration:underline}
 .jeff-contact-actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}
 .jeff-copy-status{min-height:1.5em}
+
+/* Keep the contact button label white, including iOS native button states. */
+.home-page [data-text-jeff],
+.home-page [data-text-jeff]:hover,
+.home-page [data-text-jeff]:focus,
+.home-page [data-text-jeff]:active,
+.jeff-contact-actions a.btn,
+.jeff-contact-actions a.btn:visited {
+  color: #fff !important;
+  -webkit-text-fill-color: #fff;
+}

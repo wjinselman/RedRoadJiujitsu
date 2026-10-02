@@ -3,6 +3,7 @@ export function createEmailVerification({auth,sendEmailVerification,onVerified,r
  if(!storage){try{storage=globalThis.sessionStorage}catch{}}
  let panel=null, status=null, sendButton=null, checkButton=null, subject=null, busy=false, lastAutomaticCheck=0;
  const attempts=new Map();
+ const reportedUsers=new Set();
  const current=user=>!!user&&auth.currentUser?.uid===user.uid;
  const key=user=>'rr-verification-attempt:'+user.uid;
  function last(user){try{return Math.max(attempts.get(user.uid)||0,Number(storage.getItem(key(user))||0))}catch{return attempts.get(user.uid)||0}}
@@ -11,7 +12,7 @@ export function createEmailVerification({auth,sendEmailVerification,onVerified,r
   if(code.includes('too-many-requests'))return 'Firebase temporarily limited verification requests. Check your inbox and spam for an earlier email. Wait before requesting another. Repeated sign-ins will not help. ['+code+']';
   if(code.includes('quota-exceeded'))return 'The verification-email sending limit has been reached. Contact Red Road staff and share this code: '+code;
   if(code.includes('network-request-failed'))return 'The verification request could not reach Firebase. Check your connection, then try again. ['+code+']';
-  if(/user-token-expired|invalid-user-token|requires-recent-login/.test(code))return 'Your session needs a fresh sign-in. Use Sign out below, sign in again, then request verification. ['+code+']';
+  if(/user-token-expired|invalid-user-token|requires-recent-login/.test(code))return 'Your session needs a fresh sign-in. Use “Use a different account” below, sign in again, then request verification. ['+code+']';
   return 'Verification could not finish. Share this code with Red Road staff: '+code;
  }
  function hide(){if(panel)panel.hidden=true;subject=null;}
@@ -41,6 +42,7 @@ export function createEmailVerification({auth,sendEmailVerification,onVerified,r
  function show(user,message,signOut){
   if(!current(user)||!message)return;
   subject=user;
+  if(!reportedUsers.has(user.uid)){reportedUsers.add(user.uid);try{report({code:"auth/email-not-verified"},"email-verification-required")}catch{}}
   if(!panel){panel=document.createElement('section');panel.className='flash-message';panel.style.cssText='margin-top:16px;line-height:1.6';panel.setAttribute('aria-label','Email verification');panel.setAttribute('tabindex','-1');
    const title=document.createElement('strong');title.textContent='You’re signed in. One quick email check.';
    const address=document.createElement('p');address.dataset.verificationEmail='';

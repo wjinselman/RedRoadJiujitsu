@@ -2,14 +2,19 @@
 (() => {
   'use strict';
   if (window.RRDiagnostics) return;
-  const VERSION = '56-dev-console';
+  const VERSION = '67-diagnostics';
   const knownCodes = new Set(['permission-denied','unavailable','deadline-exceeded','network-request-failed','failed-precondition','resource-exhausted','aborted','not-found','invalid-argument','unauthenticated','invalid-credential','too-many-requests','requires-recent-login','email-already-in-use','weak-password','conflict','validation','session-changed']);
+  for(const code of ["email-not-verified","quota-exceeded","invalid-email","user-disabled","user-token-expired","invalid-user-token","operation-not-allowed","unauthorized-domain","invalid-continue-uri","missing-continue-uri","unauthorized-continue-uri","expired-action-code","invalid-action-code","wrong-password","user-not-found","popup-blocked","timeout"])knownCodes.add(code);
   const kinds = new Set(['Error','TypeError','ReferenceError','SyntaxError','RangeError','URIError']);
   const operations = new Set(['runtime','promise','resource','portal','kiosk','enrollment','waiver','billing-load','directory-load','trial-load','attendance-load','waiver-load','auth-persistence']);
+  for(const op of ["sign-in","password-reset","email-verification-required","email-verification-send","email-verification-check","developer-load","member-save","payment-save"])operations.add(op);
   const pages = new Set(['owner.html','members.html','kiosk.html','enroll.html','waiver.html','index.html','visit.html','checkin.html','activate.html','developer.html']);
+  pages.add('family.html');
   const files = new Set(["developer.js", "dev-metrics.js", "weekly-updates.js", "account-nav.js", "admin-alerts.js", "analytics.js", "attendance-month.js", "billing-model.js", "billing-report.js", "billing-store.js", "billing-ui.js", "checkin.js", "class-schedule.js", "dashboard-sections.js", "diagnostics.js", "email-setup.js", "enroll-prod14.js", "enroll.js", "experience.js", "firebase-auth-client.js", "firebase-client.js", "firebase-config.js", "firebase-kiosk-client.js", "kiosk.js", "launch-config.js", "member-button.js", "mobile-nav.js", "paid-date.js", "portal.js", "quick-paid.js", "rank-model.js", "top-attendance.js", "ui-utils.js", "waiver-pdf.js", "waiver-prod14.js", "waiver.js"]);
+  for(const file of ["email-verification.js","diagnostics-transport.js","family.js","family-store.js","family-admin.js"])files.add(file);
   let local = [], uid = null, sdk = null, admin = false, generation = 0, busy = false;
-  let attempts = 0, lastAttempt = new Map(), cloudRows = [];
+  let attempts = 0, lastAttempt = new Map(), cloudRows = [], reportingTransport = null;
+  const pendingUploads = new Set();
   const pageName = location.pathname.split('/').pop() || 'index.html';
   const page = pages.has(pageName) ? pageName : 'public';
   const ua = navigator.userAgent || '';
@@ -25,7 +30,8 @@
       const source=String(error?.stack||'').match(/([a-z-]+\.js)(?:\?[^:\s]*)?:(\d+):\d+/);
       const file=source && files.has(source[1])?source[1]:'';
       if(!line&&file)line=Number(source[2]);
-      const entry = {code:knownCodes.has(rawCode)?rawCode:'unknown',kind:kinds.has(error?.name)?error.name:'Error',file,operation:operations.has(operation)?operation:'runtime',page,device,browser,version:VERSION,line:Number.isInteger(line)?Math.min(100000,Math.max(0,line)):0,count:1,status:'open'};
+      const sessionState = sdk?.auth?.currentUser ? (sdk.auth.currentUser.isAnonymous ? 'anonymous' : sdk.auth.currentUser.emailVerified ? 'verified' : 'unverified') : 'signed-out';
+      const entry = {sessionState,code:knownCodes.has(rawCode)?rawCode:'unknown',kind:kinds.has(error?.name)?error.name:'Error',file,operation:operations.has(operation)?operation:'runtime',page,device,browser,version:VERSION,line:Number.isInteger(line)?Math.min(100000,Math.max(0,line)):0,count:1,status:'open'};
       entry.slot=slotFor([entry.code,entry.kind,entry.operation,page,entry.file,entry.line].join('|'));
       const previous=local.find(x=>x.slot===entry.slot && x.code===entry.code && x.kind===entry.kind && x.operation===entry.operation && x.line===entry.line);
       if(previous)entry.count=Math.min(9999,previous.count+1);
@@ -35,17 +41,28 @@
     } catch (_) { /* Diagnostics must never break the site. */ }
   }
   async function upload(entry) {
-    if(!sdk || !uid || !navigator.onLine || attempts>=10) return;
-    const now=Date.now(); if(now-(lastAttempt.get(entry.slot)||0)<61000)return;
-    lastAttempt.set(entry.slot,now);attempts++;
-    const {slot,localTime,...data}=entry;
-    try { await sdk.setDoc(sdk.doc(sdk.db,'clientDiagnostics',uid+'_'+slot),{...data,uid,slot,updatedAt:sdk.serverTimestamp()}); }
-    catch (_) { /* No recursive reports or automatic write retry. */ }
+    if(!navigator.onLine || attempts>=10 || pendingUploads.has(entry.slot))return;
+    const now=Date.now();if(now-(lastAttempt.get(entry.slot)||0)<61000)return;
+    pendingUploads.add(entry.slot);lastAttempt.set(entry.slot,now);attempts++;
+    const epoch=generation;
+    try {
+      let client=sdk,reporter=uid;
+      if(!client||!reporter){
+        reportingTransport ||= import('./diagnostics-transport.js?v=67').then(m=>m.getDiagnosticTransport());
+        const isolated=await reportingTransport;client=isolated.sdk;reporter=isolated.uid;
+      }
+      if(epoch!==generation)return;
+      const {slot,localTime,...data}=entry;
+      await client.setDoc(client.doc(client.db,'clientDiagnostics',reporter+'_'+slot),{...data,uid:reporter,slot,updatedAt:client.serverTimestamp()});
+    }catch(_){/* Reports are best-effort. Never interrupt sign-in or recursively report transport errors. */}
+    finally{pendingUploads.delete(entry.slot);}
   }
   function reset(user) {
-    const next=user && user.email && !user.isAnonymous && user.emailVerified ? user.uid : null;
+    const next=user && user.email && !user.isAnonymous ? user.uid : null;
     if(next===uid)return;
-    uid=next;generation++;local=[];cloudRows=[];admin=false;busy=false;attempts=0;lastAttempt=new Map();
+    const queued=uid===null ? local : [];
+    uid=next;generation++;local=queued;cloudRows=[];admin=false;busy=false;
+    // Page-wide reporting limits survive account changes.
     if(panel())panel().hidden=true;
     const link=document.getElementById('staff-diagnostics-link');if(link)link.hidden=true;
     const list=document.getElementById('diagnostics-list');if(list)list.replaceChildren();
@@ -55,6 +72,26 @@
     sdk.onAuthStateChanged(sdk.auth,reset);
   }
   function element(tag,text) {const el=document.createElement(tag);el.textContent=text;return el;}
+  function explain(row){
+    const advice={
+      'email-not-verified':['Password sign-in succeeded, but verification is required before access.','Check whether this is an existing approved account affected by the hardening rollout. Confirm the actual account verification status; do not create a duplicate account.'],
+      'quota-exceeded':['The service reported a quota limit.','Check Firebase Authentication usage and email-sending limits. Repeated resend clicks will not fix a quota.'],
+      'too-many-requests':['The service temporarily limited requests.','Check recent repeat attempts and Firebase abuse limits. Avoid repeated resends.'],
+      'invalid-credential':['The supplied login credentials were rejected.','Have the user check the email/password or use password reset. This is not proof the account is missing.'],
+      'permission-denied':['The database refused this operation.','Compare the deployed rules with this account role and the submitted record shape. Check for rollout or legacy-record incompatibility.'],
+      'network-request-failed':['The request could not reach the service.','Check device connectivity, browser blocking and service status.'],
+      'failed-precondition':['A required database or application condition was not met.','Check Firebase indexes and the operation shown above.'],
+      'conflict':['The record changed during editing.','Refresh the record before retrying; do not overwrite another staff edit.'],
+      'session-changed':['The signed-in account changed during the operation.','Sign in to the intended account and retry.'],
+      'operation-not-allowed':['The requested authentication method is disabled or unavailable.','Check the enabled Firebase Authentication providers.'],
+      'unauthorized-domain':['The authentication request used an unauthorized domain.','Check Firebase Authentication authorized domains.'],
+      'user-disabled':['Authentication reported a disabled account.','Review that account in Firebase Authentication.'],
+      'user-token-expired':['The authentication session expired.','Sign out and sign in again.'],
+      'invalid-action-code':['The email link is invalid or has already been used.','Check account status first; request a fresh link only if still needed.'],
+      'expired-action-code':['The email link expired.','Request a fresh verification or reset email.']
+    };
+    return advice[row.code]||['The '+row.operation+' step reported '+row.code+'.','Use the page, source file and operation above to reproduce it. No password, raw form data or message text is collected.'];
+  }
   function render() {
     const list=document.getElementById('diagnostics-list');if(!list)return;
     const open = new Set([...list.querySelectorAll('details[open]')].map(x=>x.dataset.id));
@@ -67,6 +104,11 @@
       let time='Unknown time';try {time=row.updatedAt?.toDate().toLocaleString()||time;}catch(_){}
       details.append(element('p',`${row.page} · ${row.device} / ${row.browser} · ${row.version} · ${time}`));
       details.append(element('p',`${row.kind}${row.file?' · '+row.file:''}${row.line?' · line '+row.line:''}. Messages and member details are intentionally excluded.`));
+      const guidance=explain(row);
+      details.append(element('p','Session: '+(row.sessionState||'not recorded by older version')+'.'));
+      details.append(element('p','Meaning: '+guidance[0]));
+      details.append(element('p','Next check: '+guidance[1]));
+      details.append(element('p','Reported behavior, not a confirmed root cause. Counts are per page session, not affected people.'));
       const button=element('button',row.status==='resolved'?'Reopen':'Mark resolved');button.type='button';
       button.addEventListener('click',async()=>{
         if(!admin||busy)return;button.disabled=true;const epoch=generation;
@@ -75,7 +117,10 @@
         finally {button.disabled=false;}
       });details.append(button);list.append(details);
     }
-    if(!filtered.length)list.append(element('p','No matching errors in the loaded reports.'));
+    if(!filtered.length)list.append(element('p','No matching reports received. This does not prove every user is error-free.'));
+    const authRows=cloudRows.filter(x=>x.status!=='resolved'&&(x.operation.startsWith('email-verification')||x.operation==='sign-in'||['quota-exceeded','too-many-requests','email-not-verified'].includes(x.code)));
+    const tile=document.getElementById('auth-errors-tile');
+    if(tile){tile.querySelector('strong').textContent=String(authRows.length)+' open reports';tile.querySelector('small').textContent='Reported login / verification problems; delivery itself is not confirmed.';tile.className='tile '+(authRows.length?'warn':'');}
     const total=cloudRows.filter(x=>x.status!=='resolved').length;
     document.getElementById('diagnostics-count').textContent=`${total} open · ${cloudRows.length} loaded`;
   }
@@ -84,7 +129,7 @@
     try {
       const result=await sdk.getDocsFromServer(sdk.query(sdk.collection(sdk.db,'clientDiagnostics'),sdk.orderBy('updatedAt','desc'),sdk.limit(100)));
       if(epoch!==generation||!admin)return;
-      cloudRows=result.docs.map(s=>({id:s.id,...s.data()}));render();status('Latest 100 reports maximum. Refresh is manual; no background polling.');
+      cloudRows=result.docs.map(s=>({id:s.id,...s.data()}));render();status('Latest 100 reports loaded. Signed-out and unverified failures can report with patch 67 rules. Offline, blocked-script and reporting-service failures may be missing.');
     } catch(_){if(epoch===generation)status('Reports could not load. Deploy the supplied rules and verify developer access, then retry.');}
     finally {if(epoch===generation)busy=false;}
   }

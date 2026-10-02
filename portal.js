@@ -1,4 +1,4 @@
-import { createEmailVerification } from './email-verification.js?v=66-smooth';
+import { createEmailVerification } from './email-verification.js?v=67';
 import {enrollmentFlow} from './enrollment-flow.js?v=60';
 import {showFamilyAdmin} from './family-admin.js?v=59';
 import {childLogin,myChildren} from './family-store.js?v=59';
@@ -751,6 +751,7 @@ function setupMemberPage() {
       await openMemberForUser(credential.user);
 
     } catch (error) {
+      if(error?.code !== 'rr/email-not-verified')window.RRDiagnostics?.report(error,'sign-in');
 
       flash(message, friendlyError(error), 'error');
 
@@ -1384,7 +1385,7 @@ async function loadOwnerMembers(append = false) {
   const page = waiverPages.members;
 
   // Start independent reads together; optional kiosk data must not delay the roster.
-  const directoryRead = getDocs(query(collection(db, 'checkInDirectory'), limit(MAX_OWNER_MEMBERS))).catch(error => { window.RRDiagnostics?.report(error, 'directory-load'); return null; });
+  const directoryRead = kioskModeEnabled ? getDocs(query(collection(db, 'checkInDirectory'), limit(MAX_OWNER_MEMBERS))).catch(error => { window.RRDiagnostics?.report(error, 'directory-load'); return null; }) : Promise.resolve(null);
   ownerBillingLoading = true;
   const billingRead = loadBillingProfiles().catch(error => window.RRDiagnostics?.report(error, 'billing-load')).finally(() => { ownerBillingLoading = false; });
   const loadingIdentity = ownerIdentity;
@@ -2329,6 +2330,7 @@ function setupOwnerPage() {
       }
 
     } catch (error) {
+      if(error?.code !== 'rr/email-not-verified')window.RRDiagnostics?.report(error,'sign-in');
 
       if(error?.code !== 'rr/email-not-verified') flash(loginMessage, friendlyError(error), 'error');
 

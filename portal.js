@@ -1,3 +1,4 @@
+import { createEmailVerification } from './email-verification.js?v=66-smooth';
 import {enrollmentFlow} from './enrollment-flow.js?v=60';
 import {showFamilyAdmin} from './family-admin.js?v=59';
 import {childLogin,myChildren} from './family-store.js?v=59';
@@ -108,6 +109,21 @@ import {
 
 
 
+const verificationGate=createEmailVerification({auth,sendEmailVerification,
+ onVerified:async user=>{
+  try{
+   if(document.querySelector('#owner-login-form')){
+    const access=await authorizeStaff(user);
+    if(!access){await signOut(auth);flash(document.querySelector('#owner-login-message'),'This email is not enabled as Red Road staff.','error');}
+   }else await openMemberForUser(user);
+  }catch(error){flash(document.querySelector('#owner-login-message')||document.querySelector('#member-login-message'),friendlyError(error),'error');}
+ },report:(error,source)=>window.RRDiagnostics?.report(error,source)});
+function requireEmailVerification(user,message){
+ clearFlash(message);
+ verificationGate.show(user,message,()=>signOut(auth));
+ const error=new Error('Your sign-in succeeded. Use the email-verification controls below to continue.');
+ error.code='rr/email-not-verified';return error;
+}
 const MAX_OWNER_MEMBERS = 250;
 
 let ownerMembers = [];
@@ -267,11 +283,13 @@ async function loadAttendanceOptions() {
 
 
 function friendlyError(error) {
-  window.RRDiagnostics?.report(error, 'portal');
+  if(error?.code === 'rr/email-not-verified') return '';
+  if(error?.code !== 'rr/email-not-verified') window.RRDiagnostics?.report(error, 'portal');
 
   const code = error?.code || '';
 
-  if (code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')) return 'Email or password is incorrect.';
+  if (code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')) return 'Check your email and password, or choose Forgot password to reset it.';
+  if (code.includes('invalid-email')) return 'Check your email address for a typo.';
 
   if (code.includes('email-already-in-use')) return 'That email already has an account. Use Sign In instead.';
 
@@ -281,9 +299,9 @@ function friendlyError(error) {
 
   if (code.includes('requires-recent-login')) return 'For security, sign out and sign back in before changing the password.';
 
-  if (code.includes('permission-denied')) return 'Permission denied. Staff accounts require the included Firestore rules to be deployed to the Red Road Firebase project.';
+  if (code.includes('permission-denied')) return 'Your account cannot open this page yet. Please contact Red Road staff for help.';
 
-  if (code.includes('unavailable') || code.includes('network-request-failed')) return 'The service is temporarily unavailable. Nothing will auto-retry; try again when you are ready.';
+  if (code.includes('unavailable') || code.includes('network-request-failed')) return 'We could not connect. Check your internet connection, then try again.';
 
   return error?.message ? String(error.message).replace(/^Firebase:\s*/i, '') : 'Something went wrong.';
 
@@ -536,17 +554,10 @@ async function openMemberForUser(user) {
 
 
     if (user.emailVerified !== true) {
-
-      let verificationSent = false;
-      try { await sendEmailVerification(user); verificationSent = true; } catch (_) {};
-
-      await signOut(auth);
-
-      flash(message, verificationSent ? 'A verification email has been sent. Open its link, then sign in again.' : 'Your login exists, but your email needs verification. The verification email could not be sent. Please try again later or contact Red Road staff.', 'error');
-
+      requireEmailVerification(user,message);
       return;
-
     }
+    verificationGate.hide();
 
 
 
@@ -721,9 +732,15 @@ function setupMemberPage() {
 
 
 
+  let signInPending = false;
   listenAsync(form, 'submit', async event => {
 
     event.preventDefault();
+    if(signInPending)return;
+    signInPending=true;
+    const submit=form.querySelector('button[type="submit"]');
+    const label=submit.textContent;
+    submit.disabled=true;submit.textContent='Signing in…';form.setAttribute('aria-busy','true');
 
     clearFlash(message);
 
@@ -737,6 +754,8 @@ function setupMemberPage() {
 
       flash(message, friendlyError(error), 'error');
 
+    } finally {
+      signInPending=false;submit.disabled=false;submit.textContent=label;form.removeAttribute('aria-busy');
     }
 
   });
@@ -2031,11 +2050,11 @@ function authorizeStaff(user) {
 
 
 async function authorizeStaffOnce(user) {
-  if (!user.emailVerified) {
-    try { await sendEmailVerification(user); }
-    catch(error) { throw new Error('Verify your staff email before opening the dashboard. The verification email could not be sent; use Member Sign In to resend it.'); }
-    throw new Error('A verification email was sent. Open its link, then sign out and sign back in to open the staff dashboard.');
+  if(!await verificationGate.refresh(user)){
+    if(auth.currentUser?.uid !== user.uid)return null;
+    throw requireEmailVerification(user,$('#owner-login-message'));
   }
+  verificationGate.hide();
 
 
   const access = await getStaffAccess(user.email);
@@ -2283,9 +2302,15 @@ function setupOwnerPage() {
 
 
 
+  let signInPending = false;
   listenAsync(form, 'submit', async event => {
 
     event.preventDefault();
+    if(signInPending)return;
+    signInPending=true;
+    const submit=form.querySelector('button[type="submit"]');
+    const label=submit.textContent;
+    submit.disabled=true;submit.textContent='Signing in…';form.setAttribute('aria-busy','true');
 
     clearFlash(loginMessage);
 
@@ -2305,8 +2330,10 @@ function setupOwnerPage() {
 
     } catch (error) {
 
-      flash(loginMessage, friendlyError(error), 'error');
+      if(error?.code !== 'rr/email-not-verified') flash(loginMessage, friendlyError(error), 'error');
 
+    } finally {
+      signInPending=false;submit.disabled=false;submit.textContent=label;form.removeAttribute('aria-busy');
     }
 
   });
@@ -3343,7 +3370,7 @@ function setupOwnerPage() {
 
     } catch (error) {
 
-      flash($('#owner-app').hidden ? loginMessage : $('#dashboard-load-status'), 'Sign-in could not finish. ' + friendlyError(error), 'error');
+      if(error?.code !== 'rr/email-not-verified') flash($('#owner-app').hidden ? loginMessage : $('#dashboard-load-status'), friendlyError(error), 'error');
 
     }
 
@@ -3405,6 +3432,7 @@ if (auth) {
     const preserveSetup = isAccountSetupOpen() && (!observedUid || observedAnonymous)
       && user && !user.isAnonymous;
     observedUid = next; observedAnonymous = Boolean(user?.isAnonymous); sessionGeneration++;
+    verificationGate.hide();
     ownerIdentity = null; currentMember = null; staffAuthorization = null;
     ownerMembers=[];ownerAccess=[];kioskAccess=[];ownerAttendance=[];ownerTrials=[];standaloneWaivers=[];memberAttendance=[];
     ownerRosterLoaded=false;ownerTrialsLoaded=false;

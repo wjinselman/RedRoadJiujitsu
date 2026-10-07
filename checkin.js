@@ -25,7 +25,7 @@ async function loadAttendance() {
     $('#attendance-details').hidden = false;
     status.textContent = rows.length ? 'Your recorded classes this month.' : 'No classes recorded this month yet. Your first check-in will appear here.';
     refreshClass();
-  } catch (error) { window.RRDiagnostics?.report(error,'attendance-load');
+  } catch (error) { window.RRDiagnostics?.report(error,'attendance-load',0,{file:'checkin.js'});
     if (attempt !== attendanceGeneration || member !== record || auth.currentUser?.uid !== user.uid) return;
     status.textContent = 'Attendance could not refresh. You can still check in. Try loading attendance again.';
     $('#attendance-retry').hidden = false;
@@ -166,7 +166,7 @@ async function resetTestCheckIn() {
       ? 'Your test check-in for ' + slot.className + ' was reset. You can check in again during its class window.'
       : 'No test check-in was found for this class today. You can check in during its class window.');
     void loadAttendance();
-  } catch (error) { window.RRDiagnostics?.report(error,'attendance-load');
+  } catch (error) { window.RRDiagnostics?.report(error,'attendance-load',0,{file:'checkin.js'});
     if (auth.currentUser?.uid !== user.uid || member !== record) return;
     flash($('#checkin-message'), error?.code
       ? 'Could not reset your test check-in (' + error.code + '). Refresh and try again.'
@@ -212,7 +212,7 @@ async function confirmCheckIn() {
     completed = slot.classDate + '_' + slot.classKey;
     flash($('#checkin-message'), 'You’re checked in for ' + slot.className + (record.developerTest ? ' (Developer Test).' : '.'));
     void loadAttendance();
-  } catch (error) { window.RRDiagnostics?.report(error,'attendance-load');
+  } catch (error) { window.RRDiagnostics?.report(error,'attendance-load',0,{file:'checkin.js'});
     if (auth.currentUser?.uid !== user.uid || member !== record) return;
     const code = String(error?.code || 'connection-error');
     if (saving && code.includes('permission-denied')) {
@@ -279,7 +279,7 @@ async function verificationAction(send) {
       if (auth.currentUser?.uid !== user.uid) return;
       await openCheckIn(user);
     }
-  } catch (error) { window.RRDiagnostics?.report(error,'attendance-load');
+  } catch (error) { window.RRDiagnostics?.report(error,'attendance-load',0,{file:'checkin.js'});
     if (auth.currentUser?.uid !== user.uid) return;
     const code = String(error?.code || '');
     flash(message, code.includes('too-many-requests')
@@ -315,10 +315,12 @@ else {
     button.disabled = true;
     button.textContent = 'Signing In…';
     flash($('#checkin-login-message'), 'Signing in and checking your access…');
+    let diagnosticOperation='sign-in';
     try {
       const credential = await withTimeout(signInWithEmailAndPassword(auth, emailKey($('#checkin-email').value), $('#checkin-password').value));
+      diagnosticOperation='checkin-access';
       await openCheckIn(credential.user);
-    } catch (error) { window.RRDiagnostics?.report(error,'attendance-load');
+    } catch (error) { window.RRDiagnostics?.report(error,diagnosticOperation,0,{file:'checkin.js'});
       ++generation;
       const code = String(error?.code || '');
       const message = code.includes('permission-denied')

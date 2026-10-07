@@ -284,7 +284,7 @@ async function loadAttendanceOptions() {
 
 function friendlyError(error) {
   if(error?.code === 'rr/email-not-verified') return '';
-  if(error?.code !== 'rr/email-not-verified') window.RRDiagnostics?.report(error, 'portal');
+  if(error?.code !== 'rr/email-not-verified') window.RRDiagnostics?.report(error,'portal',0,{file:'portal.js'});
 
   const code = error?.code || '';
 
@@ -751,7 +751,7 @@ function setupMemberPage() {
       await openMemberForUser(credential.user);
 
     } catch (error) {
-      if(error?.code !== 'rr/email-not-verified')window.RRDiagnostics?.report(error,'sign-in');
+      if(error?.code !== 'rr/email-not-verified')window.RRDiagnostics?.report(error,'sign-in',0,{file:'portal.js'});
 
       flash(message, friendlyError(error), 'error');
 
@@ -1385,9 +1385,9 @@ async function loadOwnerMembers(append = false) {
   const page = waiverPages.members;
 
   // Start independent reads together; optional kiosk data must not delay the roster.
-  const directoryRead = kioskModeEnabled ? getDocs(query(collection(db, 'checkInDirectory'), limit(MAX_OWNER_MEMBERS))).catch(error => { window.RRDiagnostics?.report(error, 'directory-load'); return null; }) : Promise.resolve(null);
+  const directoryRead = kioskModeEnabled ? getDocs(query(collection(db, 'checkInDirectory'), limit(MAX_OWNER_MEMBERS))).catch(error => { window.RRDiagnostics?.report(error,'directory-load',0,{file:'portal.js'}); return null; }) : Promise.resolve(null);
   ownerBillingLoading = true;
-  const billingRead = loadBillingProfiles().catch(error => window.RRDiagnostics?.report(error, 'billing-load')).finally(() => { ownerBillingLoading = false; });
+  const billingRead = loadBillingProfiles().catch(error => window.RRDiagnostics?.report(error,'billing-load',0,{file:'portal.js'})).finally(() => { ownerBillingLoading = false; });
   const loadingIdentity = ownerIdentity;
   const snap = await getDocsFromServer(query(collection(db, 'members'), ...(append && page.cursor ? [startAfter(page.cursor)] : []), limit(MAX_OWNER_MEMBERS)));
   if (!loadingIdentity || ownerIdentity !== loadingIdentity) return;
@@ -2119,17 +2119,17 @@ async function authorizeStaffOnce(user) {
   $('#owner-coach-list').textContent = 'Loading coaches…';
 
   const extraData = Promise.allSettled([
-    loadTrialRequests().catch(error => { window.RRDiagnostics?.report(error, 'trial-load');
+    loadTrialRequests().catch(error => { window.RRDiagnostics?.report(error,'trial-load',0,{file:'portal.js'});
       $('#trial-request-list').textContent = 'Trial requests could not load. Use Refresh Trials to retry.';
       $('#stat-trials').textContent = '—';
       $('#stat-trials-note').textContent = 'Not loaded';
     }),
-    loadAttendance().catch(error => { window.RRDiagnostics?.report(error, 'attendance-load');
+    loadAttendance().catch(error => { window.RRDiagnostics?.report(error,'attendance-load',0,{file:'portal.js'});
       $('#attendance-list').textContent = 'Attendance could not load. Use Refresh Attendance to retry.';
       $('#attendance-today-count').textContent = '—';
       $('#attendance-last-time').textContent = '—';
     }),
-    loadStandaloneWaivers().catch(error => (window.RRDiagnostics?.report(error, 'waiver-load'), flash($('#waiver-library-message'),'Waivers could not load. Use Refresh Waivers to retry.','error'))),
+    loadStandaloneWaivers().catch(error => (window.RRDiagnostics?.report(error,'waiver-load',0,{file:'portal.js'}), flash($('#waiver-library-message'),'Waivers could not load. Use Refresh Waivers to retry.','error'))),
     (async () => {
       await loadAttendanceOptions().catch(() => { kioskModeEnabled = FEATURES.kioskAttendance === true; renderKioskMode(); });
       if (developer) await Promise.allSettled([loadOwnerAccess(), ...(kioskModeEnabled ? [loadKioskAccess()] : [])]);
@@ -2330,7 +2330,7 @@ function setupOwnerPage() {
       }
 
     } catch (error) {
-      if(error?.code !== 'rr/email-not-verified')window.RRDiagnostics?.report(error,'sign-in');
+      if(error?.code !== 'rr/email-not-verified')window.RRDiagnostics?.report(error,'sign-in',0,{file:'portal.js'});
 
       if(error?.code !== 'rr/email-not-verified') flash(loginMessage, friendlyError(error), 'error');
 

@@ -52,12 +52,13 @@
       try {
         await api.signOut(api.auth);
         location.assign('index.html');
-      } catch (_) {
+      } catch (error) {
+        window.RRDiagnostics?.report(error,'sign-out',0,{file:'mobile-nav.js'});
         signoutStatus.textContent = 'Could not sign out. Please try again.';
         signout.disabled = false;
       }
     });
-  }).catch(() => {});
+  }).catch(error => window.RRDiagnostics?.report(error,'navigation-load',0,{file:'mobile-nav.js'}));
   const backdrop = document.createElement('div');
   backdrop.className = 'nav-backdrop';
   backdrop.hidden = true;
@@ -132,7 +133,8 @@
       }));
     }).catch(() => {});
   }
-  import('./weekly-updates.js?v=56').catch(() => {
+  import('./weekly-updates.js?v=56').catch(error => {
+    window.RRDiagnostics?.report(error,'updates-load',0,{file:'weekly-updates.js'});
     document.querySelectorAll('[data-gym-updates]').forEach(button => button.addEventListener('click', event => {
       event.preventDefault(); alert('Updates could not load. Please refresh and try again.');
     }));

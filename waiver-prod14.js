@@ -299,9 +299,9 @@ form.addEventListener('submit', async event => {
     delivery.className='waiver-copy-delivery';
     success.after(delivery);
     try { attachWaiverPrint(receiptForDownload,delivery); }
-    catch(error) { window.RRDiagnostics?.report(error,'waiver'); delivery.textContent='Your waiver is saved. Printing is unavailable; use Download original record or ask staff for a copy.'; }
+    catch(error) { window.RRDiagnostics?.report(error,'waiver-print',0,{file:'waiver-prod14.js'}); delivery.textContent='Your waiver is saved. Printing is unavailable; use Download original record or ask staff for a copy.'; }
     success.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
-  } catch (error) { window.RRDiagnostics?.report(error,'waiver');
+  } catch (error) { window.RRDiagnostics?.report(error,'waiver-save',0,{file:'waiver-prod14.js'});
     if (completed) { showError('Your waiver was saved, but the confirmation could not finish. Ask staff to confirm your receipt. Do not submit it again.'); return; }
     const denied = String(error?.code || '').includes('permission-denied');
     const message = enrollmentMode

@@ -1,5 +1,5 @@
-import {childLogin,myChildren,checkInChild} from './family-store.js?v=judo80-20261021';
-import {mountFamilyCheckIn} from './family-checkin.js?v=family-checkin-20261021';
+import {childLogin,myChildren,checkInChild} from './family-store.js?v=simple-parent-20261021';
+import {mountFamilyCheckIn} from './family-checkin.js?v=simple-parent-20261021';
 import { monthInfo, fetchMonth, renderMonth } from './attendance-month.js?v=54-member-nav';
 import { listenAsync } from './ui-utils.js?v=54-member-nav';
 import { currentClass, CLASS_HOURS, checkInNotice } from './class-schedule.js?v=judo80-20261021';

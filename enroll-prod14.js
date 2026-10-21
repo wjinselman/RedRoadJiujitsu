@@ -1,6 +1,6 @@
 import {enrollmentFlow} from './enrollment-flow.js?v=judo80-20261021';
 const flow = enrollmentFlow(location.search);
-import {childLogin} from './family-store.js?v=judo80-20261021';
+import {childLogin} from './family-store.js?v=simple-parent-20261021';
 import { firebaseConfigured, auth, db, doc, getDocFromServer, onAuthStateChanged, createUserWithEmailAndPassword, signOut } from './firebase-client.js?v=54-member-nav';
 
 const form = document.querySelector('#enroll-form');

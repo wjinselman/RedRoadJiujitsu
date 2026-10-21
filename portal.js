@@ -1,7 +1,7 @@
 import { createEmailVerification } from './email-verification.js?v=67';
 import {enrollmentFlow} from './enrollment-flow.js?v=judo80-20261021';
-import {showFamilyAdmin} from './family-admin.js?v=family-payer-help-20261021';
-import {childLogin,myChildren} from './family-store.js?v=judo80-20261021';
+import {showFamilyAdmin} from './family-admin.js?v=simple-parent-20261021';
+import {childLogin,myChildren} from './family-store.js?v=simple-parent-20261021';
 import {showWeeklyEditor} from './weekly-updates.js?v=56';
 import {PENDING_RANK, rankMetadata, assignRank} from './rank-model.js?v=54-member-nav';
 import {loadTopAttendance,clearTopAttendance} from './top-attendance.js?v=54-member-nav';

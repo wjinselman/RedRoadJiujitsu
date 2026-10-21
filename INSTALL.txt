@@ -1,20 +1,17 @@
-EARLY CLASS CHECK-IN UPDATE — NOT LIVE UNTIL PUBLISHED
+Red Road: Simple Parent Links
 
-1. Upload the five files inside website/ to the GitHub repository root.
-2. Firebase Console > Firestore Database > Rules:
-   Replace the previous gymNow, padded, attendanceWindow and planInClass
-   functions with attendance-functions.txt. If missing, add them inside the
-   database documents block. Do not leave duplicate function definitions.
-3. Inside match /attendance/{attendanceId}, replace ONLY its allow create
-   condition with attendance-create-condition.txt. Keep all other permissions.
-4. If not already done, validAttendance must allow the developer-test source:
-   && (data.source == 'kiosk' || data.source == 'member' || data.source == 'developer-test');
-5. Publish Firebase Rules. Uploading to GitHub does not publish rules.
+1. In the existing Red Road Firebase project, open Firestore Database > Rules. Publish the contents of FIREBASE/firestore.rules. This is a rules update, not an SDK version upgrade. No database reset, account recreation or data migration is needed.
+2. Upload the HTML, JS and CSS files at the top of this ZIP to the website root, replacing matching files. The FIREBASE folder is for the Firebase console; uploading it to GitHub does not publish the rules.
+3. Refresh the Staff Dashboard. In Families, select Spencer's existing member account in Parent / existing member, then Save Parent Link for each child. His current email is preselected when it matches. No new parent account or billing category change is needed.
 
-Windows are Monday-Friday, Central Time: Kids 5:45 PM to before 7 PM;
-Adults 6:45 PM to before 8 PM. Adults cannot select or submit Kids check-ins.
-Family accounts and Developer tests must explicitly choose a class.
-Family selection records attendance for the account; it does not create
-separate named attendance entries for each household member.
-Email verification remains a separate access requirement with a clear message.
-No new membership, waiver, payment, or role permissions are introduced.
+Behavior
+- The dropdown includes existing roster members and parents who have submitted child profiles. It is not filtered by billing category.
+- Saving the parent link approves the child. Linked children can check in when the parent's membership is active, portal-enabled and not archived. Parent deactivation blocks all linked children; reactivation restores access without editing each child.
+- During Kids hours, the parent can select one or multiple children. During adult hours, a training parent can check themselves in. For adult self-check-in their program must be Adult or Family, not the non-training Parent / Payer program.
+- Only owners and developers can change parent links. Other parents cannot read or check in unrelated children. Reassigning a parent moves account access to the selected verified email, preserving the original waiver signer information.
+- Existing billing records and payment amounts are unchanged. This does not create new accounts or charge anyone.
+
+Validation
+19 targeted UI/logic tests and 16 isolated Firestore emulator checks passed. Attendance-rule tests use a test-only pinned server clock; the release rules retain the real server clock. Parent selector preview inspected in the browser. No live member records or attendance were changed.
+
+Not deployed. Both the Firebase rules publication and website upload are required. Firebase SDK remains 12.18.0.

@@ -18,9 +18,9 @@ export function mountFamilyCheckIn(host,{user,children,isCurrent,saveChild,now=(
   if(key!==lastKey){rows.forEach(row=>{row.input.checked=false;row.status.textContent='';});summary.textContent='';lastKey=key;}
   notice.textContent=checkInNotice({plan:'Kids'},now());
   for(const row of rows){
-   const eligible=row.child.status==='active'&&row.child.guardianUid===user.uid;
+   const eligible=row.child.status==='active'&&row.child.familyActive!==false&&String(row.child.guardianEmail||'').toLowerCase()===String(user.email||'').toLowerCase();
    row.input.disabled=!valid||busy||!slot||!eligible||row.confirmed===key;
-   if(!eligible){row.input.checked=false;row.status.textContent=row.child.status==='pending'?'Waiting for staff approval':'Check-in unavailable — contact staff';}
+   if(!eligible){row.input.checked=false;row.status.textContent=row.child.status==='pending'?'Waiting for staff approval':row.child.familyActive===false?'Family membership is inactive — contact staff':'Check-in unavailable — contact staff';}
    else if(key&&row.confirmed===key){row.input.checked=false;row.status.textContent='Checked in';}
   }
   selectAll.disabled=!rows.some(row=>!row.input.disabled);

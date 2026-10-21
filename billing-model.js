@@ -1,4 +1,5 @@
 export const BILLING_CATEGORIES = {
+  judo:{label:'Judo Only',cents:8000},
   adult:{label:'Adult',cents:13500}, kids:{label:'Kids',cents:9000}, service:{label:'First Responder / LEO / Military',cents:10000},
   'family-payer':{label:'Family Plan — Payer',cents:30000}, 'family-covered':{label:'Family Plan — Covered Member',cents:0}
 };
@@ -19,6 +20,7 @@ export function paymentPeriod(start) {
 }
 export function defaultCategory(member) {
   const plan=String(member.plan||'').toLowerCase();
+  if(plan.includes('judo'))return 'judo';
   if(plan.includes('kid'))return 'kids';
   if(/military|responder|leo|service/.test(plan))return 'service';
   if(plan.includes('family'))return 'family-payer';

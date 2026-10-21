@@ -1,6 +1,6 @@
-import {enrollmentFlow} from './enrollment-flow.js?v=60';
+import {enrollmentFlow} from './enrollment-flow.js?v=judo80-20261021';
 const flow = enrollmentFlow(location.search);
-import {childLogin} from './family-store.js?v=59';
+import {childLogin} from './family-store.js?v=judo80-20261021';
 import { firebaseConfigured, auth, db, doc, getDocFromServer, onAuthStateChanged, createUserWithEmailAndPassword, signOut } from './firebase-client.js?v=54-member-nav';
 
 const form = document.querySelector('#enroll-form');
@@ -61,7 +61,7 @@ if (form) {
     onAuthStateChanged(auth, user => { if(restored)return;restored=true;prepareEnrollment(user).catch(()=>show('Could not check your member profile. Refresh to retry, or ask staff to check signup permissions.')); });
   }
   const params = new URLSearchParams(location.search);
-  const requestedProgram = { kids: 'Kids', adult: 'Adult', service: 'First Responder', family: 'Family' }[params.get('program')];
+  const requestedProgram = { judo: 'Judo Only', kids: 'Kids', adult: 'Adult', service: 'First Responder', family: 'Family' }[params.get('program')];
   if (requestedProgram) document.querySelector('#program').value = requestedProgram;
 
   form.addEventListener('submit', async event => {

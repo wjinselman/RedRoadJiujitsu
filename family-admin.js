@@ -1,5 +1,5 @@
 import {auth,db,collection,query,limit,getDocsFromServer,doc,getDocFromServer} from './firebase-client.js?v=54-member-nav';
-import {approveChild} from './family-store.js?v=59';
+import {approveChild} from './family-store.js?v=judo80-20261021';
 import {attachWaiverPrint} from './waiver-pdf.js?v=54-member-nav';
 let epoch=0;
 const make=(tag,text)=>{const node=document.createElement(tag);node.textContent=text;return node;};

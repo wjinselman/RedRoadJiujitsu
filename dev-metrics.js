@@ -1,4 +1,4 @@
-import {status,exempt,BILLING_CATEGORIES,defaultCategory,gymDate} from './billing-model.js?v=54-member-nav';
+import {status,exempt,BILLING_CATEGORIES,defaultCategory,gymDate} from './billing-model.js?v=judo80-20261021';
 export const dayBefore=(date,n)=>{const d=new Date(date+'T12:00:00Z');d.setUTCDate(d.getUTCDate()-n);return d.toISOString().slice(0,10);};
 export function summarize({members=[],billing=[],attendance=[],payments=[],trials=[],children=[]},today=gymDate()) {
  const roster=members.filter(m=>!m.archived),active=roster.filter(m=>m.active),profiles=new Map(billing.map(p=>[p.id,p]));

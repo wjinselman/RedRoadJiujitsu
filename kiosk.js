@@ -1,3 +1,4 @@
+import {currentClass,checkInNotice} from './class-schedule.js?v=judo80-20261021';
 import { listenAsync } from './ui-utils.js?v=54-member-nav';
 import { FEATURES } from './launch-config.js';
 import {
@@ -73,6 +74,11 @@ async function sha256(value) {
 
 function classFor(member, now = new Date()) {
   const plan = String(member.plan || '').toLowerCase();
+  if(plan.includes('judo')) {
+    const slot=currentClass(member,now);
+    if(!slot) throw Error(checkInNotice(member,now));
+    return slot.className;
+  }
   const kids = plan.includes('kid') || (plan.includes('family') && now.getHours() < 19);
   const noGi = now.getDay() === 2 || now.getDay() === 5;
   if (kids) return noGi ? 'Kids No-Gi' : 'Kids Jiu Jitsu';

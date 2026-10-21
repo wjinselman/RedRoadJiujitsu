@@ -1,6 +1,6 @@
 import {auth,updatePassword,signOut,createUserWithEmailAndPassword,sendEmailVerification} from './firebase-client.js?v=54-member-nav';
 import {isSignInWithEmailLink,signInWithEmailLink} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js';
-import {enrollmentFlow} from './enrollment-flow.js?v=60';
+import {enrollmentFlow} from './enrollment-flow.js?v=judo80-20261021';
 const flow = enrollmentFlow(location.search);
 const $=s=>document.querySelector(s);
 let accountSetupBusy=false;

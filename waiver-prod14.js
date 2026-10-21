@@ -1,4 +1,4 @@
-import {saveChildAndWaiver} from './family-store.js?v=59';
+import {saveChildAndWaiver} from './family-store.js?v=judo80-20261021';
 import {signupRank} from './rank-model.js?v=54-member-nav';
 import {runTransaction} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
 import {

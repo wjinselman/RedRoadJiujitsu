@@ -1,6 +1,6 @@
 import {auth,db,doc,getDocFromServer,getDocsFromServer,collection,query,where,limit,serverTimestamp} from './firebase-client.js?v=54-member-nav';
 import {runTransaction} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
-import {currentClass} from './class-schedule.js?v=54-member-nav';
+import {currentClass} from './class-schedule.js?v=judo80-20261021';
 export const normalize=value=>String(value||'').trim().toLowerCase();
 export function requireParent(){const user=auth?.currentUser;if(!user?.emailVerified||user.isAnonymous)throw Error('Sign in with a verified email first.');return user;}
 export async function childLogin(email){const snap=await getDocFromServer(doc(db,'childLogins',normalize(email)));return snap.exists()?snap.data():null;}

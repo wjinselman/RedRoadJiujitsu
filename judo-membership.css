@@ -1,0 +1,7 @@
+.home-page .program-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.home-page .program-card:last-child{grid-column:auto}
+.home-page .program-judo{--program-image:url('assets/red-road-master-crest-r67.webp');--program-position:center 30%}
+.home-page #pricing .price-grid{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.home-page #pricing .price a{display:block;color:#fff;margin-top:16px;text-decoration:underline;text-underline-offset:4px}
+.home-page #pricing .price span{display:block}
+@media(max-width:700px){.home-page .program-grid{grid-template-columns:1fr}}

@@ -1,6 +1,6 @@
 import {auth,db,firebaseConfigured,onAuthStateChanged,doc,getDocFromServer,getDocsFromServer,collection,query,where,limit} from './firebase-client.js?v=54-member-nav';
-import {myChildren,childLogin,checkInChild,normalize} from './family-store.js?v=59';
-import {currentClass,checkInNotice} from './class-schedule.js?v=54-member-nav';
+import {myChildren,childLogin,checkInChild,normalize} from './family-store.js?v=judo80-20261021';
+import {currentClass,checkInNotice} from './class-schedule.js?v=judo80-20261021';
 import {attachWaiverPrint} from './waiver-pdf.js?v=54-member-nav';
 const $=s=>document.querySelector(s),make=(tag,text)=>{const n=document.createElement(tag);n.textContent=text;return n;};let generation=0,session=null,childOnly=false;
 function valid(epoch){return epoch===generation&&session?.uid===auth.currentUser?.uid;}

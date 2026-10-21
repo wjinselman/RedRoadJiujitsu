@@ -1,7 +1,7 @@
-import {childLogin,myChildren} from './family-store.js?v=59';
+import {childLogin,myChildren} from './family-store.js?v=judo80-20261021';
 import { monthInfo, fetchMonth, renderMonth } from './attendance-month.js?v=54-member-nav';
 import { listenAsync } from './ui-utils.js?v=54-member-nav';
-import { currentClass, CLASS_HOURS, checkInNotice } from './class-schedule.js?v=54-member-nav';
+import { currentClass, CLASS_HOURS, checkInNotice } from './class-schedule.js?v=judo80-20261021';
 import { firebaseConfigured, auth, db, signOut, signInWithEmailAndPassword, sendEmailVerification, onAuthStateChanged, doc, getDoc, getDocFromServer, deleteDoc, setDoc, serverTimestamp } from './firebase-client.js?v=54-member-nav';
 const $ = selector => document.querySelector(selector);
 const emailKey = value => String(value || '').trim().toLowerCase();

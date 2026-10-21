@@ -1,6 +1,6 @@
 import {auth,db,firebaseConfigured,onAuthStateChanged,doc,getDocFromServer,getDocsFromServer,collection,query,orderBy,limit,where,startAfter,setDoc,serverTimestamp} from './firebase-client.js?v=54-member-nav';
-import {summarize,dayBefore} from './dev-metrics.js?v=59';
-import {gymDate,money} from './billing-model.js?v=54-member-nav';
+import {summarize,dayBefore} from './dev-metrics.js?v=judo80-20261021';
+import {gymDate,money} from './billing-model.js?v=judo80-20261021';
 const $=s=>document.querySelector(s);let epoch=0,authorized=null,busy=false;
 function el(tag,text){const node=document.createElement(tag);node.textContent=text;return node;}
 function table(target,headers,rows){const host=$(target);host.replaceChildren();if(!rows.length){host.append(el('p','No findings in the loaded records.'));return;}const wrap=el('div','');wrap.className='table-wrap';const t=el('table',''),head=el('thead',''),hr=el('tr','');headers.forEach(h=>hr.append(el('th',h)));head.append(hr);t.append(head);const body=el('tbody','');rows.slice(0,150).forEach(row=>{const tr=el('tr','');row.forEach(v=>tr.append(el('td',String(v??''))));body.append(tr)});t.append(body);wrap.append(t);host.append(wrap);if(rows.length>150)host.append(el('p','Showing first 150 findings. Open the owner roster to review the rest.'));}

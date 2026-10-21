@@ -1,7 +1,8 @@
-export const CLASS_HOURS = 'Monday–Friday: Kids check-in 5:45–7:00 PM; Adults 6:45–8:00 PM (Central Time).';
+export const CLASS_HOURS = 'Judo: Monday & Thursday check-in 5:45–7:00 PM; Monday–Friday: Kids check-in 5:45–7:00 PM; Adults 6:45–8:00 PM (Central Time).';
 export function classGroup(record) {
   const plan = String(record?.plan || '').toLowerCase();
   if (record?.developerTest || plan.includes('family')) return ['kids','adult'].includes(record?.selectedProgram) ? record.selectedProgram : null;
+  if (plan.includes('judo')) return 'judo';
   if (plan.includes('kid')) return 'kids';
   if (['adult','coach','military','service','first responder'].some(value => plan.includes(value))) return 'adult';
   return null;
@@ -13,6 +14,10 @@ export function gymTime(now = new Date()) {
 export function currentClass(record, now = new Date()) {
   const t=gymTime(now), group=classGroup(record);
   if (!group || ['Sat','Sun'].includes(t.weekday)) return null;
+  if(group==='judo'){
+    if(!['Mon','Thu'].includes(t.weekday) || t.minutes<1065 || t.minutes>=1140) return null;
+    return {className:'Judo',classDate:t.classDate,classKey:'judo'};
+  }
   const start=group==='kids'?1065:1125, end=group==='kids'?1140:1200;
   if(t.minutes<start || t.minutes>=end) return null;
   const className=(group==='kids'?'Kids':'Adult')+(['Tue','Fri'].includes(t.weekday)?' No-Gi':' Jiu Jitsu');
@@ -21,7 +26,8 @@ export function currentClass(record, now = new Date()) {
 export function checkInNotice(record, now=new Date()) {
   if (!record) return 'Check-in is only available during scheduled class times, starting 15 minutes before class. '+CLASS_HOURS;
   const group=classGroup(record);
-  if (!group) return record.developerTest || String(record.plan||'').toLowerCase().includes('family') ? 'Choose Kids or Adult class to check in.' : 'Your account needs a Kids or Adult program assigned. Ask a coach for help.';
+  if (!group) return record.developerTest || String(record.plan||'').toLowerCase().includes('family') ? 'Choose Kids or Adult class to check in.' : 'Your account needs a Kids, Adult or Judo program assigned. Ask a coach for help.';
+  if(group==='judo') return currentClass(record,now) ? 'Check-in is open for Judo.' : 'Judo check-in opens Monday and Thursday, 5:45–7:00 PM Central. Class runs 6:00–7:00 PM.';
   const slot=currentClass(record,now);
   if(slot) return 'Check-in is open for '+slot.className+'.';
   const t=gymTime(now), title=group==='kids'?'Kids':'Adult', start=group==='kids'?1065:1125;

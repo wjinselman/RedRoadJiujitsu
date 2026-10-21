@@ -1,21 +1,21 @@
 import { createEmailVerification } from './email-verification.js?v=67';
-import {enrollmentFlow} from './enrollment-flow.js?v=60';
-import {showFamilyAdmin} from './family-admin.js?v=59';
-import {childLogin,myChildren} from './family-store.js?v=59';
+import {enrollmentFlow} from './enrollment-flow.js?v=judo80-20261021';
+import {showFamilyAdmin} from './family-admin.js?v=judo80-20261021';
+import {childLogin,myChildren} from './family-store.js?v=judo80-20261021';
 import {showWeeklyEditor} from './weekly-updates.js?v=56';
 import {PENDING_RANK, rankMetadata, assignRank} from './rank-model.js?v=54-member-nav';
 import {loadTopAttendance,clearTopAttendance} from './top-attendance.js?v=54-member-nav';
-import {toggleMemberPaid} from './quick-paid.js?v=54-member-nav';
-import {saveMemberPaidDate,createPaidDatePicker} from './paid-date.js?v=54-member-nav';
+import {toggleMemberPaid} from './quick-paid.js?v=judo80-20261021';
+import {saveMemberPaidDate,createPaidDatePicker} from './paid-date.js?v=judo80-20261021';
 let quickPaymentBusy = false;
 let ownerBillingLoading = false;
-import {setupEmailInvitation,isAccountSetupOpen} from './email-setup.js?v=60';
-import {activePaymentAlerts} from './admin-alerts.js?v=54-member-nav';
-import {gymDate} from './billing-model.js?v=54-member-nav';
+import {setupEmailInvitation,isAccountSetupOpen} from './email-setup.js?v=judo80-20261021';
+import {activePaymentAlerts} from './admin-alerts.js?v=judo80-20261021';
+import {gymDate} from './billing-model.js?v=judo80-20261021';
 
-import {profiles,billingReady,loadBillingProfiles,loadMyBilling,memberBilling,saveWithBilling,ensureNoCoveredMembers} from './billing-store.js?v=54-member-nav';
+import {profiles,billingReady,loadBillingProfiles,loadMyBilling,memberBilling,saveWithBilling,ensureNoCoveredMembers} from './billing-store.js?v=judo80-20261021';
 
-import {fillBillingForm,billingIntent,billingText,setupBillingReport,invalidateReport} from './billing-ui.js?v=59';
+import {fillBillingForm,billingIntent,billingText,setupBillingReport,invalidateReport} from './billing-ui.js?v=judo80-20261021';
 
 import { listenAsync, localDate } from './ui-utils.js?v=54-member-nav';
 

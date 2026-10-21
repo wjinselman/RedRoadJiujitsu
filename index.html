@@ -54,6 +54,44 @@
     "addressCountry": "US"
   }
 }</script>
+
+<style id="pricing-mobile-cleanup">
+.home-page #pricing .price-grid { display:grid !important; grid-template-columns:repeat(3,minmax(0,1fr)) !important; gap:18px !important; }
+.home-page #pricing .price { display:flex !important; flex-direction:column !important; justify-content:flex-start !important; gap:0 !important; min-width:0 !important; height:auto !important; padding:24px !important; }
+.home-page #pricing .price h3 { min-height:4.5em !important; margin:0 0 18px !important; line-height:1.5 !important; }
+.home-page #pricing .price > strong { display:block !important; margin:0 0 8px !important; line-height:1.1 !important; }
+.home-page #pricing .price > span { display:block !important; margin:0 !important; line-height:1.5 !important; }
+.home-page #pricing .price .class-day { font-size:clamp(24px,3vw,36px) !important; }
+.home-page #pricing .pricing-action { display:inline-flex !important; align-items:center !important; justify-content:center !important; gap:8px !important; align-self:flex-start !important; margin-top:18px !important; padding:10px 12px !important; border:1px solid #484b51 !important; border-radius:8px !important; color:#fff !important; background:#202226 !important; font-size:14px !important; font-weight:700 !important; line-height:1.3 !important; text-decoration:none !important; white-space:nowrap !important; min-height:44px !important; box-sizing:border-box !important; }
+.home-page #pricing .pricing-action:hover { background:#34373d !important; }
+.home-page #pricing .pricing-action:focus-visible { outline:2px solid #fff !important; outline-offset:3px !important; }
+@media(max-width:700px) {
+ .home-page #pricing .price-grid { grid-template-columns:repeat(2,minmax(0,1fr)) !important; gap:12px !important; }
+ .home-page #pricing .price { padding:16px 14px !important; }
+ .home-page #pricing .price h3 { font-size:15px !important; line-height:1.35 !important; min-height:5.4em !important; margin-bottom:12px !important; }
+ .home-page #pricing .price > strong { font-size:36px !important; }
+ .home-page #pricing .price > span { font-size:13px !important; }
+ .home-page #pricing .price .class-day { font-size:24px !important; min-height:39.6px !important; display:flex !important; align-items:center !important; }
+ .home-page #pricing .pricing-action { font-size:12px !important; padding:9px 8px !important; gap:5px !important; }
+}
+@media(max-width:340px) { .home-page #pricing .price { padding:14px 10px !important; } .home-page #pricing .pricing-action { font-size:11px !important; } }
+</style>
+
+<style id="schedule-desktop-fill">
+.schedule-crest-panel { display:none; }
+@media(min-width:901px) {
+ .home-page #schedule .poster { display:flex; flex-direction:column; align-self:stretch; }
+ .home-page #schedule .poster > img { flex:0 0 auto; width:100%; height:auto; }
+ .home-page #schedule .schedule-crest-panel { display:flex; flex:1 0 220px; min-height:220px; flex-direction:column; align-items:center; justify-content:center; gap:14px; margin-top:14px; padding:22px 12px; overflow:hidden; border-top:1px solid #5b1820; background:radial-gradient(ellipse at center,rgba(201,21,33,.15),transparent 70%),repeating-linear-gradient(135deg,transparent 0 28px,rgba(255,255,255,.02) 29px 30px),#0b0c0f; }
+ .home-page #schedule .schedule-crest-panel img { width:156px; height:156px; max-width:60%; object-fit:contain; filter:drop-shadow(0 6px 15px #000); }
+ .home-page #schedule .schedule-crest-panel p { margin:0; text-align:center; color:#eee; font-size:10px; font-weight:800; letter-spacing:.12em; line-height:1.8; }
+ .home-page #schedule .schedule-crest-panel p span { color:#e21c2c; padding:0 5px; }
+}
+</style>
+<style id="judo-program-photo">
+.home-page #programs .program-judo { --program-image:url('assets/judo-throw-20261021.jpg'); --program-position:35% center; }
+.home-page #programs .program-judo::before { background-image:url('assets/judo-throw-20261021.jpg') !important; background-position:35% center; }
+</style>
 </head>
 <body class="home-page">
 <div aria-hidden="true" class="site-emblem-bg">
@@ -243,6 +281,10 @@
 <div class="schedule-wrap">
 <div class="poster">
 <img alt="Red Road class schedule and memberships: Judo Only $80 per month; Judo Monday and Thursday 6–7 PM" src="class-schedule-judo-20261021.jpg" width="1024" height="1536" decoding="async" loading="lazy">
+<div class="schedule-crest-panel" aria-label="Red Road Jiu Jitsu — Discipline, confidence, community">
+<img src="assets/red-road-master-crest-r67.webp" alt="Red Road Jiu Jitsu crest" width="760" height="760" loading="lazy" decoding="async">
+<p>DISCIPLINE <span>·</span> CONFIDENCE <span>·</span> COMMUNITY</p>
+</div>
 </div>
 <div class="schedule">
 <article class="class-card"><div class="time">6:00–7:00 PM</div><div><h3>Judo Only</h3><p><strong>Monday &amp; Thursday · $80/month.</strong> Focus your training on Judo.</p></div><a class="btn btn-dark class-action" href="enroll.html?program=judo">Choose Judo</a></article>
@@ -307,7 +349,7 @@
 <p>Choose the plan that fits your training. Kids, adults, families and those who serve are welcome here.</p>
 </div>
 <div class="price-grid">
-<article class="price"><h3>Judo Only</h3><strong>$80</strong><span>per month · Monday &amp; Thursday</span><a href="enroll.html?program=judo">Choose Judo Only →</a></article>
+<article class="price"><h3>Judo Only</h3><strong>$80</strong><span>per month · Monday &amp; Thursday</span><a class="pricing-action" href="enroll.html?program=judo">Choose Judo <span aria-hidden="true">→</span></a></article>
 <article class="price">
 <h3>Adults</h3>
 <strong>$135</strong>
@@ -327,6 +369,12 @@
 <h3>Family Package</h3>
 <strong>$300</strong>
 <span>monthly cap · 100% disabled veterans train free</span>
+</article>
+<article class="price price-women">
+<h3>Women’s Class</h3>
+<strong class="class-day">Tuesday</strong>
+<span>6:00–7:00 PM · No-Gi</span>
+<a class="pricing-action" href="#schedule">View schedule <span aria-hidden="true">→</span></a>
 </article>
 </div>
 </div>

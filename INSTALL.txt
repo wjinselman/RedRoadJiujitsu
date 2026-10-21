@@ -1,17 +1,22 @@
-Red Road: Simple Parent Links
+Red Road - family dropdown and payment-link audit update
 
-1. In the existing Red Road Firebase project, open Firestore Database > Rules. Publish the contents of FIREBASE/firestore.rules. This is a rules update, not an SDK version upgrade. No database reset, account recreation or data migration is needed.
-2. Upload the HTML, JS and CSS files at the top of this ZIP to the website root, replacing matching files. The FIREBASE folder is for the Firebase console; uploading it to GitHub does not publish the rules.
-3. Refresh the Staff Dashboard. In Families, select Spencer's existing member account in Parent / existing member, then Save Parent Link for each child. His current email is preselected when it matches. No new parent account or billing category change is needed.
+Upload all HTML, JavaScript and CSS files in this ZIP to the website root, replacing matching files. Refresh the dashboard after upload. Keep the other website files.
 
-Behavior
-- The dropdown includes existing roster members and parents who have submitted child profiles. It is not filtered by billing category.
-- Saving the parent link approves the child. Linked children can check in when the parent's membership is active, portal-enabled and not archived. Parent deactivation blocks all linked children; reactivation restores access without editing each child.
-- During Kids hours, the parent can select one or multiple children. During adult hours, a training parent can check themselves in. For adult self-check-in their program must be Adult or Family, not the non-training Parent / Payer program.
-- Only owners and developers can change parent links. Other parents cannot read or check in unrelated children. Reassigning a parent moves account access to the selected verified email, preserving the original waiver signer information.
-- Existing billing records and payment amounts are unchanged. This does not create new accounts or charge anyone.
+Firebase: FIREBASE/firestore.rules is the SAME rules update supplied with Simple Parent Links. If you already published that exact update in Firebase Console, no further rules change is needed. Otherwise publish it in Firestore Database > Rules. Uploading this file to GitHub does not publish Firebase rules. No SDK upgrade is required.
 
-Validation
-19 targeted UI/logic tests and 16 isolated Firestore emulator checks passed. Attendance-rule tests use a test-only pinned server clock; the release rules retain the real server clock. Parent selector preview inspected in the browser. No live member records or attendance were changed.
+There are two different links:
+1. Families > Parent / existing member > Save Parent Link links child profiles to a guardian for access/check-in. This lists existing members and parents who submitted child profiles, regardless of billing category. It does not create charges or change billing.
+2. Members > Edit > Family Plan - Covered Member > Family payer links an existing roster member to the payer's payment coverage. This now recognizes both saved family-payer billing profiles AND older Family memberships with no separate billing profile. All member pages are loaded for this selector.
 
-Not deployed. Both the Firebase rules publication and website upload are required. Firebase SDK remains 12.18.0.
+Payment fixes:
+- Legacy Family parents no longer disappear because their billingProfiles record is absent.
+- Selecting one saves its missing family-payer profile and the child's family-covered profile in one transaction. Existing Paid status is preserved; no payment date or receipt is invented. The covered member adds $0.
+- Existing payer profiles, dates and receipts are preserved when linking another covered member.
+- A saved Family program no longer blocks saving family billing.
+- Explicit Adult or Kids billing profiles are not silently converted to $300 family billing. If a parent's saved billing is intentionally Adult/Kids, use Families for guardian linking; changing their billing plan is a separate admin decision.
+
+Verification: 27 targeted tests passed covering the actual billing dropdown, transaction behavior, legacy profiles, complete directory loading, guardian linking and multiple-child/adult check-in. This package includes the prior Simple Parent Links and family check-in files.
+
+Live audit findings: the public owner page and family-admin script already load Simple Parent Links. The payment dropdown was still using the older billing-only filter. The publicly hosted firestore.rules file still contained the older restriction, but that file does not reveal which rules are currently deployed in Firebase. No signed-in production member/billing records were inspected or changed.
+
+Status: prepared and tested locally; not deployed. If the empty selector is Families > Parent / existing member rather than Members > Edit > Family payer, a screenshot of that current screen is needed to identify the remaining issue.

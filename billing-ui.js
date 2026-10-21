@@ -1,7 +1,7 @@
 import {previousMonth,summarizeExpected,renderReport} from './billing-report.js?v=judo80-20261021';
-import {BILLING_CATEGORIES,money,gymDate,defaultCategory,exempt,summarizePayments,status} from './billing-model.js?v=judo80-20261021';
+import {BILLING_CATEGORIES,money,gymDate,defaultCategory,exempt,summarizePayments,status,familyPayerChoices,familyPayerProfile} from './billing-model.js?v=family-billing-20261021';
 
-import {profiles,billingReady,memberBilling,paymentsForMonth,loadBillingProfiles} from './billing-store.js?v=judo80-20261021';
+import {profiles,billingMembers,billingReady,memberBilling,paymentsForMonth,loadBillingProfiles} from './billing-store.js?v=family-billing-20261021';
 
 import {db,collection,query,limit,startAfter,getDocsFromServer} from './firebase-client.js?v=54-member-nav';
 
@@ -19,13 +19,9 @@ export function fillBillingForm(form,member,roster){
 
   select.value=category;
 
-  payer.innerHTML='<option value="">Select the family payer</option>'+[...profiles.entries()].filter(([email,p])=>p.category==='family-payer'&&email!==member.email).map(([email])=>{
-
-    const person=roster.find(x=>x.email===email);
-
-    return `<option value="${escape(email)}">${escape(person?.name||email)} (${escape(email)})</option>`;
-
-  }).join('');
+  const directory=[...new Map([...billingMembers.values(),...roster].map(person=>[person.email,person])).values()];
+  const choices=familyPayerChoices(directory,profiles,member.email);
+  payer.innerHTML='<option value="">Select the family payer</option>'+choices.map(person=>`<option value="${escape(person.email)}">${escape(person.name||person.email)} (${escape(person.email)})</option>`).join('');
 
   payer.value=profile?.payerEmail||'';
 
@@ -49,13 +45,13 @@ export function fillBillingForm(form,member,roster){
 
     if(covered){
 
-      const p=profiles.get(payer.value);
+      const p=familyPayerProfile(directory.find(person=>person.email===payer.value),profiles.get(payer.value));
 
       const state=status({}, {category:'family-covered'},p);
 
       form.elements.paid.checked=state.current;
 
-      hint.textContent='Covered by the selected family payer. $0 is added for this member. '+(state.paidThrough?'Paid through '+state.paidThrough+'; next due '+state.nextDue+'.':'Payment dates come from the payer.');
+      hint.textContent=!choices.length?'No family plan payer is saved yet. This is the billing selector. To link a child to an existing parent without changing billing, use Families → Parent / existing member.':'Covered by the selected family payer. $0 is added for this member. '+(state.paidThrough?'Paid through '+state.paidThrough+'; next due '+state.nextDue+'.':'Payment dates come from the payer.');
 
     }else{
 

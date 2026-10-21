@@ -27,6 +27,18 @@ export function defaultCategory(member) {
   return 'adult';
 }
 export const exempt = member => member?.coachAccess===true || member?.paymentExempt===true;
+// Older Family memberships predate billingProfiles. Keep their recorded Paid
+// flag without inventing a payment date or receipt. An explicit profile wins.
+export function familyPayerProfile(member,profile){
+  if(profile)return profile.category==='family-payer'?profile:null;
+  if(!member||defaultCategory(member)!=='family-payer')return null;
+  return {category:'family-payer',payerEmail:'',paid:member.paid===true,paidOn:'',paidThrough:'',nextDue:'',manualStatusOnly:true,sequence:0,revision:1};
+}
+export function familyPayerChoices(roster,profiles,excludeEmail=''){
+  const members=new Map(roster.map(member=>[member.email,member]));
+  return [...members.values()].filter(member=>member.email!==excludeEmail&&member.archived!==true&&familyPayerProfile(member,profiles.get(member.email)))
+    .sort((a,b)=>String(a.name||a.email).localeCompare(String(b.name||b.email)));
+}
 export function status(member, profile, payer, today=gymDate()) {
   if(exempt(member))return {current:true,label:'Payment Exempt',paidThrough:'',nextDue:''};
   if(!profile)return {current:member.paid===true,label:member.paid?'Paid · date not set':'Past Due',paidThrough:'',nextDue:''};

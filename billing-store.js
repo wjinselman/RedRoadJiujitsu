@@ -1,13 +1,14 @@
 import {db,auth,doc,getDocFromServer,getDocsFromServer,collection,query,where,limit,startAfter,serverTimestamp,onAuthStateChanged} from './firebase-client.js?v=54-member-nav';
 import {runTransaction} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
-import {status,planSave,gymDate} from './billing-model.js?v=judo80-20261021';
+import {status,planSave,gymDate,familyPayerProfile} from './billing-model.js?v=family-billing-20261021';
 export const profiles=new Map();
+export const billingMembers=new Map();
 export let billingReady=false;
 let billingGeneration=0;
-if(auth) onAuthStateChanged(auth,()=>{billingGeneration++;profiles.clear();billingReady=false;});
+if(auth) onAuthStateChanged(auth,()=>{billingGeneration++;profiles.clear();billingMembers.clear();billingReady=false;});
 export async function loadBillingProfiles(){
   const generation=++billingGeneration;
-  billingReady=false;profiles.clear();
+  billingReady=false;profiles.clear();billingMembers.clear();
   const result=new Map();let cursor;
   for(;;){
     const page=await getDocsFromServer(query(collection(db,'billingProfiles'),...(cursor?[startAfter(cursor)]:[]),limit(250)));
@@ -16,7 +17,15 @@ export async function loadBillingProfiles(){
     if(page.docs.length<250)break;
     cursor=page.docs.at(-1);
   }
+  const members=new Map();cursor=null;
+  for(;;){
+    const page=await getDocsFromServer(query(collection(db,'members'),...(cursor?[startAfter(cursor)]:[]),limit(250)));
+    if(generation!==billingGeneration)return;
+    page.docs.forEach(s=>members.set(s.id,{...s.data(),email:s.id}));
+    if(page.docs.length<250)break;cursor=page.docs.at(-1);
+  }
   for(const [k,v] of result)profiles.set(k,v);
+  for(const [k,v] of members)billingMembers.set(k,v);
   billingReady=true;
 }
 export async function loadMyBilling(email){
@@ -47,11 +56,10 @@ export async function saveWithBilling(payload,previous,intent,directoryChange){
   if(!billingReady)throw Error('Billing could not load. Refresh the roster before saving a payment.');
   const email=payload.email,memberRef=doc(db,'members',email),profileRef=doc(db,'billingProfiles',email);
   const expectedRevision=profiles.get(email)?.revision||0;
-  if(intent.category.startsWith('family-') && payload.plan==='Family')throw Error('Choose Adult or Kids as this member’s class program. Family billing is selected separately.');
   if(intent.category!=='family-payer')await ensureNoCoveredMembers(email);
   const actor=auth.currentUser?.email?.toLowerCase();
   if(!actor)throw Error('Please sign in again.');
-  let writtenProfile;
+  let writtenProfile,initializedPayer=null;
   const result=await runTransaction(db,async tx=>{
     const fresh=await tx.get(memberRef);
     const profileSnap=await tx.get(profileRef);
@@ -69,26 +77,28 @@ export async function saveWithBilling(payload,previous,intent,directoryChange){
         changes[key]=value;
       }
     }
-    let payer=null;
+    let payer=null,payerToCreate=null;
     if(intent.category==='family-covered'){
       const payerSnap=await tx.get(doc(db,'billingProfiles',intent.payerEmail));
       const payerMember=await tx.get(doc(db,'members',intent.payerEmail));
       if(!payerMember.exists() || payerMember.data().archived===true)throw Error('The family payer must be an existing, unarchived member.');
-      payer=payerSnap.exists()?payerSnap.data():null;
+      payer=familyPayerProfile(payerMember.data(),payerSnap.exists()?payerSnap.data():null);
+      if(payer&&!payerSnap.exists())payerToCreate={...payer,updatedAt:serverTimestamp(),updatedBy:actor};
     }
     const planned=planSave({member:payload,oldMember:live,profile,payer,...intent,today:gymDate()});
     const newProfile={...planned.profile,updatedAt:serverTimestamp(),updatedBy:actor};
     const receiptId=email+'_'+String(newProfile.sequence).padStart(6,'0');
     // All reads precede writes. Member status, coverage dates and the receipt
     // commit together; failed or competing saves cannot create partial payments.
+    if(payerToCreate)tx.set(doc(db,'billingProfiles',intent.payerEmail),payerToCreate);
     tx.set(memberRef,changes,{merge:true});
     tx.set(profileRef,newProfile);
     if(planned.receipt)tx.set(doc(db,'payments',receiptId),{...planned.receipt,createdAt:serverTimestamp(),recordedBy:actor});
     if(directoryChange){if(directoryChange.data)tx.set(directoryChange.ref,directoryChange.data);else tx.delete(directoryChange.ref);}
-    writtenProfile=newProfile;
+    writtenProfile=newProfile;initializedPayer=payerToCreate;
     return planned.receipt;
   });
-  if(auth.currentUser?.email?.toLowerCase()===actor)profiles.set(email,writtenProfile);
+  if(auth.currentUser?.email?.toLowerCase()===actor){profiles.set(email,writtenProfile);billingMembers.set(email,payload);if(initializedPayer)profiles.set(intent.payerEmail,initializedPayer);}
   return result;
 }
 export async function paymentsForMonth(month){

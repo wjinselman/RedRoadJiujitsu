@@ -1,8 +1,8 @@
 /* Red Road roster paid-date shortcut. No new collections or rules. */
 import {auth,db,doc,serverTimestamp} from './firebase-client.js?v=54-member-nav';
 import {runTransaction} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js';
-import {profiles,billingReady} from './billing-store.js?v=judo80-20261021';
-import {defaultCategory,exempt,gymDate,paymentPeriod,planSave} from './billing-model.js?v=judo80-20261021';
+import {profiles,billingReady} from './billing-store.js?v=family-billing-20261021';
+import {defaultCategory,exempt,gymDate,paymentPeriod,planSave} from './billing-model.js?v=family-billing-20261021';
 
 /** Record a date using Edit's existing billing model, without touching other member fields. */
 export async function saveMemberPaidDate(member,role,paidOn,expectedRevision=profiles.get(member?.email)?.revision||0){

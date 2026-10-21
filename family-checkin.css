@@ -1,0 +1,9 @@
+.family-checkin fieldset{border:0;padding:0;margin:20px 0;min-width:0}
+.family-checkin legend{font-weight:700;margin-bottom:12px}
+.family-checkin-child{display:grid;grid-template-columns:24px minmax(0,1fr);align-items:center;gap:8px 12px;padding:16px;margin:10px 0;border:1px solid #45464d;border-radius:10px;background:#17191f;cursor:pointer}
+.family-checkin-child input{width:22px;height:22px;margin:0;accent-color:#c91521}
+.family-checkin-child strong{overflow-wrap:anywhere}
+.family-checkin-child span{grid-column:2;font-size:14px;color:#c5c8ce}
+.family-checkin-child:focus-within{outline:2px solid #fff;outline-offset:3px}
+.family-checkin>button{margin-bottom:12px;white-space:normal}
+.family-checkin p{line-height:1.5;overflow-wrap:anywhere}

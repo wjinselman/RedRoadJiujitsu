@@ -1,4 +1,5 @@
-import {childLogin,myChildren} from './family-store.js?v=judo80-20261021';
+import {childLogin,myChildren,checkInChild} from './family-store.js?v=judo80-20261021';
+import {mountFamilyCheckIn} from './family-checkin.js?v=family-checkin-20261021';
 import { monthInfo, fetchMonth, renderMonth } from './attendance-month.js?v=54-member-nav';
 import { listenAsync } from './ui-utils.js?v=54-member-nav';
 import { currentClass, CLASS_HOURS, checkInNotice } from './class-schedule.js?v=judo80-20261021';
@@ -7,6 +8,7 @@ const $ = selector => document.querySelector(selector);
 const emailKey = value => String(value || '').trim().toLowerCase();
 let member = null, pending = false, completed = '', generation = 0, signingIn = false;
 let attendanceRows = [], attendanceMonth = '', attendanceGeneration = 0;
+let familyCheckIn=null,familyChildren=[];
 async function loadAttendance() {
   const record = member, user = auth.currentUser, info = monthInfo();
   if (!record || !user) return;
@@ -42,6 +44,7 @@ function showHours() {
 }
 function flash(target, text, tone = 'ok') { target.textContent = text; target.dataset.tone = tone; target.hidden = false; }
 function refreshClass() {
+  familyCheckIn?.refresh();
   showHours();
   const resetButton = $('#checkin-reset-test');
   resetButton.hidden = !member?.developerTest;
@@ -66,6 +69,9 @@ async function openCheckIn(user) {
   if (user?.isAnonymous) user = null;
   const attempt = ++generation;
   member = null; completed = ''; attendanceRows = []; attendanceMonth = ''; ++attendanceGeneration;
+  familyCheckIn=null;familyChildren=[];
+  $('#checkin-family-view').hidden=true;$('#checkin-family-children').replaceChildren();
+  $('#checkin-family-status').textContent='';
   $('#attendance-details').hidden = true; $('#attendance-status').textContent = '';
   $('#checkin-reset-test').hidden = true; showHours();
   $('#checkin-login-view').hidden = Boolean(user?.emailVerified);
@@ -79,6 +85,20 @@ async function openCheckIn(user) {
   const child = await withTimeout(childLogin(email));
   if (attempt !== generation || auth.currentUser?.uid !== user.uid) return;
   if (child) { location.replace('family.html'); return; }
+  // Family access is independent of the parent's own training membership.
+  try{
+    const children=await withTimeout(myChildren(user));
+    if(attempt!==generation||auth.currentUser?.uid!==user.uid)return;
+    familyChildren=children;
+    if(familyChildren.length){
+      $('#checkin-family-view').hidden=false;
+      familyCheckIn=mountFamilyCheckIn($('#checkin-family-children'),{user,children:familyChildren,isCurrent:()=>attempt===generation&&auth.currentUser?.uid===user.uid,saveChild:checkInChild});
+    }
+  }catch(_){
+    if(attempt!==generation||auth.currentUser?.uid!==user.uid)return;
+    $('#checkin-family-view').hidden=false;
+    $('#checkin-family-status').textContent='Children could not load. Use Refresh Family to retry. Your own check-in is still available if your membership is active.';
+  }
   // Member and developer access are independent. Start both immediately.
   // A missing/denied member record must not block an authorized developer test.
   const memberRead = withTimeout(getDoc(doc(db, 'members', email))).then(value => ({value}), error => ({error}));
@@ -92,20 +112,22 @@ async function openCheckIn(user) {
     const snap = memberResult.value;
     if (attempt !== generation) return;
     if (!snap.exists()) {
-      const children = await withTimeout(myChildren(user));
-      if (attempt !== generation || auth.currentUser?.uid !== user.uid) return;
-      if (children.length) { location.replace('family.html'); return; }
+      if (familyChildren.length) return;
     }
     if (!snap.exists()) return flash($('#checkin-login-message'), 'No member record was found. Use “New here? Create an account” below or ask a coach.', 'error');
     record = { ...snap.data(), email };
-    if (record.enabled !== true || record.active !== true || record.archived === true) return flash($('#checkin-login-message'), 'Your membership must be active. Ask a coach for help.', 'error');
+    if (record.enabled !== true || record.active !== true || record.archived === true) {
+      if(familyChildren.length)$('#checkin-family-status').textContent='Your own membership must be active before you can check yourself in. Your approved children can use their options above.';
+      return flash($('#checkin-login-message'), 'Your membership must be active. Ask a coach for help.', 'error');
+    }
   }
   if (attempt !== generation || auth.currentUser?.uid !== user.uid) return;
   member = record;
   const chooser = $('#checkin-program-choice');
-  chooser.hidden = !(record.developerTest || String(record.plan || '').toLowerCase().includes('family'));
+  const familyAdult=familyChildren.length>0&&String(record.plan||'').toLowerCase().includes('family');
+  chooser.hidden = familyAdult || !(record.developerTest || String(record.plan || '').toLowerCase().includes('family'));
   $('#checkin-program').value = '';
-  member.selectedProgram = '';
+  member.selectedProgram = familyAdult?'adult':'';
   $('#checkin-member-name').textContent = member.name || 'Member';
   $('#checkin-message').hidden = true;
   if (member.developerTest) flash($('#checkin-message'), 'Developer test: no member profile needed. This check-in is labeled Developer Test in attendance.');
@@ -116,7 +138,7 @@ async function openCheckIn(user) {
   } finally {
     if (attempt === generation) {
       $('#checkin-restoring').hidden = true;
-      if (!member) $('#checkin-login-view').hidden = false;
+      if (!member) $('#checkin-login-view').hidden = familyChildren.length>0;
     }
   }
 }
@@ -298,8 +320,10 @@ showHours();
 window.redRoadCheckinReady = true;
 if (!firebaseConfigured) { $('#checkin-restoring').hidden = true; $('#checkin-login-view').hidden = false; flash($('#checkin-login-message'), 'Check-in is not connected yet.', 'error'); }
 else {
+  $('#checkin-family-refresh').addEventListener('click',()=>{if(!pending&&!familyCheckIn?.isBusy())void openCheckIn(auth.currentUser).catch(()=>{$('#checkin-family-status').textContent='Could not refresh. Check your connection and retry.';});});
+  $('#checkin-family-signout').addEventListener('click',async()=>{if(pending||familyCheckIn?.isBusy())return;try{await signOut(auth);}catch(_){$('#checkin-family-status').textContent='Could not sign out. Please retry.';}});
   $('#checkin-switch-account').addEventListener('click', async () => {
-    if (pending) return;
+    if (pending || familyCheckIn?.isBusy()) return;
     try { await signOut(auth); $('#checkin-password').value = ''; }
     catch (_) { flash($('#checkin-message'), 'Could not sign out. Please try again.', 'error'); }
   });

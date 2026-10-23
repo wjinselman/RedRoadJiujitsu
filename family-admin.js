@@ -8,7 +8,7 @@ async function loadDirectory(name,current){
  do{const page=await getDocsFromServer(query(collection(db,name),...(cursor?[startAfter(cursor)]:[]),limit(250)));if(!current())return {docs:[]};docs.push(...page.docs);if(page.docs.length<250)break;cursor=page.docs.at(-1);}while(current());
  return {docs};
 }
-export async function showFamilyAdmin(identity){
+export async function showFamilyAdmin(identity,savedChildId=null){
  const host=document.getElementById('staff-family'),nav=document.getElementById('staff-family-link');if(!host)return;
  const token=++epoch,uid=auth.currentUser?.uid,allowed=identity&&['owner','developer'].includes(identity.role);
  host.hidden=!allowed;if(nav)nav.hidden=!allowed;host.replaceChildren();if(!allowed)return;
@@ -21,7 +21,7 @@ export async function showFamilyAdmin(identity){
  const parents=new Map(members.docs.map(d=>[d.id.toLowerCase(),{email:d.id.toLowerCase(),name:d.data().name||d.id}]));
  for(const d of children.docs){const c=d.data(),email=String(c.guardianEmail||'').trim().toLowerCase();if(email&&!parents.has(email))parents.set(email,{email,name:email});}
  const options=[...parents.values()].sort((a,b)=>a.name.localeCompare(b.name)||a.email.localeCompare(b.email));
- status.textContent=children.docs.length+' child profiles loaded. Choose a parent to link each child.';
+ status.textContent=children.docs.length+' child profiles loaded. Saved links are shown below; change a field to update a link.';
  for(const snap of children.docs.sort((a,b)=>(a.data().status==='pending'?0:1)-(b.data().status==='pending'?0:1))){
  const child={...snap.data(),id:snap.id},card=make('article','');card.className='child-card';card.append(make('h3',child.name),make('p',`Parent: ${child.guardianEmail} · Born: ${child.dob} · ${child.status}`));
  const form=make('form',''),fields=make('div','');fields.className='child-fields';
@@ -32,7 +32,11 @@ export async function showFamilyAdmin(identity){
  const rank=field('Rank','rank','text',child.rank);rank.required=true;rank.maxLength=80;
  const stripes=field('Stripes','stripes','number',child.stripes);stripes.min=0;stripes.max=4;stripes.step=1;stripes.required=true;
  const save=make('button','Save Parent Link');save.className='btn btn-red';save.type='submit';const message=make('p','');message.setAttribute('role','status');
- form.append(fields,details,make('p','Save links this child to the selected parent. Check-in follows the parent’s active membership.'),save,message);form.onsubmit=async e=>{e.preventDefault();if(!current())return;save.disabled=true;try{await approveChild(child,{parentEmail:payer.value,loginEmail:login.value,rank:rank.value.trim(),stripes:stripes.value,status:'active'});if(current())await showFamilyAdmin(identity);}catch(error){if(current()){message.textContent=error.code?'Could not save. Check owner access, connection and deployed rules.':error.message;save.disabled=false;}}};
+ let saving=false;
+ if(child.id===savedChildId||(child.status==='active'&&child.reviewedBy&&child.guardianEmail)){save.textContent='✓ Parent Link Saved';save.disabled=true;message.textContent='✓ Parent link saved.';message.style.color='#65d895';}
+ const markChanged=()=>{if(saving)return;save.disabled=false;save.textContent='Save Parent Link';message.textContent='Unsaved changes';message.style.color='';};
+ form.addEventListener('input',markChanged);form.addEventListener('change',markChanged);
+ form.append(fields,details,make('p','Save links this child to the selected parent. Check-in follows the parent’s active membership.'),save,message);form.onsubmit=async e=>{e.preventDefault();if(!current()||saving||save.disabled)return;saving=true;save.disabled=true;save.textContent='Saving…';message.textContent='';message.style.color='';try{await approveChild(child,{parentEmail:payer.value,loginEmail:login.value,rank:rank.value.trim(),stripes:stripes.value,status:'active'});if(current())await showFamilyAdmin(identity,child.id);}catch(error){if(current()){message.textContent=error.code?'Could not save. Check owner access, connection and deployed rules.':error.message;save.disabled=false;save.textContent='Save Parent Link';saving=false;}}};
  const view=make('button','View Child Waiver');view.type='button';view.className='btn btn-dark';const print=make('div','');view.onclick=async()=>{view.disabled=true;try{const waiver=await getDocFromServer(doc(db,'childWaivers',child.id));if(!current())return;if(!waiver.exists())throw Error();print.replaceChildren();attachWaiverPrint(waiver.data(),print);}catch(_){if(current())message.textContent='Waiver could not load. Please retry.';}finally{view.disabled=false;}};
  card.append(form,view,print);host.append(card);
  }

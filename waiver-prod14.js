@@ -57,14 +57,20 @@ if (childMode) {
   for (const [id,value] of [['participantName',pendingChild?.name],['dob',pendingChild?.dob]]) { document.getElementById(id).value=value||''; document.getElementById(id).readOnly=true; }
   auth?.authStateReady().then(() => { document.querySelector('#email').value=auth.currentUser?.email||'';document.querySelector('#email').readOnly=true; }).catch(() => { submitButton.disabled=true; });
 } else if (trialMode) {
-  trialFields.hidden = false;
-  trialProgram.required = true;
-  trialDate.required = true;
-  trialDate.min = localDate();
+  // A trial needs a waiver, not a booking or a membership account.
+  trialFields.hidden = true;
+  trialProgram.add(new Option('Any class', 'Any class'));
+  trialProgram.value = 'Any class';
+  trialDate.value = localDate();
+  for (const id of ['address','emergencyName','emergencyPhone']) {
+    const input = document.getElementById(id);
+    input.required = false;
+    input.closest('.form-field').hidden = true;
+  }
   document.querySelector('#waiver-kicker').textContent = 'Your First Class Is Free';
   document.querySelector('#waiver-title').innerHTML = 'Try One Class. <span class="red">No Account Needed.</span>';
-  document.querySelector('#waiver-intro').textContent = 'Choose a class, read the complete waiver and sign online. Red Road staff will receive your trial request.';
-  document.querySelector('#waiver-steps').innerHTML = '<span class="current"><b>1</b>Choose Class</span><span><b>2</b>Sign Waiver</span><span><b>3</b>Visit Red Road</span>';
+  document.querySelector('#waiver-intro').textContent = 'Add your name, date of birth, email and phone, then read and sign the waiver. No account or class booking needed.';
+  document.querySelector('#waiver-steps').innerHTML = '<span class="current"><b>1</b>Sign Waiver</span><span><b>2</b>Visit Red Road</span>';
   document.querySelector('#waiver-storage-note').innerHTML = '<strong>No membership account:</strong> Your trial request and signed waiver will be securely saved for Red Road staff review. You will not create a password or member profile.';
   submitButton.textContent = 'Submit Free Trial & Waiver';
 } else if (enrollmentMode) {
@@ -204,6 +210,7 @@ form.addEventListener('submit', async event => {
       if (!firebaseConfigured || !auth || !db) {
         throw new Error('Free-trial requests are not connected yet. Firebase configuration is required.');
       }
+      await auth.authStateReady();
       let user = auth.currentUser;
       const startedAnonymousSession = !user || user.isAnonymous === true;
       if (!user) user = (await signInAnonymously(auth)).user;
@@ -226,7 +233,7 @@ form.addEventListener('submit', async event => {
       receiptForDownload = { ...record, trialClass: true, trialProgram: trialRecord.trialProgram, trialDate: trialRecord.trialDate };
       success.hidden = false;
       delete success.dataset.tone;
-      success.textContent = `Your free trial request is in. Red Road staff received your signed waiver for ${trialRecord.trialProgram} on ${trialRecord.trialDate}. Your trial pass is valid through ${trialRecord.trialExpiresOn}. Your receipt is ${receiptId}. No membership account was created.`;
+      success.textContent = `Your waiver is saved. You’re ready for one free class—check the class schedule and come train. Your trial pass is valid through ${trialRecord.trialExpiresOn}. Receipt ${receiptId}. No account is needed. If you join later, create your login using this email; your trial does not create a membership account.`;
     } else if (enrollmentMode) {
       const pending = JSON.parse(sessionStorage.getItem('redroad:pendingEnrollment') || 'null');
       const user = auth?.currentUser;
@@ -281,6 +288,7 @@ form.addEventListener('submit', async event => {
       setTimeout(() => location.replace('members.html?enrolled=1'), 1600);
     } else {
       if (!firebaseConfigured || !auth || !db) throw new Error('Waiver storage is not connected. Nothing has been submitted. Ask Red Road staff for help.');
+      await auth.authStateReady();
       let user = auth.currentUser;
       const startedAnonymousSession = !user || user.isAnonymous === true;
       if (!user) user = (await signInAnonymously(auth)).user;

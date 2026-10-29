@@ -311,13 +311,10 @@ service cloud.firestore {
         && data.phone.size() > 0
         && data.phone.size() <= 40
         && data.address is string
-        && data.address.size() > 0
         && data.address.size() <= 240
         && data.emergencyName is string
-        && data.emergencyName.size() > 0
         && data.emergencyName.size() <= 160
         && data.emergencyPhone is string
-        && data.emergencyPhone.size() > 0
         && data.emergencyPhone.size() <= 40
         && data.minor is bool
         && data.guardianName is string

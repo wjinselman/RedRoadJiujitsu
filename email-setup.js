@@ -1,4 +1,4 @@
-import {auth,updatePassword,signOut,createUserWithEmailAndPassword,sendEmailVerification} from './firebase-client.js?v=54-member-nav';
+import {auth,updatePassword,signOut,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendEmailVerification} from './firebase-client.js?v=54-member-nav';
 import {isSignInWithEmailLink,signInWithEmailLink} from 'https://www.gstatic.com/firebasejs/12.18.0/firebase-auth.js';
 import {enrollmentFlow} from './enrollment-flow.js?v=judo80-20261021';
 const flow = enrollmentFlow(location.search);
@@ -8,6 +8,7 @@ export function isAccountSetupOpen(){return accountSetupBusy || Boolean($('#memb
 function errorText(error){
   const code=error?.code||'';
   if(code.includes('email-already-in-use'))return 'This email already has a login. Close this window and sign in, or use Forgot password. Your existing account has not been changed.';
+  if(code.includes('invalid-credential')||code.includes('wrong-password'))return 'That email already has a login. Close this window and use Sign In or Forgot password to recover it. Your trial waiver is separate and has not blocked your account.';
   if(code.includes('invalid-email'))return 'Enter a valid email address.';
   if(code.includes('quota-exceeded'))return 'The daily verification email limit has been reached. Please try again later or contact Red Road staff.';
   if(code.includes('operation-not-allowed'))return 'Email setup is not enabled yet. Please ask Red Road staff for help.';
@@ -55,7 +56,14 @@ export function setupEmailInvitation(){
     try{
       await auth.authStateReady();
       if(auth.currentUser && !auth.currentUser.isAnonymous){message.textContent='You are already signed in. Close this window and sign out before creating a different account.';return;}
-      const result=await createUserWithEmailAndPassword(auth,email.value.trim().toLowerCase(),password.value);
+      let result;
+      try { result=await createUserWithEmailAndPassword(auth,email.value.trim().toLowerCase(),password.value); }
+      catch(error) {
+        if(error?.code !== 'auth/email-already-in-use') throw error;
+        // Resume only after proving ownership with the supplied password.
+        result=await signInWithEmailAndPassword(auth,email.value.trim().toLowerCase(),password.value);
+        if(result.user.emailVerified){window.location.assign(flow.next);return;}
+      }
       user=result.user;showVerification();
       try{await sendVerification();}
       catch(error){ window.RRDiagnostics?.report(error,'enrollment');message.textContent='Your login was created, but the verification email could not be sent. '+errorText(error)+' Use Resend verification below; do not create another account.';}

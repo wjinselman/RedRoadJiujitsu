@@ -15,11 +15,12 @@ function runClassic(env,file){env.w.eval(read(file));}
 async function load(env,file,extra='',options={}){
  const calls={writes:[],commits:0,reads:[],signIns:0};const records=options.records||{};const lists=options.lists||{};
  const snapshot=(id,data)=>({id,exists:()=>data!==undefined,data:()=>data});
- const mocks={firebaseConfigured:true,auth:{currentUser:options.user||null},db:{},
+ const mocks={firebaseConfigured:true,auth:{currentUser:options.user||null,authStateReady:async()=>{}},db:{},
   doc:(_,group,id)=>({group,id}),collection:(_,group)=>({group}),query:(target,...constraints)=>({...target,constraints}),where:(...args)=>args,orderBy:(...args)=>args,startAfter:doc=>({after:doc.id}),limit:n=>({limit:n}),serverTimestamp:()=>({timestamp:true}),
   getDoc:async ref=>{calls.reads.push(ref);return snapshot(ref.id,records[ref.group+'/'+ref.id]);},
   getDocs:async ref=>{calls.reads.push(ref);if(options.failGroups?.includes(ref.group))throw {code:'permission-denied'};let rows=lists[ref.group]||[];const after=ref.constraints?.find(item=>item.after)?.after;const cap=ref.constraints?.find(item=>item.limit)?.limit||250;if(after)rows=rows.slice(rows.findIndex(item=>item.id===after)+1);return {docs:rows.slice(0,cap).map(item=>snapshot(item.id,item))};},
   setDoc:async(ref,payload)=>{calls.writes.push({ref,payload});if(options.writeDelay)await options.writeDelay;if(options.writeError)throw options.writeError;},deleteDoc:async ref=>{calls.writes.push({delete:ref});},
+  runTransaction:async()=>{throw Error('Unexpected transaction in trial test');},
   writeBatch:()=>({set:(ref,payload)=>calls.writes.push({ref,payload}),delete:ref=>calls.writes.push({delete:ref}),commit:async()=>{calls.commits++;if(options.commitDelay)await options.commitDelay;if(options.writeError)throw options.writeError;}}),
   signInWithEmailAndPassword:async()=>{calls.signIns++;return {user:options.user||{email:'owner@example.invalid',emailVerified:true}};},
   signInAnonymously:async()=>{mocks.auth.currentUser={uid:'anonymous-test',isAnonymous:true};return {user:mocks.auth.currentUser};},
@@ -29,7 +30,7 @@ async function load(env,file,extra='',options={}){
  mocks.getDocsFromServer=mocks.getDocs;
  const context=env.dom.getInternalVMContext();const cache=new Map();
  const firebase=new vm.SyntheticModule(Object.keys(mocks),function(){for(const [key,value]of Object.entries(mocks))this.setExport(key,value);},{context});
- async function get(name){name=name.split('?')[0].replace(/^\.\//,'');if(name.startsWith('firebase-'))return firebase;if(cache.has(name))return cache.get(name);const module=new vm.SourceTextModule(read(name)+(name===file?'\n'+extra:''),{context,identifier:name});cache.set(name,module);await module.link(async spec=>get(spec));return module;}
+ async function get(name){name=name.split('?')[0].replace(/^\.\//,'');if(name.startsWith('firebase-')||name.startsWith('https://www.gstatic.com/firebasejs/'))return firebase;if(cache.has(name))return cache.get(name);const module=new vm.SourceTextModule(read(name)+(name===file?'\n'+extra:''),{context,identifier:name});cache.set(name,module);await module.link(async spec=>get(spec));return module;}
  const module=await get(file);await module.evaluate();return {api:module.namespace,calls,mocks};
 }
 function click(env,selector){env.d.querySelector(selector).click();}
@@ -205,4 +206,14 @@ test('Permanent deletion never confirms success for a surviving record or failed
 });
 test('Homepage preserves hero trial and the three-button bar with only its center changed',()=>{
  const e=makeDom('index.html',385);runClassic(e,'mobile-nav.js');const hero=e.d.querySelector('.hero-actions');assert.equal(hero.children[0].textContent,'Try One Class Free');assert.equal(hero.children[0].getAttribute('href'),'waiver.html?trial=1');assert.equal(hero.children[1].textContent,'See Class Times');const buttons=[...e.d.querySelectorAll('.mobile-action-bar a')];assert.deepEqual(buttons.map(a=>a.textContent),['Schedule','Sign Up Now','Members']);assert.deepEqual(buttons.map(a=>a.getAttribute('href')),['#schedule','enroll.html','members.html']);assert.doesNotMatch(read('mobile-nav.js'),/account-nav/);e.close();
+});
+
+test('Short trial needs no booking or address and writes no membership identity',async()=>{
+ const e=makeDom('waiver.html?trial=1');const x=await load(e,'waiver-prod14.js');fillWaiver(e);
+ for(const id of ['address','emergencyName','emergencyPhone']){const input=e.d.getElementById(id);input.value='';assert.equal(input.required,false);assert.equal(input.closest('.form-field').hidden,true);}
+ assert.equal(e.d.getElementById('trial-class-fields').hidden,true);
+ assert.equal(e.d.getElementById('trialProgram').value,'Any class');
+ submit(e,'#waiver-form');await tick();await tick();
+ assert.equal(x.calls.commits,1);assert.equal(x.calls.writes.length,1);assert.equal(x.calls.writes[0].ref.group,'trialWaivers');
+ assert.equal(x.calls.signIns,0);assert.equal(x.mocks.auth.currentUser,null);e.close();
 });

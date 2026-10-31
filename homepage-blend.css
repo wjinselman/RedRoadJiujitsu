@@ -1,0 +1,11 @@
+/* Blend the homepage hero into its class summary and first content section. */
+.home-page .hero{border-bottom:0}
+.home-page .quickbar{
+  margin-top:0!important;
+  background:linear-gradient(180deg,#07080a 0%,rgba(7,8,10,.82) 100%);
+}
+.home-page .programs-section::before{
+  background:linear-gradient(180deg,rgba(7,8,10,.82),rgba(7,9,12,.70))!important;
+  border-top:0!important;
+  box-shadow:none!important;
+}

@@ -1,0 +1,10 @@
+/* A second decorative crest; the existing right crest is untouched. */
+.home-page .site-emblem-bg-left{display:none}
+@media(min-width:1181px){
+ .home-page .site-emblem-bg-left{
+  display:block;
+  right:auto!important;
+  left:-12vw!important;
+  transform:translateY(-50%) rotate(3deg)!important;
+ }
+}

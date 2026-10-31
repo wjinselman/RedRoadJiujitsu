@@ -523,3 +523,6 @@ body{background:#07080a}
 @media(max-width:700px){.hero-logo-mode .hero-action-photo{background-image:url('assets/hero-mobile-r67.webp')}}
 /* JS enables deferral only when IntersectionObserver is available. */
 .home-page.defer-program-photos .program-card:not(.photo-ready)::before{background-image:none}
+
+/* The kiosk crest follows the same centered, viewport-bounded placement. */
+.kiosk-page::after{left:50%;right:auto;bottom:auto;top:50%;width:min(calc(100vw - 32px),calc(100svh - 32px),820px);transform:translate(-50%,-50%)}

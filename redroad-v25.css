@@ -1952,3 +1952,23 @@ main,
 .waiver-inline-link{font-weight:900;color:#fff;text-decoration:underline;text-decoration-color:var(--red);text-underline-offset:4px}
 @media(max-width:900px){.bullyproof-grid{grid-template-columns:1fr}.bullyproof-poster{max-width:430px}.waiver-viewer{height:62vh}}
 @media(max-width:600px){.form-grid,.bullyproof-points{grid-template-columns:1fr}.form-field.full{grid-column:auto}.flow-card{padding:22px 18px}.flow-actions .btn{width:100%}.waiver-viewer{height:55vh}}
+
+/* Keep the persistent crest fully inside the viewport on every screen size. */
+.site-emblem-bg{
+  left:50% !important;
+  right:auto !important;
+  top:calc(50% + 38px) !important;
+  width:min(calc(100vw - 32px),calc(100svh - 108px),980px) !important;
+  transform:translate(-50%,-50%) !important;
+  will-change:auto;
+}
+/* Local landing pages use an in-section version of the same background mark. */
+.local-hero::after{
+  inset:24px;
+  width:auto;
+  height:auto;
+  aspect-ratio:auto;
+  transform:none;
+  background-position:center;
+  background-size:contain;
+}

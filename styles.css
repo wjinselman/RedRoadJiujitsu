@@ -1866,23 +1866,3 @@ main,
 @media (max-width:350px){
   #pricing .price-grid{grid-template-columns:1fr !important}
 }
-
-/* Keep the persistent crest fully inside the viewport on every screen size. */
-.site-emblem-bg{
-  left:50% !important;
-  right:auto !important;
-  top:calc(50% + 38px) !important;
-  width:min(calc(100vw - 32px),calc(100svh - 108px),980px) !important;
-  transform:translate(-50%,-50%) !important;
-  will-change:auto;
-}
-/* Local landing pages use an in-section version of the same background mark. */
-.local-hero::after{
-  inset:24px;
-  width:auto;
-  height:auto;
-  aspect-ratio:auto;
-  transform:none;
-  background-position:center;
-  background-size:contain;
-}

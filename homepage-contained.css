@@ -1,0 +1,5 @@
+/* Contain wide-desktop panels; retain existing mobile layout. */
+@media(min-width:1400px){
+ .home-page main,.home-page>.footer{width:min(calc(var(--max) + 64px),calc(100% - 112px));margin-inline:auto}
+ .home-page main{box-shadow:0 0 60px rgba(0,0,0,.18)}
+}

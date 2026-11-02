@@ -1,6 +1,8 @@
 /* A second decorative crest; the existing right crest is untouched. */
 .home-page .site-emblem-bg-left{display:none}
 @media(min-width:1181px){
+ /* Let the black background soften both side crests without dimming the hero logo. */
+ .home-page .site-emblem-bg{opacity:.04!important}
  .home-page .site-emblem-bg-left{
   display:block;
   right:auto!important;

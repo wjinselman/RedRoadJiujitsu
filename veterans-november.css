@@ -1,0 +1,16 @@
+#veterans-announcement[hidden]{display:none!important}
+#veterans-announcement{background:#141821;border-bottom:1px solid #603039;text-align:center}
+#veterans-open{width:100%;min-height:48px;padding:11px 16px;border:0;background:transparent;color:#fff;font:600 14px/1.5 system-ui,sans-serif;cursor:pointer}
+#veterans-open:hover{background:#211b23}.veterans-info{display:inline-block;margin-left:8px;color:#ffd5d8;text-decoration:underline;text-underline-offset:3px}
+#veterans-open:focus-visible,#veterans-close:focus-visible{outline:2px solid #fff;outline-offset:-4px}
+#veterans-dialog{position:fixed;inset:0;width:min(700px,calc(100% - 32px));max-height:90vh;max-height:90dvh;margin:auto;padding:0;border:1px solid #48434a;border-radius:14px;background:#111318;color:#f4f4f5;box-shadow:0 24px 100px #0009;overflow:hidden}
+#veterans-dialog:not([open]){display:none}
+#veterans-dialog[open]{display:flex;flex-direction:column}
+#veterans-dialog::backdrop{background:rgba(0,0,0,.8)}
+.veterans-dialog-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px 12px 20px;border-bottom:1px solid #35363c;flex-shrink:0}
+#veterans-title{font:700 17px/1.4 system-ui,sans-serif;margin:0;color:#fff;letter-spacing:0;text-transform:none}
+#veterans-close{flex-shrink:0;width:44px;height:44px;border:1px solid #474950;border-radius:8px;background:#24262d;color:#fff;font-size:20px;cursor:pointer}
+.veterans-dialog-content{overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;min-height:0}
+.veterans-dialog-content>img{display:block;width:100%;height:auto;max-width:100%}
+.veterans-message{padding:26px;font:400 16px/1.75 system-ui,sans-serif}.veterans-message p{margin:0 0 20px}.veterans-message .btn{color:#fff}
+@media(max-width:600px){#veterans-open{font-size:13px;padding:10px 12px}.veterans-info{margin-left:4px}#veterans-dialog{width:calc(100% - 16px);max-height:94vh;max-height:94dvh;border-radius:10px}.veterans-dialog-header{padding:8px 10px 8px 16px}#veterans-title{font-size:15px}.veterans-message{padding:22px 20px}}

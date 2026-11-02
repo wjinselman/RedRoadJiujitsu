@@ -14,3 +14,10 @@
 .veterans-dialog-content>img{display:block;width:100%;height:auto;max-width:100%}
 .veterans-message{padding:26px;font:400 16px/1.75 system-ui,sans-serif}.veterans-message p{margin:0 0 20px}.veterans-message .btn{color:#fff}
 @media(max-width:600px){#veterans-open{font-size:13px;padding:10px 12px}.veterans-info{margin-left:4px}#veterans-dialog{width:calc(100% - 16px);max-height:94vh;max-height:94dvh;border-radius:10px}.veterans-dialog-header{padding:8px 10px 8px 16px}#veterans-title{font-size:15px}.veterans-message{padding:22px 20px}}
+
+/* Match the desktop site palette while retaining the mobile treatment. */
+@media(min-width:981px){
+  #veterans-open{background:var(--red,#c91521)}
+  #veterans-open:hover,#veterans-open:focus-visible{background:#141821}
+  #veterans-open .veterans-info{color:#fff}
+}

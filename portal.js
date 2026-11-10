@@ -561,15 +561,20 @@ async function openMemberForUser(user) {
 
 
 
-    const childLink = await childLogin(user.email);
-    if (!stillCurrent()) return;
-    if (childLink || enrollmentFlow(location.search).family) {
-      location.replace('family.html'); return;
-    }
+    // Read the authorized member profile before probing family-only collections.
+    // A denied child-login lookup must not prevent an existing member signing in.
     const member = await getMemberRecord(user.email);
     if (!stillCurrent()) return;
+    if (member && enrollmentFlow(location.search).family) {
+      location.replace('family.html'); return;
+    }
 
     if (!member) {
+      const childLink = await childLogin(user.email);
+      if (!stillCurrent()) return;
+      if (childLink || enrollmentFlow(location.search).family) {
+        location.replace('family.html'); return;
+      }
       const children = await myChildren(user);
       if (!stillCurrent()) return;
       if (children.length) { window.location.replace('family.html'); return; }
